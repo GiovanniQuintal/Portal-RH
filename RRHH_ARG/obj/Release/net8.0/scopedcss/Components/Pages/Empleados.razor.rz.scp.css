@@ -1,0 +1,140 @@
+.employees-container[b-9w6nqow5fk] {
+    padding: 20px;
+    width: 100%;
+}
+
+.top-panel[b-9w6nqow5fk] {
+    width: 100%;
+    max-width: 1000px; /* Tamaño grande del contenedor principal */
+    margin: 0 auto;
+}
+
+.title[b-9w6nqow5fk] {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* --- SOLUCIÓN DE LAYOUT --- */
+.search-panel[b-9w6nqow5fk] {
+    display: flex; /* Asegura la alineación en una fila */
+    justify-content: space-between; /* Separa los dos grupos (búsqueda y filtro) */
+    align-items: center;
+    gap: 25px; /* Aumenta el espacio entre los dos grupos */
+    margin-top: 20px;
+}
+
+.search-input-group[b-9w6nqow5fk] {
+    /* Permitimos que ocupe más espacio pero limitamos su crecimiento */
+    max-width: 600px;
+    flex-grow: 1;
+}
+
+.filter-select-group[b-9w6nqow5fk] {
+    /* Impedimos que el grupo de filtro se expanda, dejando espacio para la búsqueda */
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-shrink: 0; /* Asegura que este grupo no se encoja */
+    /* Nota: Si quieres que el filtro esté fijo a la derecha sin importar el tamaño del grupo de búsqueda,
+       las clases de Bootstrap ya lo manejan si el contenedor principal es 'd-flex justify-content-between'. */
+}
+/* --- FIN SOLUCIÓN DE LAYOUT --- */
+
+.search-btn[b-9w6nqow5fk] {
+    background-color: #253C60;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    margin-left: -1px;
+}
+
+    .search-btn img[b-9w6nqow5fk] {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+
+.filter-select[b-9w6nqow5fk] {
+    width: 150px; /* Mantenemos el ancho compacto para el select */
+    min-width: 150px;
+}
+
+.filter-btn[b-9w6nqow5fk] {
+    background-color: lightgray;
+    color: #253C60;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+}
+
+    .filter-btn img[b-9w6nqow5fk] {
+        width: 24px;
+        height: 24px;
+    }
+
+.table-container[b-9w6nqow5fk] {
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+/* ... (resto de estilos de tabla y status) ... */
+.employee-table th[b-9w6nqow5fk] {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.status-badge[b-9w6nqow5fk] {
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+}
+
+.status-empleado[b-9w6nqow5fk] {
+    background-color: #28a745;
+}
+
+.status-practicante[b-9w6nqow5fk] {
+    background-color: #007bff;
+}
+
+.status-inactivo[b-9w6nqow5fk] {
+    background-color: #dc3545;
+}
+
+.progress-container[b-9w6nqow5fk] {
+    width: 100px;
+    margin: 5px 0;
+}
+
+.progress-label[b-9w6nqow5fk] {
+    font-size: 12px;
+    margin-bottom: 3px;
+    color: #6c757d;
+}
+
+.progress-bar[b-9w6nqow5fk] {
+    background-color: #17a2b8;
+}
+
+.action-btn[b-9w6nqow5fk] {
+    font-size: 12px;
+    padding: 5px 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #007bff;
+    font-weight: bold;
+}

@@ -1,0 +1,525 @@
+﻿@page "/mis-tarjetas-qhse"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@inject EmpleadoService Service
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, Empleado, HSE, FA, Supervisor")]
+
+<div class="container-fluid py-4 h-100 overflow-auto">
+
+    <div class="d-flex align-items-center border-bottom pb-3 mb-4">
+        <img src="images/stop.png" alt="STOP" class="title-icon-img me-3" style="height: 50px;" />
+        <h3 class="title text-dark fw-bold m-0">Tarjetas STOP</h3>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center p-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else if (!isEmpleadoVinculado)
+    {
+        <div class="alert alert-warning shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Tu usuario actual no está vinculado a un perfil de empleado. Contacta a Recursos Humanos.
+        </div>
+    }
+    else
+    {
+        <div class="row mb-4 px-3">
+            <div class="col-auto">
+                <button class="btn border-0 shadow-sm new-card-btn d-flex flex-column align-items-center justify-content-center"
+                        @onclick="AbrirModalCrear"
+                        title="Crear nueva tarjeta STOP">
+
+                    @* Opción A: Usar la imagen de tu tarjeta *@
+                    <img src="images/CardSTOP.png" alt="Nueva Tarjeta" class="img-fluid mb-2" style="height: 60px;" />
+
+                    @* Opción B: O usar un icono de Bootstrap si lo prefieres (descomenta la línea de abajo) *@
+                    @* <i class="bi bi-plus-circle text-primary" style="font-size: 2.5rem;"></i> *@
+
+                    <span class="fw-bold text-dark mt-1" style="font-size: 0.9rem;">Nueva Tarjeta</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-card-list me-2"></i> Historial de mis reportes</h5>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="CargarMisTarjetas">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                </button>
+            </div>
+            <ul class="nav nav-tabs mb-3 border-bottom-0" id="tarjetasTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "misTarjetas" ? "active fw-bold text-primary border-primary border-bottom-0" : "text-muted")"
+                            @onclick='() => activeTab = "misTarjetas"'>
+                        Mis Reportes
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "asignadas" ? "active fw-bold text-primary border-primary border-bottom-0" : "text-muted")"
+                            @onclick='() => activeTab = "asignadas"'>
+                        Tarjetas Asignadas
+                        @if (tarjetasAsignadas.Any(c => c.Estatus == 1))
+                        {
+                            <span class="badge bg-danger ms-2 rounded-pill">Nuevas</span>
+                        }
+                    </button>
+                </li>
+            </ul>
+
+            <div class="card border-0 shadow-sm border-top">
+                <div class="card-body p-0 table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Fecha</th>
+                                <th>Lugar del evento</th>
+                                <th>Estado</th>
+                                <th class="text-end pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (activeTab == "misTarjetas")
+                            {
+                                @if (misTarjetas.Any())
+                                {
+                                    @foreach (var card in misTarjetas.OrderByDescending(c => c.Fecha))
+                                    {
+                                        <tr>
+                                            <td class="ps-4 fw-bold">@card.Fecha.ToString("dd/MM/yyyy")</td>
+                                            <td>@card.Lugar</td>
+                                            <td><span class="badge @card.EstatusColor rounded-pill px-3">@card.EstatusTexto</span></td>
+                                            <td class="text-end pe-4">
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalVer(card.QhcId, false)">
+                                                    <i class="bi bi-eye"></i> Ver
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="4" class="text-center text-muted py-4">No has registrado ninguna tarjeta aún.</td></tr>
+                                }
+                            }
+                            else if (activeTab == "asignadas")
+                            {
+                                @if (tarjetasAsignadas.Any())
+                                {
+                                    @foreach (var card in tarjetasAsignadas.OrderByDescending(c => c.Fecha))
+                                    {
+                                        <tr class="@(card.Estatus == 1 ? "table-warning" : "")">
+                                            <td class="ps-4 fw-bold">@card.Fecha.ToString("dd/MM/yyyy")</td>
+                                            <td>@card.Lugar</td>
+                                            <td><span class="badge @card.EstatusColor rounded-pill px-3">@card.EstatusTexto</span></td>
+                                            <td class="text-end pe-4">
+                                                <button class="btn btn-sm btn-primary" @onclick="() => AbrirModalVer(card.QhcId, true)">
+                                                    @(card.Estatus == 1 ? "Atender" : "Ver Evidencia")
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="4" class="text-center text-muted py-4">No tienes tarjetas asignadas por resolver.</td></tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (showCreateModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.6); z-index: 1050;" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Nueva Tarjeta STOP</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalCrear"></button>
+                </div>
+                <div class="modal-body bg-white pb-5">
+                    <QhseForm IsReadOnly="false" OnSaved="CerrarModalCrear" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showViewModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.6); z-index: 1050;" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">@(esVistaAsignada && tarjetaSeleccionadaEstatus == 1 ? "Atender Tarjeta Asignada" : "Detalle de Tarjeta")</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalVer"></button>
+                </div>
+                <div class="modal-body bg-white pb-2">
+                    <QhseForm IsReadOnly="true" ModelParameter="@modeloParaVer" />
+
+                    @* APARTADO DE EVIDENCIA: EN PROCESO (Solo visible para el asignado) *@
+                    @if (esVistaAsignada && tarjetaSeleccionadaEstatus == 1)
+                    {
+                        <div class="mt-4 p-4 rounded" style="background-color: #f8f9fa; border: 2px dashed var(--argos-cyan);">
+                            <h5 class="fw-bold" style="color: var(--argos-cyan);">
+                                <i class="bi bi-camera-fill me-2"></i>Subir Evidencia de Resolución
+                            </h5>
+
+                            @if (!string.IsNullOrEmpty(mensajeErrorEvidencia))
+                            {
+                                <div class="alert alert-danger py-2 px-3 mb-3 d-flex align-items-center">
+                                    <i class="bi bi-x-circle-fill me-2"></i> @mensajeErrorEvidencia
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Notas o detalles de la resolución:</label>
+                                <textarea class="form-control" rows="3" @bind="textoEvidencia" placeholder="Describe cómo se resolvió la condición insegura..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Subir Foto (Opcional):</label>
+                                <InputFile class="form-control" OnChange="CargarFoto" accept="image/*" />
+                            </div>
+                        </div>
+                    }
+
+                    @* APARTADO DE EVIDENCIA: RESUELTA (Visible para todos si la tarjeta ya se cerró) *@
+                    @if (esVistaAsignada && tarjetaSeleccionadaEstatus == 2)
+                    {
+                        <div class="mt-4 p-4 rounded" style="background-color: #f8f9fa; border: 2px solid #198754;">
+                            <h5 class="fw-bold text-success">
+                                <i class="bi bi-check-circle-fill me-2"></i>Tarjeta Resuelta
+                            </h5>
+
+                            <div class="mb-3 mt-3">
+                                <label class="form-label fw-bold">Notas de la resolución:</label>
+                                <p class="form-control bg-white">@textoEvidenciaVisualizacion</p>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(rutaFotoVisualizacion))
+                            {
+                                <div class="mb-3 text-center">
+                                    <label class="form-label fw-bold d-block text-start">Evidencia Fotográfica:</label>
+                                    <img src="@rutaFotoVisualizacion" alt="Evidencia" class="img-fluid rounded border shadow-sm" style="max-height: 400px; object-fit: contain;" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-3">
+                                    <p class="text-muted fst-italic"><i class="bi bi-image me-1"></i> No se adjuntó evidencia fotográfica.</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModalVer">Cerrar</button>
+                    @if (esVistaAsignada && tarjetaSeleccionadaEstatus == 1)
+                    {
+                        <button type="button" class="btn btn-success px-4" @onclick="ConfirmarResolucion">
+                            <i class="bi bi-check-circle-fill me-2"></i> Cerrar Tarjeta (Resuelto)
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showModalExito)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.7); z-index: 1060;" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill me-2"></i>¡Evidencia Enviada!</h5>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-shield-check text-success" style="font-size: 4rem;"></i>
+                    <h4 class="fw-bold mt-3">Tarjeta Resuelta con Éxito</h4>
+                    <p class="text-muted">La tarjeta ha sido cerrada y devuelta a los registros de QHSE. ¡Gracias por tu compromiso con la seguridad!</p>
+                </div>
+                <div class="modal-footer bg-light justify-content-center">
+                    <button type="button" class="btn btn-success px-5" @onclick="CerrarModalExito">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    /* Nuevo estilo para el botón de Agregar Tarjeta */
+    .new-card-btn {
+        background-color: #f8f9fa; /* Un gris muy clarito */
+        border-radius: 12px;
+        width: 140px;
+        height: 140px;
+        transition: all 0.2s ease-in-out;
+        border: 2px dashed #ccc !important;
+    }
+
+        .new-card-btn:hover {
+            background-color: #e9ecef;
+            border-color: var(--bs-primary) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+        }
+
+    /* Construcción de la cruz multicolor con CSS puro para evitar SVGs externos */
+    .plus-icon-container {
+        position: relative;
+        width: 48px;
+        height: 48px;
+    }
+
+    .plus-part {
+        position: absolute;
+    }
+
+    .top-red {
+        width: 12px;
+        height: 20px;
+        background-color: #EA4335;
+        top: 0;
+        left: 18px;
+    }
+
+    .bottom-green {
+        width: 12px;
+        height: 20px;
+        background-color: #34A853;
+        top: 28px;
+        left: 18px;
+    }
+
+    .left-yellow {
+        width: 20px;
+        height: 12px;
+        background-color: #FBBC05;
+        top: 18px;
+        left: -2px;
+    }
+
+    .right-blue {
+        width: 20px;
+        height: 12px;
+        background-color: #4285F4;
+        top: 18px;
+        left: 30px;
+    }
+    /* Cuadrado central para unir la cruz limpiamente */
+    .plus-icon-container::after {
+        content: '';
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background-color: #FBBC05; /* Se puede solapar con amarillo u otro */
+        top: 18px;
+        left: 18px;
+    }
+</style>
+
+@code {
+    private bool isLoading = true;
+    private bool isEmpleadoVinculado = true;
+    private int currentEmpleadoId = 0;
+
+    private List<QhseCard> misTarjetas = new();
+
+    // Control de Modales
+    private bool showCreateModal = false;
+    private bool showViewModal = false;
+    private QhseFormModel modeloParaVer = new();
+
+    private string activeTab = "misTarjetas";
+    private List<QhseCard> tarjetasAsignadas = new();
+
+    // Variables para la evidencia
+    private bool esVistaAsignada = false;
+    private int tarjetaSeleccionadaId = 0;
+    private int tarjetaSeleccionadaEstatus = 0;
+
+    private string textoEvidencia = "";
+    private string rutaFotoTemporal = "";
+
+    // Para modo lectura de evidencia
+    private string textoEvidenciaVisualizacion = "";
+    private string rutaFotoVisualizacion = "";
+
+    // Variable para guardar el archivo en memoria antes de enviarlo
+    private IBrowserFile archivoEvidenciaSeleccionado;
+
+    private string mensajeErrorEvidencia = "";
+    private bool showModalExito = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarIdentidadUsuario();
+    }
+
+    private async Task CargarMisTarjetas()
+    {
+        if (currentEmpleadoId > 0)
+        {
+            misTarjetas = await Service.GetQhseCardsByEmpleadoIdAsync(currentEmpleadoId);
+            // Cargar también las que le han asignado a este usuario
+            tarjetasAsignadas = await Service.GetTarjetasAsignadasAsync(currentEmpleadoId);
+        }
+    }
+
+    // Actualizamos AbrirModalVer para saber de qué pestaña viene
+    private async Task AbrirModalVer(int cardId, bool desdeAsignadas)
+    {
+        tarjetaSeleccionadaId = cardId;
+        esVistaAsignada = desdeAsignadas;
+
+        modeloParaVer = await Service.GetQhseCardForViewAsync(cardId);
+
+        // Obtener el estatus y evidencia actual buscando en la lista respectiva
+        var card = desdeAsignadas
+            ? tarjetasAsignadas.FirstOrDefault(c => c.QhcId == cardId)
+            : misTarjetas.FirstOrDefault(c => c.QhcId == cardId);
+
+        if (card != null)
+        {
+            tarjetaSeleccionadaEstatus = card.Estatus;
+            textoEvidenciaVisualizacion = card.EvidenciaTexto ?? "Sin notas registradas.";
+
+            // --- AHORA SIMPLEMENTE LEEMOS EL BASE64 DIRECTO DE LA BD ---
+            if (!string.IsNullOrEmpty(card.EvidenciaFoto))
+            {
+                // Como ya lo guardamos con el formato 'data:image/jpeg;base64,...'
+                // solo necesitamos asignarlo a la variable para el 'src'
+                rutaFotoVisualizacion = card.EvidenciaFoto;
+            }
+            else
+            {
+                rutaFotoVisualizacion = "";
+            }
+        }
+
+        textoEvidencia = "";
+        rutaFotoTemporal = "";
+        showViewModal = true;
+    }
+
+    // Método para manejar la foto (Mock: Aquí procesarías el stream para guardarlo en wwwroot o en la nube)
+    private void CargarFoto(InputFileChangeEventArgs e)
+    {
+        // Solo guardamos el archivo en la variable.
+        // La subida real se hará cuando el usuario presione "Cerrar Tarjeta (Resuelto)"
+        archivoEvidenciaSeleccionado = e.File;
+    }
+
+    private async Task ConfirmarResolucion()
+    {
+        // 1. VALIDACIÓN
+        if (string.IsNullOrWhiteSpace(textoEvidencia) && archivoEvidenciaSeleccionado == null)
+        {
+            mensajeErrorEvidencia = "Debes describir cómo se resolvió la condición o subir una fotografía de evidencia para poder cerrar la tarjeta.";
+            return;
+        }
+
+        mensajeErrorEvidencia = "";
+        string imagenBase64 = null; // Guardará la imagen convertida a texto
+
+        // 2. PROCESAR IMAGEN A BASE64
+        if (archivoEvidenciaSeleccionado != null)
+        {
+            // Limitamos a 5 MB (Ajusta si necesitas más)
+            var maxFileSize = 5 * 1024 * 1024;
+
+            try
+            {
+                using var stream = archivoEvidenciaSeleccionado.OpenReadStream(maxAllowedSize: maxFileSize);
+                using var memoryStream = new System.IO.MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+
+                var bytes = memoryStream.ToArray();
+                // Construimos la cadena Data URI para que el <img> pueda leerla directamente
+                imagenBase64 = $"data:{archivoEvidenciaSeleccionado.ContentType};base64,{Convert.ToBase64String(bytes)}";
+            }
+            catch (Exception ex)
+            {
+                mensajeErrorEvidencia = $"Error al procesar la imagen: El archivo podría ser demasiado grande. (Máx 5MB). Detalle: {ex.Message}";
+                return; // Cortamos si falla la imagen
+            }
+        }
+
+        // 3. Guardar en base de datos
+        // Ahora le pasamos 'imagenBase64' en lugar de 'identificadorFoto'
+        await Service.ResolverTarjetaAsync(tarjetaSeleccionadaId, textoEvidencia, imagenBase64);
+
+        // 4. Limpiar variables
+        archivoEvidenciaSeleccionado = null;
+        textoEvidencia = "";
+
+        // 5. Cerrar modal y mostrar éxito
+        showViewModal = false;
+        showModalExito = true;
+    }
+
+    // Nuevo método para cerrar el modal de éxito y recargar la UI
+    private async Task CerrarModalExito()
+    {
+        showModalExito = false;
+        await CargarMisTarjetas();
+    }
+
+
+    private async Task CargarIdentidadUsuario()
+    {
+        isLoading = true;
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                currentEmpleadoId = await Service.GetEmpleadoIdByUserIdAsync(userId);
+
+                if (currentEmpleadoId > 0)
+                {
+                    isEmpleadoVinculado = true;
+                    await CargarMisTarjetas();
+                }
+                else
+                {
+                    isEmpleadoVinculado = false;
+                }
+            }
+        }
+        isLoading = false;
+    }
+
+
+    // Lógica Modal Crear
+    private void AbrirModalCrear()
+    {
+        showCreateModal = true;
+    }
+
+    private async Task CerrarModalCrear()
+    {
+        showCreateModal = false;
+        // Refrescamos la lista al cerrar el modal por si el usuario guardó una tarjeta nueva.
+        await CargarMisTarjetas();
+    }
+
+    private void CerrarModalVer()
+    {
+        showViewModal = false;
+    }
+
+}

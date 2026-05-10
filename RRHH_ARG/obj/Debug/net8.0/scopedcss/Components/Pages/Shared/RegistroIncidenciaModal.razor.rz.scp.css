@@ -1,0 +1,30 @@
+/* Target the label text next to the step indicator */
+[b-n9kttmjm7h] .fluent-wizard-step .label {
+    font-weight: 1000; /* Lo mantenemos semi-bold */
+    /* --- INICIO DE LOS CAMBIOS --- */
+    /* 1. Hacer la letra un poco más grande */
+    font-size: 10.05em; /* Ajusta este valor (ej. 1.1em, 16px) si quieres más/menos */
+    /* 2. Moverlo ligeramente hacia abajo */
+    position: relative; /* Necesario para usar 'top' */
+    top: 1px; /* Ajusta este valor (ej. 1px, 3px) para moverlo más/menos */
+    /* --- FIN DE LOS CAMBIOS --- */
+}
+
+/* --- (Asegúrate de mantener la regla anterior para los números, si la tenías) --- */
+[b-n9kttmjm7h] .fluent-wizard-step .fluent-wizard-icon-number {
+    /* ... (Los estilos para centrar el número) ... */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: inherit;
+    line-height: 1;
+    text-align: center;
+    user-select: none;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}

@@ -1,0 +1,28 @@
+wwwroot\app.css
+wwwroot\bootstrap\bootstrap.min.css
+wwwroot\bootstrap\bootstrap.min.css.map
+wwwroot\cvs\26859902-bbc6-4b3a-80e4-2eac2131e6cd_REPASO EXAMEN 2 INNOVACIÓN TECNOLÓGICA.pdf
+wwwroot\cvs\85c0e90d-7730-4071-8f1b-3380acb9c4f3_Starbucks (1).pdf
+wwwroot\favicon.png
+wwwroot\images\agregar.png
+wwwroot\images\agregar1.png
+wwwroot\images\ARGLogo.png
+wwwroot\images\ARG_Logo_azul.png
+wwwroot\images\birthday_icon.png
+wwwroot\images\buscar.png
+wwwroot\images\CardSTOP.png
+wwwroot\images\check.png
+wwwroot\images\document_icon.png
+wwwroot\images\filtrar.png
+wwwroot\images\interview_icon.png
+wwwroot\images\logo-negative.png
+wwwroot\images\Rol.png
+wwwroot\images\Solo fuente argos.png
+wwwroot\images\solo logo menos.png
+wwwroot\images\stop.png
+wwwroot\images\stop2.png
+wwwroot\images\time.png
+wwwroot\images\x.png
+wwwroot\js\calendar-interop.js
+wwwroot\js\site.js
+wwwroot\SLogo.png

@@ -1,0 +1,554 @@
+﻿@using RRHH_ARG.Models
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.FluentUI.AspNetCore.Components;
+@using RRHH_ARG.Data
+@using RRHH_ARG.Services
+
+@inject EmpleadoService EmpleadoService
+@inject VacacionService VacacionService
+
+@if (showModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Incidencia</h5>
+                    <button type="button" class="btn-close" @onclick="Close" disabled="@_overlayIsVisible"></button>
+                </div>
+                <div class="modal-body">
+                    @if (_showSuccessView)
+                    {
+                        <div class="text-center p-5">
+                            <div class="mb-3">
+                                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                            </div>
+                            <h3 class="fw-bold text-success">¡Registro Exitoso!</h3>
+                            <p class="text-muted">La incidencia se ha guardado correctamente.</p>
+                            <button class="btn btn-primary mt-4 px-4" @onclick="Close">Aceptar y Cerrar</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <FluentWizard @ref="wizard"
+                                      StepperPosition="StepperPosition.Left"
+                                      StepSequence="@WizardStepSequence.Linear"
+                                      Border="WizardBorder.Outside"
+                                      Height="auto"
+                                      Style="min-height: 400px;"
+                                      OnFinish="@HandleFinishAsync">
+                            <Steps>
+                                <!-- PASO 1: SEDE -->
+                                <FluentWizardStep Title="Sede" OnChange="@OnStep1Change">
+                                    <FluentEditForm Model="_step1_SedeModel" OnValidSubmit="@OnStep1ValidSubmit" OnInvalidSubmit="@OnInvalidSubmit">
+                                        <DataAnnotationsValidator />
+                                        <h4><strong>Paso 1. Selecciona la subsidiaria.<br /><br /></strong></h4>
+                                        <div class="form-group">
+                                            <label class="form-label">Subsidiaria:</label>
+                                            <InputSelect Value="@_step1_SedeModel.SelectedSubsidiaria"
+                                                         ValueChanged="@((string s) => OnSubsidiariaChanged(s))"
+                                                         ValueExpression="@(() => _step1_SedeModel.SelectedSubsidiaria)"
+                                                         class="form-select">
+                                                <option value="">--Seleccionar--</option>
+                                                @foreach (var sub in availableSubsidiarias)
+                                                {
+                                                    <option value="@sub">@sub</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                        <FluentValidationSummary style="color:darkred" />
+                                    </FluentEditForm>
+                                </FluentWizardStep>
+
+                                <!-- PASO 2: ÁREA -->
+                                <FluentWizardStep Title="Área de trabajo" OnChange="@OnStep2Change">
+                                    <FluentEditForm Model="_step2_AreaModel" OnValidSubmit="@OnStep2ValidSubmit" OnInvalidSubmit="@OnInvalidSubmit">
+                                        <DataAnnotationsValidator />
+                                        <h4><strong>Paso 2. Selecciona el área.<br /><br /></strong></h4>
+                                        <div class="form-group">
+                                            <label class="form-label">Área:</label>
+                                            <InputSelect Value="@_step2_AreaModel.SelectedArea"
+                                                         ValueChanged="@((string s) => OnAreaChanged(s))"
+                                                         ValueExpression="@(() => _step2_AreaModel.SelectedArea)"
+                                                         class="form-select"
+                                                         disabled="@(availableAreas.Count == 0)">
+                                                <option value="">--Seleccionar--</option>
+                                                @foreach (var area in availableAreas)
+                                                {
+                                                    <option value="@area">@area</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="@(() => _step2_AreaModel.SelectedArea)" />
+                                        </div>
+                                        <FluentValidationSummary style="color:darkred" />
+                                    </FluentEditForm>
+                                </FluentWizardStep>
+
+                                <!-- PASO 3: EMPLEADO -->
+                                <FluentWizardStep Title="Buscar trabajador" OnChange="@OnStep3Change">
+                                    <FluentEditForm Model="_step3_EmpleadoModel" OnValidSubmit="@OnStep3ValidSubmit" OnInvalidSubmit="@OnInvalidSubmit">
+                                        <DataAnnotationsValidator />
+                                        <h4><strong>Paso 3. Selecciona al empleado.<br /><br /></strong></h4>
+                                        <div class="form-group">
+                                            <label class="form-label">Empleado:</label>
+                                            <InputSelect Value="@_step3_EmpleadoModel.EmpleadoId.ToString()"
+                                                         ValueChanged="@(async (string s) => await OnEmpleadoChanged(s))"
+                                                         ValueExpression="@(() => _step3_EmpleadoModel.EmpleadoIdString)"
+                                                         class="form-select"
+                                                         disabled="@(availableEmpleados.Count == 0)">
+                                                <option value="0">--Seleccionar--</option>
+                                                @foreach (var emp in availableEmpleados)
+                                                {
+                                                    <option value="@emp.Id">@emp.Nombre @emp.Apellidos</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="@(() => _step3_EmpleadoModel.EmpleadoId)" />
+                                        </div>
+                                        <FluentValidationSummary style="color:darkred" />
+                                    </FluentEditForm>
+                                </FluentWizardStep>
+
+                                <!-- PASO 4: TIPO -->
+                                <FluentWizardStep Title="Tipo" OnChange="@OnStep4Change">
+                                    <FluentEditForm Model="_step4_TipoModel" OnValidSubmit="@OnStep4ValidSubmit" OnInvalidSubmit="@OnInvalidSubmit">
+                                        <DataAnnotationsValidator />
+                                        <h4><strong>Paso 4. Define naturaleza y fecha.<br /><br /></strong></h4>
+                                        <div class="form-group">
+                                            <label class="form-label">Tipo de Incidencia:</label>
+                                            <InputSelect @bind-Value="_step4_TipoModel.TipoId" TValue="int" class="form-select">
+                                                <option value="0">--Selecciona--</option>
+                                                @foreach (var tipo in catalogoTipos)
+                                                {
+                                                    <option value="@tipo.TinId">@tipo.TinNombre</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="@(() => _step4_TipoModel.TipoId)" />
+                                        </div>
+
+                                        <div class="form-group mt-2">
+    <label class="form-label">Cantidad (Días / Horas):</label>
+    <InputNumber @bind-Value="_step4_TipoModel.Cantidad" class="form-control" />
+    <ValidationMessage For="@(() => _step4_TipoModel.Cantidad)" />
+
+    @* ---> NUEVO: ALERTAS VISUALES DE SALDO <--- *@
+    @if (_step4_TipoModel.TipoId == 2) @* Asumiendo que 2 es el ID de Vacaciones *@
+    {
+        <div class="text-primary small fw-bold mt-2">
+            <i class="bi bi-info-circle"></i> Saldo disponible: @saldoVacacionesDisponible días
+        </div>
+        
+        @if (_step4_TipoModel.Cantidad > saldoVacacionesDisponible)
+        {
+            <div class="text-danger small fw-bold mt-1">
+                * Aviso: El empleado no tiene saldo suficiente para cubrir estos días.
+            </div>
+        }
+    }
+</div>
+
+                                        <div class="form-group mt-2">
+                                            <label class="form-label">Fecha:</label>
+                                            <InputDate @bind-Value="_step4_TipoModel.FechaIncidencia" class="form-control" />
+                                            <ValidationMessage For="@(() => _step4_TipoModel.FechaIncidencia)" />
+                                        </div>
+                                        <FluentValidationSummary style="color:darkred" />
+                                    </FluentEditForm>
+                                </FluentWizardStep>
+
+                                <!-- PASO 5: EVIDENCIA -->
+                                <FluentWizardStep Title="Evidencia" OnChange="@OnStep5Change">
+                                    <FluentEditForm Model="_step5_EvidenciaModel" OnValidSubmit="@OnStep5ValidSubmit" OnInvalidSubmit="@OnInvalidSubmit">
+                                        <DataAnnotationsValidator />
+                                        <h4><strong>Paso 5. Descripción y documento.<br /><br /></strong></h4>
+                                        <div class="form-group">
+                                            <label class="form-label">Descripción:</label>
+                                            <InputTextArea @bind-Value="_step5_EvidenciaModel.Descripcion" class="form-control" rows="5" placeholder="Sea específico..." />
+                                            <ValidationMessage For="@(() => _step5_EvidenciaModel.Descripcion)" />
+                                        </div>
+                                        <InputArchivo Label="Adjuntar Documento." OnFileChanged="OnDocumentoAdjuntoChanged" />
+                                        <FluentValidationSummary style="color:darkred" />
+                                    </FluentEditForm>
+                                </FluentWizardStep>
+
+                                <!-- PASO 6: RESUMEN -->
+                                <FluentWizardStep Title="Listo">
+                                    @if (empleadoSeleccionado != null)
+                                    {
+                                        <h5>Por favor, confirme los datos:</h5>
+                                        <p><strong>Empleado:</strong> @empleadoSeleccionado.Nombre @empleadoSeleccionado.Apellidos</p>
+
+                                        @* Buscamos el nombre del tipo seleccionado para mostrarlo bonito en el resumen *@
+                                        <p><strong>Tipo:</strong> @(catalogoTipos.FirstOrDefault(t => t.TinId == _step4_TipoModel.TipoId)?.TinNombre)</p>
+                                        <p><strong>Cantidad:</strong> @_step4_TipoModel.Cantidad</p>
+
+                                        <p><strong>Fecha:</strong> @_step4_TipoModel.FechaIncidencia.ToShortDateString()</p>
+                                        <p><strong>Descripción:</strong> @_step5_EvidenciaModel.Descripcion</p>
+                                        @if (archivoAdjunto != null)
+                                        {
+                                            <p><strong>Documento Adjunto:</strong> @archivoAdjunto.Name</p>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <h4><strong><br />Todo listo!</strong></h4>
+                                    }
+                                </FluentWizardStep>
+                            </Steps>
+                        </FluentWizard>
+                    }
+                </div>
+                <FluentOverlay @bind-Visible=@_overlayIsVisible
+                               Opacity="0.4"
+                               Alignment="Align.Center"
+                               Justification="@JustifyContent.Center">
+                    <FluentProgressRing />
+                </FluentOverlay>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public List<Empleado> EmpleadosDisponibles { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<IncidenciaDTO> OnSubmit { get; set; }
+
+    private FluentWizard? wizard;
+    private bool showModal = false;
+    private Empleado? empleadoSeleccionado = null;
+    private bool _overlayIsVisible = false;
+    private IBrowserFile? archivoAdjunto;
+    private bool _showSuccessView = false;
+
+    private Step1_SedeModel _step1_SedeModel = new();
+    private Step2_AreaModel _step2_AreaModel = new();
+    private Step3_EmpleadoModel _step3_EmpleadoModel = new();
+    private Step4_TipoModel _step4_TipoModel = new();
+    private Step5_EvidenciaModel _step5_EvidenciaModel = new();
+
+    private List<string> availableSubsidiarias = new();
+    private List<string> availableAreas = new();
+    private List<Empleado> availableEmpleados = new();
+
+    private List<TipoIncidencia> catalogoTipos = new();
+
+    // Rastrear el paso actual manualmente
+    private int _currentStepIndex = 0;
+
+    private decimal saldoVacacionesDisponible = 0;
+
+    public async Task Open()
+    {
+        _step1_SedeModel = new();
+        _step2_AreaModel = new();
+        _step3_EmpleadoModel = new();
+        _step4_TipoModel = new();
+        _step5_EvidenciaModel = new();
+        empleadoSeleccionado = null;
+        availableAreas.Clear();
+        availableEmpleados.Clear();
+        archivoAdjunto = null;
+        _overlayIsVisible = false;
+        _showSuccessView = false;
+        _currentStepIndex = 0;
+
+        availableSubsidiarias = EmpleadosDisponibles
+            .Select(e => e.Subsidiaria)
+            .Where(s => !string.IsNullOrEmpty(s))
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+
+        catalogoTipos = await EmpleadoService.GetTiposIncidenciaActivosAsync();
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        _showSuccessView = false;
+        StateHasChanged();
+    }
+
+    // ==========================================
+    // EVENTOS OnChange para cada paso
+    // ==========================================
+
+    private async Task OnStep1Change(FluentWizardStepChangeEventArgs e)
+    {
+        if (e.TargetIndex > _currentStepIndex)
+        {
+            if (string.IsNullOrEmpty(_step1_SedeModel.SelectedSubsidiaria))
+            {
+                e.IsCancelled = true;
+                await Task.Delay(100);
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+        _currentStepIndex = e.TargetIndex;
+    }
+
+    private async Task OnStep2Change(FluentWizardStepChangeEventArgs e)
+    {
+        if (e.TargetIndex > _currentStepIndex)
+        {
+            if (string.IsNullOrEmpty(_step2_AreaModel.SelectedArea))
+            {
+                e.IsCancelled = true;
+                await Task.Delay(100);
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+        _currentStepIndex = e.TargetIndex;
+    }
+
+    private async Task OnStep3Change(FluentWizardStepChangeEventArgs e)
+    {
+        if (e.TargetIndex > _currentStepIndex)
+        {
+            if (_step3_EmpleadoModel.EmpleadoId <= 0)
+            {
+                e.IsCancelled = true;
+                await Task.Delay(100);
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+        _currentStepIndex = e.TargetIndex;
+    }
+
+    private async Task OnStep4Change(FluentWizardStepChangeEventArgs e)
+    {
+        if (e.TargetIndex > _currentStepIndex)
+        {
+            // 1. Validación normal de campos vacíos
+            if (!ValidateModel(_step4_TipoModel))
+            {
+                e.IsCancelled = true;
+                await Task.Delay(100);
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            // 2. ---> NUEVA VALIDACIÓN: Bloqueo por saldo de vacaciones
+            if (_step4_TipoModel.TipoId == 2 && _step4_TipoModel.Cantidad > saldoVacacionesDisponible)
+            {
+                e.IsCancelled = true; // Impide que el Wizard avance al Paso 5
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+        _currentStepIndex = e.TargetIndex;
+    }
+
+    private async Task OnStep5Change(FluentWizardStepChangeEventArgs e)
+    {
+        if (e.TargetIndex > _currentStepIndex)
+        {
+            if (!ValidateModel(_step5_EvidenciaModel))
+            {
+                e.IsCancelled = true;
+                await Task.Delay(100);
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+        _currentStepIndex = e.TargetIndex;
+    }
+
+    // ==========================================
+    // Handlers de validación de formularios
+    // ==========================================
+    private async Task OnStep1ValidSubmit() { _overlayIsVisible = true; await Task.Delay(500); _overlayIsVisible = false; }
+    private async Task OnStep2ValidSubmit() { _overlayIsVisible = true; await Task.Delay(500); _overlayIsVisible = false; }
+    private async Task OnStep3ValidSubmit() { _overlayIsVisible = true; await Task.Delay(500); _overlayIsVisible = false; }
+    private async Task OnStep4ValidSubmit() { _overlayIsVisible = true; await Task.Delay(500); _overlayIsVisible = false; }
+    private async Task OnStep5ValidSubmit() { _overlayIsVisible = true; await Task.Delay(500); _overlayIsVisible = false; }
+    private void OnInvalidSubmit() { }
+
+    private bool ValidateModel(object model)
+    {
+        var context = new ValidationContext(model);
+        var results = new List<ValidationResult>();
+        return Validator.TryValidateObject(model, context, results, true);
+    }
+
+    // ==========================================
+    // Eventos de cambio de valores
+    // ==========================================
+    private void OnSubsidiariaChanged(string value)
+    {
+        _step1_SedeModel.SelectedSubsidiaria = value;
+        _step2_AreaModel = new();
+        _step3_EmpleadoModel = new();
+        empleadoSeleccionado = null;
+        availableEmpleados.Clear();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            availableAreas = EmpleadosDisponibles
+                .Where(emp => emp.Subsidiaria != null && emp.Subsidiaria.Equals(value))
+                .Select(emp => emp.Area)
+                .Where(a => !string.IsNullOrEmpty(a))
+                .Distinct()
+                .OrderBy(a => a)
+                .ToList();
+        }
+        else
+        {
+            availableAreas.Clear();
+        }
+    }
+
+    private void OnAreaChanged(string value)
+    {
+        _step2_AreaModel.SelectedArea = value;
+        _step3_EmpleadoModel = new();
+        empleadoSeleccionado = null;
+
+        if (!string.IsNullOrEmpty(_step1_SedeModel.SelectedSubsidiaria) && !string.IsNullOrEmpty(value))
+        {
+            availableEmpleados = EmpleadosDisponibles
+                .Where(emp =>
+                    (emp.Subsidiaria != null && emp.Subsidiaria.Equals(_step1_SedeModel.SelectedSubsidiaria)) &&
+                    (emp.Area != null && emp.Area.Equals(value))
+                )
+                .OrderBy(emp => emp.Nombre)
+                .ToList();
+        }
+        else
+        {
+            availableEmpleados.Clear();
+        }
+    }
+
+    private async Task OnEmpleadoChanged(string value)
+    {
+        int.TryParse(value, out int selectedId);
+        _step3_EmpleadoModel.EmpleadoId = selectedId;
+
+        if (selectedId > 0)
+        {
+            empleadoSeleccionado = availableEmpleados.FirstOrDefault(e => e.Id == selectedId);
+
+            // ---> NUEVO: Consultamos el saldo disponible al momento de seleccionar al empleado
+            saldoVacacionesDisponible = await VacacionService.GetSaldoDisponibleAsync(selectedId);
+        }
+        else
+        {
+            empleadoSeleccionado = null;
+            saldoVacacionesDisponible = 0;
+        }
+    }
+
+    private void OnDocumentoAdjuntoChanged(IBrowserFile? file)
+    {
+        archivoAdjunto = file;
+    }
+
+    // ==========================================
+    // Finalización del wizard
+    // ==========================================
+    private async Task HandleFinishAsync()
+    {
+        if (string.IsNullOrEmpty(_step1_SedeModel.SelectedSubsidiaria) ||
+            string.IsNullOrEmpty(_step2_AreaModel.SelectedArea) ||
+            _step3_EmpleadoModel.EmpleadoId <= 0 ||
+            !ValidateModel(_step4_TipoModel) ||
+            !ValidateModel(_step5_EvidenciaModel))
+        {
+            return;
+        }
+
+        _overlayIsVisible = true;
+        StateHasChanged();
+
+        byte[]? fileBytes = null;
+        if (archivoAdjunto != null)
+        {
+            long maxFileSize = 1024 * 1024 * 5;
+            try
+            {
+                using var stream = archivoAdjunto.OpenReadStream(maxFileSize);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                fileBytes = ms.ToArray();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al leer archivo: {ex.Message}");
+            }
+        }
+
+        var incidenciaFinal = new IncidenciaDTO
+        {
+            EmpleadoId = _step3_EmpleadoModel.EmpleadoId,
+            TipoId = _step4_TipoModel.TipoId,
+            Cantidad = _step4_TipoModel.Cantidad, // <--- ¡AQUÍ ESTÁ EL MAPEO FALTANTE!
+            FechaIncidencia = _step4_TipoModel.FechaIncidencia,
+            Descripcion = _step5_EvidenciaModel.Descripcion,
+            NombreArchivo = archivoAdjunto?.Name,
+            ArchivoBytes = fileBytes
+        };
+
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(incidenciaFinal);
+        }
+
+        _overlayIsVisible = false;
+        _showSuccessView = true;
+        StateHasChanged();
+    }
+
+    // ==========================================
+    // MODELOS
+    // ==========================================
+
+    private class Step1_SedeModel
+    {
+        [Required(ErrorMessage = "Debe seleccionar una subsidiaria.")]
+        public string? SelectedSubsidiaria { get; set; }
+    }
+
+    private class Step2_AreaModel
+    {
+        [Required(ErrorMessage = "Debe seleccionar un área.")]
+        public string? SelectedArea { get; set; }
+    }
+
+    private class Step3_EmpleadoModel
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un empleado.")]
+        public int EmpleadoId { get; set; }
+
+        public string EmpleadoIdString => EmpleadoId.ToString();
+    }
+
+    private class Step4_TipoModel
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "El tipo de incidencia es obligatorio.")]
+        public int TipoId { get; set; }
+
+        // <--- ¡AQUÍ ESTÁ LA PROPIEDAD CANTIDAD FALTANTE! --->
+        [Required(ErrorMessage = "La cantidad es obligatoria.")]
+        [Range(0.1, 1000, ErrorMessage = "La cantidad debe ser mayor a 0.")]
+        public decimal Cantidad { get; set; } = 1;
+
+        [Required]
+        public DateTime FechaIncidencia { get; set; } = DateTime.Now;
+    }
+
+    private class Step5_EvidenciaModel
+    {
+        [Required(ErrorMessage = "La descripción es obligatoria.")]
+        [MinLength(10, ErrorMessage = "La descripción debe tener al menos 10 caracteres.")]
+        public string Descripcion { get; set; } = "";
+    }
+}

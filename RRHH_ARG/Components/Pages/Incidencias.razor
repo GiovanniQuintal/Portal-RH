@@ -1,0 +1,224 @@
+﻿@page "/incidencias"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using RRHH_ARG.Components.Pages.Shared
+
+@inject EmpleadoService EmpleadoService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, HSE")]
+
+
+<div class="incidencias-container">
+    <div class="top-panel">
+        <h1 class="title">Incidencias</h1>
+
+        <div class="search-panel">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Buscar por empleado o tipo..."
+                       @bind="SearchTerm" @bind:event="oninput" />
+
+                <button class="btn btn-primary search-btn" @onclick="ApplyFilters">
+                    <img src="images/buscar.png" alt="buscar" class="img-fluid" style="max-width: 20px;" />
+                </button>
+            </div>
+
+            <div class="ms-auto">
+                <select class="form-select" @bind="FilterTipo">
+                    <option value="">-- Todos los Tipos --</option>
+                    @foreach (var tipo in availableTipos)
+                    {
+                        <option value="@tipo">@tipo</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="text-end mt-4 mb-3">
+            <button class="btn btn-success" style="background-color: #253C60;" @onclick="OpenAgregarModal">
+                Nueva Incidencia
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive mt-4">
+        <table class="table table-hover align-middle employee-table">
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Empleado</th>
+                    <th>Área</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var inc in filteredIncidencias)
+                {
+                    <tr>
+                        <td><span class="badge bg-secondary">INC-@inc.IncidenciaId</span></td>
+
+                        <td>@inc.NombreEmpleado</td>
+                        <td>@inc.AreaEmpleado</td>
+                        <td>@inc.Tipo</td>
+                        <td>@inc.Descripcion</td>
+                        <td>@inc.FechaIncidencia.ToShortDateString()</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-info btn-sm text-white" @onclick="() => OpenVerModal(inc)">
+                                    Ver
+                                </button>
+
+                                <button class="btn btn-warning btn-sm text-dark" @onclick="() => OpenEditarDirecto(inc)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <button class="btn btn-danger btn-sm" @onclick="() => HandleDelete(inc.IncidenciaId)">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!filteredIncidencias.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center p-4">No se encontraron incidencias.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4">
+        <p role="status">Total de incidencias mostradas: @filteredIncidencias.Count</p>
+    </div>
+</div>
+
+<RegistroIncidenciaModal @ref="registroModal" EmpleadosDisponibles="allEmpleados" OnSubmit="HandleRegistroSubmit" />
+
+<VerIncidenciaModal @ref="verModal" OnSave="HandleEdicionSubmit" />
+
+@code {
+    // --- VARIABLES DE DATOS ---
+    private List<IncidenciaDTO> allIncidencias = new();
+    private List<IncidenciaDTO> filteredIncidencias = new();
+    private List<string> availableTipos = new();
+    private List<Empleado> allEmpleados = new();
+
+    // Referencias a los modales
+    private RegistroIncidenciaModal registroModal = null!;
+    private VerIncidenciaModal verModal = null!;
+
+    // --- VARIABLES DE FILTRO ---
+    private string _searchTerm = string.Empty;
+    private string SearchTerm
+    {
+        get => _searchTerm;
+        set { _searchTerm = value; ApplyFilters(); }
+    }
+
+    private string _filterTipo = string.Empty;
+    private string FilterTipo
+    {
+        get => _filterTipo;
+        set { _filterTipo = value; ApplyFilters(); }
+    }
+
+    // --- CARGA INICIAL ---
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        allIncidencias = await EmpleadoService.GetIncidenciasDTOAsync();
+        allEmpleados = await EmpleadoService.GetEmpleadosParaIncidenciasAsync();
+
+        availableTipos = allIncidencias
+            .Select(i => i.Tipo)
+            .Where(t => !string.IsNullOrEmpty(t))
+            .Distinct()
+            .OrderBy(t => t)
+            .ToList();
+
+        ApplyFilters();
+    }
+
+    // --- LÓGICA DE FILTROS ---
+    private void ApplyFilters()
+    {
+        var query = allIncidencias.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(FilterTipo))
+        {
+            query = query.Where(i => i.Tipo.Equals(FilterTipo, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
+        {
+            string search = SearchTerm.Trim().ToLower();
+            query = query.Where(i =>
+                (i.NombreEmpleado != null && i.NombreEmpleado.ToLower().Contains(search)) ||
+                (i.Tipo != null && i.Tipo.ToLower().Contains(search)) ||
+                (i.IncidenciaId.ToString().Contains(search)) // <--- BONUS: Permite buscar por número de folio
+            );
+        }
+
+        // <--- ORDENAMOS POR NÚMERO "COMO VENGAN" (El ID más alto es el más nuevo)
+        filteredIncidencias = query.OrderByDescending(i => i.IncidenciaId).ToList();
+
+        // Si los prefieres del más viejo al más nuevo, cambia OrderByDescending por OrderBy
+    }
+
+    // --- ACCIONES (CREAR / VER / EDITAR / BORRAR) ---
+    
+    // 1. Crear
+    private void OpenAgregarModal()
+    {
+        registroModal.Open();
+    }
+
+    private async Task HandleRegistroSubmit(IncidenciaDTO nuevaIncidencia)
+    {
+        await EmpleadoService.AddIncidenciaAsync(nuevaIncidencia);
+        await LoadData();
+    }
+
+    // 2. Ver / Editar (PASO 3 QUE PEDISTE)
+    private void OpenVerModal(IncidenciaDTO incidencia)
+    {
+        verModal.Open(incidencia, false);
+    }
+
+    private void OpenEditarDirecto(IncidenciaDTO incidencia)
+    {
+        verModal.Open(incidencia, true); // true = modo editar
+    }
+
+    private async Task HandleEdicionSubmit(IncidenciaDTO incidenciaEditada)
+    {
+        // Llamamos al método Update del servicio
+        await EmpleadoService.UpdateIncidenciaAsync(incidenciaEditada);
+        await LoadData();
+    }
+
+    // 3. Eliminar
+    private async Task HandleDelete(int id)
+    {
+        // Usamos JSRuntime para un confirm nativo del navegador
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "¿Estás seguro de que deseas eliminar esta incidencia? Esta acción no se puede deshacer.");
+
+        if (confirmado)
+        {
+            await EmpleadoService.DeleteIncidenciaAsync(id);
+            await LoadData();
+        }
+    }
+    
+}

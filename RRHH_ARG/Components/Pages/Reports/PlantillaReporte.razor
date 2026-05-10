@@ -1,0 +1,283 @@
+﻿<style>
+    .report-container {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        color: #222;
+    }
+
+    .page-portrait {
+        width: 100%; /* Cambiado de 210mm a 100% */
+        min-height: auto; /* Cambiado de 297mm a auto */
+        margin: 0; /* Quitamos el margen de 20px */
+        background: #fff;
+        box-shadow: none; /* Quitamos la sombra para impresión limpia */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .page-landscape {
+        width: 100%; /* Cambiado de 297mm a 100% */
+        min-height: auto; /* Cambiado de 210mm a auto */
+        margin: 0;
+        background: #fff;
+        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Ajuste de padding para evitar que se corte el texto a la derecha */
+    .page-header {
+        padding: 16px 30px 12px 24px; 
+        border-bottom: 2px solid #1a3a5c;
+    }
+
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        /* Aseguramos que no sobrepase el 100% del contenedor */
+        width: 100%; 
+    }
+
+    .header-left {
+        text-align: left;
+        max-width: 55%;
+    }
+
+    .logo-name {
+        font-size: 11px;
+        font-weight: 700;
+        color: #1a3a5c;
+        margin-top: 5px;
+    }
+
+    .header-right {
+        text-align: right;
+        font-size: 11px;
+        color: #555;
+        line-height: 1.6;
+        /* Margen extra a la derecha por si acaso */
+        margin-right: 10px; 
+    }
+
+    .header-right strong {
+        font-size: 13px;
+        color: #222;
+    }
+
+    .header-bottom {
+        text-align: center;
+        margin-top: 15px;
+    }
+
+    .header-title {
+        background: #fff;
+        color: #000;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+
+    .page-body {
+        flex: 1;
+        padding: 16px 24px;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    /* Solución para repetir cabeceras en páginas nuevas */
+    .report-table thead {
+        display: table-header-group;
+    }
+
+    .report-table thead tr {
+        background: #1a3a5c;
+        color: #fff;
+        /* Evita que la fila de cabecera se divida en dos hojas */
+        page-break-inside: avoid; 
+    }
+
+    .report-table thead th {
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    .report-table tbody tr:nth-child(even) {
+        background: transparent;
+    }
+
+    /* Solución para evitar que las filas de datos se corten por la mitad */
+    .report-table tbody tr {
+        page-break-inside: avoid;
+    }
+
+    .report-table tbody td {
+        padding: 7px 10px;
+        border-bottom: 1px solid #e4e8ef;
+    }
+
+    .report-table tfoot {
+        display: table-footer-group;
+    }
+
+    .report-table tfoot tr {
+        background: #eef2f8;
+        page-break-inside: avoid;
+    }
+
+    .report-table tfoot td {
+        padding: 8px 10px;
+        font-weight: 700;
+        border-top: 2px solid #1a3a5c;
+        font-size: 12px;
+    }
+
+    .badge {
+        padding: 2px 8px;
+        border-radius: 100px;
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    .verde {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .amarillo {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .rojo {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    /* Ajuste para que el footer se mantenga al fondo en impresión multipágina */
+    .page-footer {
+        border-top: 2px solid #1a3a5c;
+        padding: 10px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 10px;
+        color: #777;
+        background: #f9fafb;
+        /* En multipágina es mejor que el footer fluya de forma natural al final */
+        margin-top: auto; 
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+        .report-container, .report-container * {
+            visibility: visible;
+        }
+        .report-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .page-portrait, .page-landscape {
+            box-shadow: none;
+            margin: 0;
+            width: 100%;
+            /* Permitimos que la página crezca naturalmente en la impresión */
+            min-height: auto; 
+        }
+
+        @@page {
+            margin: 15mm 15mm 20mm 15mm; /* Margen superior, derecho, inferior, izquierdo */
+            size: auto;
+        }
+    }
+</style>
+
+<div class="report-container">
+    <div class="@(EsHorizontal ? "page-landscape" : "page-portrait")">
+
+        <header class="page-header">
+            <div class="header-top">
+                <div class="header-left">
+                    <img src="/images/logo-negative.png" alt="Logo" style="max-height: 50px;">
+                    <div class="logo-name">Argos Ingenieria de Automatizacion y Contol S de RL</div>
+                </div>
+
+                <div class="header-right">
+                    Fecha de emisión: <strong>@FechaEmision.ToString("dd/MM/yyyy")</strong><br>
+                    Generado por: <strong>@Usuario</strong>
+                </div>
+            </div>
+
+            <div class="header-bottom">
+                <div class="header-title">@Titulo</div>
+            </div>
+        </header>
+
+        <main class="page-body">
+            @if (ContenidoSuperior != null)
+            {
+                <div style="margin-bottom: 20px;">
+                    @ContenidoSuperior
+                </div>
+            }
+
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        @CabecerasTabla
+                    </tr>
+                </thead>
+                <tbody>
+                    @CuerpoTabla
+                </tbody>
+                @if (PieTabla != null)
+                {
+                    <tfoot>
+                        <tr>
+                            @PieTabla
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </main>
+
+        <footer class="page-footer">
+            <div class="footer-left">
+                Mérida, Yuc. Méx Calle 19 #418 entre 58 y 60 Cd. Industrial Umán, C.P. 97390. Méx.
+            </div>
+            <div class="footer-center">Este documento es de uso interno y confidencial</div>
+            <div class="footer-right">Página 1 de 1</div>
+        </footer>
+
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Titulo { get; set; } = "Reporte";
+    [Parameter] public DateTime FechaEmision { get; set; } = DateTime.Now;
+    [Parameter] public string Usuario { get; set; } = "Usuario Actual";
+    [Parameter] public bool EsHorizontal { get; set; } = false;
+
+    [Parameter] public RenderFragment ContenidoSuperior { get; set; }
+
+    [Parameter] public RenderFragment CabecerasTabla { get; set; }
+    [Parameter] public RenderFragment CuerpoTabla { get; set; }
+    [Parameter] public RenderFragment PieTabla { get; set; }
+}

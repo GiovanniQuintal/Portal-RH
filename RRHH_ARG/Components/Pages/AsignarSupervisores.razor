@@ -1,0 +1,397 @@
+﻿@page "/asignar-supervisores"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using RRHH_ARG.Data
+@using RRHH_ARG.Models
+
+@rendermode InteractiveServer
+
+@inject EmpleadoService EmpleadoService
+@inject ApplicationDbContext Context
+@inject UserManager<ApplicationUser> UserManager
+
+@attribute [Authorize(Roles = "RH, HSE")]
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary"><i class="bi bi-people-fill"></i> Gestión de Supervisores</h2>
+    </div>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i> @message
+            <button type="button" class="btn-close" @onclick="() => message = string.Empty"></button>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm mb-5 border-warning">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center"
+                 style="cursor: pointer;"
+                 @onclick="() => mostrarMasiva = !mostrarMasiva">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-arrow-left-right"></i> Reasignación Masiva de Personal
+                </h5>
+                <i class="bi @(mostrarMasiva ? "bi-chevron-up" : "bi-chevron-down") fs-5"></i>
+            </div>
+
+            @if (mostrarMasiva)
+            {
+                <div class="card-body animate__animated animate__fadeIn">
+                    <div class="row align-items-end g-3">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-danger">De (Supervisor Actual):</label>
+                            <select class="form-select" @bind="SourceSupId">
+                                <option value="0">-- Seleccionar Supervisor --</option>
+                                @foreach (var sup in listaSupervisores)
+                                {
+                                    // Filtro visual: Solo mostramos aquí a los que tienen subordinados
+                                    var count = GetSubordinateCount(sup.EmpId);
+                                    if (count > 0)
+                                    {
+                                        <option value="@sup.EmpId">
+                                            @sup.NombreCompleto (@count a cargo)
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-1 text-center d-none d-md-block">
+                            <i class="bi bi-arrow-right fs-2 text-muted"></i>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-success">Para (Nuevo Supervisor):</label>
+                            <select class="form-select" @bind="TargetSupId">
+                                <option value="0">-- Seleccionar Nuevo Jefe --</option>
+                                @foreach (var sup in listaSupervisores)
+                                {
+                                    @if (sup.EmpId != SourceSupId)
+                                    {
+                                        <option value="@sup.EmpId">@sup.NombreCompleto</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-1">
+                            <button class="btn btn-dark w-100"
+                                    @onclick="PrepararTransferenciaMasiva"
+                                    disabled="@(SourceSupId == 0 || TargetSupId == 0)">
+                                Transferir
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-text mt-2">
+                        <i class="bi bi-info-circle"></i> Use esta sección para mover todo el equipo de un supervisor a otro.
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-task"></i> Nómina por Supervisor</h5>
+            </div>
+            <div class="card-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Filtrar lista por Supervisor:</label>
+                        <select class="form-select" @bind="FilterSupId" @bind:after="AplicarFiltro">
+                            <option value="-1">-- Ver Todos --</option>
+                            <option value="0"> [!] Empleados Sin Supervisor (@listaCompleta.Count(x => x.SupId == null))</option>
+                            @foreach (var sup in listaSupervisores)
+                            {
+                                // Solo mostramos en el filtro a los que son jefes activos
+                                var count = GetSubordinateCount(sup.EmpId);
+                                if (count > 0)
+                                {
+                                    <option value="@sup.EmpId">@sup.NombreCompleto (@count)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Puesto</th>
+                                <th>Supervisor Actual</th>
+                                <th class="text-center">Cambio Individual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var emp in empleadosFiltrados)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@emp.NombreCompleto</div>
+                                        <small class="text-muted">@emp.Email</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@emp.PuestoNombre</span>
+                                    </td>
+                                    <td>
+                                        @if (emp.SupId.HasValue)
+                                        {
+                                            <span class="text-success">
+                                                <i class="bi bi-person-check"></i>
+                                                @GetSupervisorName(emp.SupId.Value)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">Sin Asignar</span>
+                                        }
+                                    </td>
+                                    <td class="text-center" style="width: 250px;">
+                                        <div class="input-group input-group-sm">
+                                            <select class="form-select" @bind="emp.SupIdTemp">
+                                                <option value="">-- Cambiar --</option>
+
+                                                @foreach (var sup in listaSupervisores)
+                                                {
+                                                    // LÓGICA DE VALIDACIÓN:
+                                                    // 1. sup.EmpId != emp.EmpId  -> "Yo no puedo ser mi propio jefe"
+                                                    // 2. sup.EmpId != emp.SupId  -> "No mostrar al jefe que ya tengo asignado" (Opcional)
+
+                                                    if (sup.EmpId != emp.EmpId && sup.EmpId != emp.SupId)
+                                                    {
+                                                        <option value="@sup.EmpId">@sup.NombreCompleto</option>
+                                                    }
+                                                }
+                                            </select>
+
+                                            <button class="btn btn-outline-primary"
+                                                    @onclick="() => PrepararCambioIndividual(emp)"
+                                                    disabled="@(!emp.SupIdTemp.HasValue)">
+                                                <i class="bi bi-save"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            @if (empleadosFiltrados.Count == 0)
+                            {
+                                <tr><td colspan="4" class="text-center py-3 text-muted">No se encontraron empleados.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* MODALES (SIN CAMBIOS VISUALES) *@
+@if (showModalMasivo)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold">Confirmar Transferencia</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModales"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fs-5">El supervisor <strong>@GetSupervisorName(SourceSupId)</strong> tiene <strong>@_countToTransfer</strong> empleados.</p>
+                    <p>¿Transferir TODOS a <strong>@GetSupervisorName(TargetSupId)</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModales">Cancelar</button>
+                    <button type="button" class="btn btn-dark" @onclick="EjecutarTransferenciaMasiva">Sí, Transferir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showModalIndividual && _empIndividualSeleccionado != null)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">Confirmar Cambio</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModales"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Cambiar supervisor de: <strong>@_empIndividualSeleccionado.NombreCompleto</strong></p>
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <div>Actual: <strong>@(_empIndividualSeleccionado.SupId.HasValue? GetSupervisorName(_empIndividualSeleccionado.SupId.Value) : "Sin Asignar")</strong></div>
+                        <div><i class="bi bi-arrow-right"></i></div>
+                        <div>Nuevo: <strong class="text-success">@GetSupervisorName(_empIndividualSeleccionado.SupIdTemp.Value)</strong></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModales">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="EjecutarCambioIndividual">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<EmpleadoDTO> listaCompleta = new();
+    private List<EmpleadoDTO> empleadosFiltrados = new();
+    private List<EmpleadoDTO> listaSupervisores = new();
+
+    private bool isLoading = true;
+    private string message = "";
+    private bool mostrarMasiva = false;
+
+    private bool showModalMasivo = false;
+    private bool showModalIndividual = false;
+    private int _countToTransfer = 0;
+    private EmpleadoDTO? _empIndividualSeleccionado;
+
+    private int SourceSupId { get; set; }
+    private int TargetSupId { get; set; }
+    private int FilterSupId { get; set; } = -1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        isLoading = true;
+
+        // 1. CARGA DE LA NÓMINA COMPLETA (Quienes van a recibir jefe)
+        var rawData = await Context.Empleados
+            .AsNoTracking()
+            .Include(e => e.Per).ThenInclude(p => p.Pep)
+            .Include(e => e.Usuario)
+            .ToListAsync();
+
+        listaCompleta = rawData.Select(e => new EmpleadoDTO
+        {
+            EmpId = e.EmpId,
+            NombreCompleto = e.Per != null ? $"{e.Per.PerNombre} {e.Per.PerApellidoPaterno}" : "Sin Datos",
+            Email = e.Usuario?.Email,
+            PuestoNombre = e.Per?.Pep?.PepNombre ?? "Sin Puesto",
+            SupId = e.SupId,
+            SupIdTemp = null,
+            StaId = e.StaId ?? 0
+        }).OrderBy(x => x.NombreCompleto).ToList();
+
+        // 2. CARGA DE SUPERVISORES (CORRECCIÓN: Usamos el Service)
+        // Esto trae SOLO a los que tienen el Rol "SUPERVISOR" (Doble Rol)
+        var supervisoresVM = await EmpleadoService.GetSupervisoresAsync();
+
+        // Mapeamos el resultado del service a tu DTO local
+        listaSupervisores = supervisoresVM.Select(s => new EmpleadoDTO
+        {
+            EmpId = s.Id,
+            // Agregamos el cargo entre paréntesis para distinguirlos mejor
+            NombreCompleto = $"{s.Nombre} {s.ApellidoPaterno} ({s.Empleo})",
+            SupId = s.Id
+        }).ToList();
+
+        AplicarFiltro();
+        isLoading = false;
+    }
+
+    private void PrepararTransferenciaMasiva()
+    {
+        _countToTransfer = listaCompleta.Count(e => e.SupId == SourceSupId);
+        if (_countToTransfer == 0)
+        {
+            message = "⚠️ El supervisor origen no tiene empleados a su cargo.";
+            StateHasChanged();
+            return;
+        }
+        showModalMasivo = true;
+    }
+
+    private async Task EjecutarTransferenciaMasiva()
+    {
+        showModalMasivo = false;
+        try
+        {
+            var empleadosAfectados = await Context.Empleados.Where(e => e.SupId == SourceSupId).ToListAsync();
+            foreach (var emp in empleadosAfectados) emp.SupId = TargetSupId;
+
+            await Context.SaveChangesAsync();
+            message = $"¡Éxito! Se transfirieron {_countToTransfer} empleados.";
+            SourceSupId = 0; TargetSupId = 0;
+            await CargarDatos();
+        }
+        catch (Exception ex) { message = $"Error: {ex.Message}"; }
+    }
+
+    private void PrepararCambioIndividual(EmpleadoDTO emp)
+    {
+        if (emp.SupIdTemp == null) return;
+        _empIndividualSeleccionado = emp;
+        showModalIndividual = true;
+    }
+
+    private async Task EjecutarCambioIndividual()
+    {
+        showModalIndividual = false;
+        if (_empIndividualSeleccionado != null && _empIndividualSeleccionado.SupIdTemp.HasValue)
+        {
+            try
+            {
+                var empDb = await Context.Empleados.FindAsync(_empIndividualSeleccionado.EmpId);
+                if (empDb != null)
+                {
+                    empDb.SupId = _empIndividualSeleccionado.SupIdTemp.Value;
+                    await Context.SaveChangesAsync();
+                    message = $"Se asignó correctamente a {_empIndividualSeleccionado.NombreCompleto}.";
+                    await CargarDatos();
+                }
+            }
+            catch (Exception ex) { message = "Error: " + ex.Message; }
+        }
+        _empIndividualSeleccionado = null;
+    }
+
+    private void CerrarModales() { showModalMasivo = false; showModalIndividual = false; _empIndividualSeleccionado = null; }
+
+    private void AplicarFiltro()
+    {
+        if (FilterSupId == -1) empleadosFiltrados = listaCompleta;
+        else if (FilterSupId == 0) empleadosFiltrados = listaCompleta.Where(e => e.SupId == null).ToList();
+        else empleadosFiltrados = listaCompleta.Where(e => e.SupId == FilterSupId).ToList();
+    }
+
+    private int GetSubordinateCount(int supervisorId) => listaCompleta.Count(e => e.SupId == supervisorId);
+
+    private string GetSupervisorName(int supervisorId)
+    {
+        var sup = listaCompleta.FirstOrDefault(s => s.EmpId == supervisorId);
+        return sup?.NombreCompleto ?? "Desconocido";
+    }
+
+    public class EmpleadoDTO
+    {
+        public int EmpId { get; set; }
+        public string NombreCompleto { get; set; } = "";
+        public string? Email { get; set; }
+        public string PuestoNombre { get; set; } = "";
+        public int? SupId { get; set; }
+        public int? SupIdTemp { get; set; }
+        public int StaId { get; set; }
+    }
+}

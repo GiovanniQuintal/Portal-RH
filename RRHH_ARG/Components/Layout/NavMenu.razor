@@ -1,0 +1,557 @@
+﻿@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+@using RRHH_ARG.Models
+@using RRHH_ARG.Services
+@using RRHH_ARG.Data
+@inject AuthenticationStateProvider AuthStateProvider
+@inject EmpleadoService EmpleadoService
+
+
+@* 2. CAMBIO EN EL SIDEBAR (PADRE): Agregamos 'overflow: hidden' para que el padre NUNCA tenga scroll MODIFICA DIC 18*@
+<div class="d-flex flex-column p-0" style="height: 100vh; overflow: hidden;">
+    <div class="@NavMenuCssClass">
+
+        @* --- 1. LA LENGÜETA (BOTÓN) --- 
+           IMPORTANTE: Está dentro del div que se mueve, pero posicionado "fuera" a la derecha. 
+        *@
+        <div class="mobile-toggle-tab" @onclick="ToggleNavMenu">
+            @* Usamos un SVG directo para garantizar que se vea la hamburguesa *@
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z" />
+            </svg>
+        </div>
+
+    <div class="top-section text-center">
+        @* ... (Tu código del logo y usuario sigue igual) ... *@
+        <div class="logo mb-3">
+            <img src="images/ARGLogo.png" alt="Company Logo" class="img-fluid" />
+        </div>
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="user-panel d-flex align-items-center w-100 mb-3">
+                        <div class="user-logo">
+                            @if (empleadoActual != null)
+                            {
+                                @* Foto real del empleado con el fallback a UI-Avatars *@
+                                <img src="/api/Archivo/@empleadoActual.Id/Foto"
+                                     alt="User"
+                                     class="rounded-circle"
+                                     style="width: 50px; height: 50px; object-fit: cover;"
+                                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=@empleadoActual.Nombre+@empleadoActual.ApellidoPaterno&background=random&color=fff';" />
+                            }
+                            else
+                            {
+                                @* Imagen por defecto *@
+                                <img src="images/Rol.png" alt="User" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;" />
+                            }
+                        </div>
+                        <div class="user-info ms-3 text-start">
+                            <div class="text-white" title="Usuario conectado">
+                                <span class="fw-bold fs-6 d-block text-truncate" style="max-width: 140px;">
+                                    @if (empleadoActual != null)
+                                    {
+                                        @* Nombre y Apellido *@
+                                        @($"{empleadoActual.Nombre.Trim().Split(' ')[0]} {empleadoActual.ApellidoPaterno}")
+                                    }
+                                    else
+                                    {
+                                        @* Nombre de identidad (correo) por defecto *@
+                                        @context.User.Identity?.Name
+                                    }
+                                </span>
+                                @* Opcional: Mostrar el puesto de trabajo si existe *@
+                                @if (empleadoActual != null && !string.IsNullOrEmpty(empleadoActual.Empleo))
+                                {
+                                    <small class="text-white-50 d-block text-truncate" style="font-size: 0.75rem; max-width: 140px;">
+                                        @empleadoActual.EmpleosCombinados
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </Authorized>
+            <NotAuthorized>
+                <div class="user-panel d-flex align-items-center w-100 mb-3 opacity-50">
+                    <div class="user-logo">
+                        <img src="images/Rol.png" alt="Guest" class="rounded-circle" style="width: 50px; height: 50px;" />
+                    </div>
+                    <div class="user-info ms-3">
+                        <span class="fw-bold fs-5">Invitado</span>
+                    </div>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+        <hr class="divider" />
+    </div>
+
+    @* 3. CAMBIO EN EL NAV: Clase 'hide-scrollbar' y estilos de overflow específicos *@
+        <nav class="nav-menu flex-column flex-grow-1 hide-scrollbar " @onclick="CloseNavMenu"
+         style="overflow-y: scroll; overflow-x: hidden; min-height: 0;">
+
+        <AuthorizeView Roles="RH, Empleado, HSE, FA, Supervisor">
+            <Authorized>
+                <NavLink class="nav-link py-3 ps-4" href="inicio" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Inicio</span>
+                </NavLink>
+            </Authorized>
+        </AuthorizeView>
+
+            <AuthorizeView Roles="HSE">
+                @* --- AGREGA ESTO --- *@
+                <NavLink class="nav-link py-3 ps-4" href="qhse-dashboard">
+                    <span class="bi bi-postcard-fill me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Gestión STOP</span>
+                </NavLink>
+                @* ------------------- *@
+            </AuthorizeView>
+
+        <AuthorizeView Roles="RH, HSE">
+            <NavLink class="nav-link py-3 ps-4" href="empleados">
+                <span class="bi bi-person-fill me-2" aria-hidden="true"></span>
+                <span class="nav-text">Empleados</span>
+            </NavLink>
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+            <NavLink class="nav-link py-3 ps-4" href="reclutamiento">
+                    <span class="bi bi-people-fill me-2" aria-hidden="true"></span>
+                <span class="nav-text">Reclutamiento</span>
+            </NavLink>
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+            <NavLink class="nav-link py-3 ps-4" href="incidencias">
+                    <span class="bi bi-clipboard2-x-fill me-2" aria-hidden="true"></span>
+                <span class="nav-text">Incidencias</span>
+            </NavLink>
+        </AuthorizeView>
+
+            
+
+        @*---<AuthorizeView Roles="Empleado, HSE, FA, Supervisor">
+            <Authorized>---*@
+
+                @*--<div class="sidebar-heading mt-3 mb-2 px-4 text-muted small text-uppercase fw-bold">
+                    Mi Información
+                </div>--*@
+
+                @*---<NavLink class="nav-link py-3 ps-4" href="mi-expediente">
+                    <span class="bi bi-folder-check me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Mi Expediente</span>
+                </NavLink>
+                <NavLink class="nav-link py-3 ps-4" href="mi-epp">
+                    <span class="bi bi-shield-check me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Mis EPPs</span>
+                </NavLink>
+            </Authorized>
+        </AuthorizeView>---*@
+
+        <AuthorizeView Roles="Empleado, HSE, FA, Supervisor">
+            <NavLink class="nav-link py-3 ps-4" href="mi-puesto">
+                    <span class="bi bi-suitcase-lg me-2" aria-hidden="true"></span>
+                <span class="nav-text">Perfil Puesto</span>
+            </NavLink>
+        </AuthorizeView>
+
+
+
+            <AuthorizeView Roles="RH, HSE">
+            
+            <NavLink class="nav-link py-3 ps-4" href="panel-epp">
+                    <span class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></span>
+                <span class="nav-text">EPP</span>
+            </NavLink>
+            
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+            <NavLink class="nav-link py-3 ps-4" href="organigrama">
+                    <span class="bi bi-diagram-3 me-2" aria-hidden="true"></span>
+                <span class="nav-text">Ver Organigrama</span>
+            </NavLink>
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, Empleado, HSE, FA, Supervisor">
+                <NavLink class="nav-link py-3 ps-4" href="mis-tarjetas-qhse">
+                    <span class="bi bi-sign-stop me-2" aria-hidden="true"></span>
+                    @*-<span class="bi bi-exclamation-square me-2" aria-hidden="true"></span>-*@
+                    <span class="nav-text">STOP</span>
+                </NavLink>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="RH">
+                <NavLink class="nav-link py-3 ps-4" href="nomina/dashboard">
+                    <span class="bi bi-cash-coin me-2" aria-hidden="true"></span>
+                    
+                    <span class="nav-text">Prenómina</span>
+                </NavLink>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="RH">
+                <NavLink class="nav-link py-3 ps-4" href="finanzas/hub">
+                    <span class="bi bi-cash me-2" aria-hidden="true"></span>
+
+                    <span class="nav-text">FA</span>
+                </NavLink>
+            </AuthorizeView>
+            @*-
+        <AuthorizeView Roles="RH, Empleado, HSE, FA, Supervisor">
+            <NavLink class="nav-link py-3 ps-4" href="qhse-card">
+                    <span class="bi bi-sign-stop me-2" aria-hidden="true"></span>
+                <span class="nav-text">STOP</span>
+            </NavLink>
+        </AuthorizeView>-*@
+
+        
+
+        
+        <AuthorizeView Roles="RH, Empleado, HSE, FA, Supervisor">
+            <NavLink class="nav-link py-3 ps-4" href="mis-objetivos">
+                <span class="bi bi-bullseye me-2" aria-hidden="true"></span>
+                <span class="nav-text">Objetivos</span>
+            </NavLink>
+            </AuthorizeView>   @*---*@
+        
+            @*------*@<AuthorizeView Roles="RH, HSE, FA, Supervisor">
+                <NavLink class="nav-link py-3 ps-4" href="cursos">
+                    <span class="bi bi-pencil-square me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Mis cursos</span>
+                </NavLink>
+            </AuthorizeView>
+        
+        <AuthorizeView Roles="Admin">
+            <NavLink class="nav-link py-3 ps-4" href="GestionUsuarios">
+                    <span class="bi bi-person-gear me-2" aria-hidden="true"></span>
+                <span class="nav-text">Gestión Usuarios</span>
+            </NavLink>
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+            <div class="sidebar-heading mt-3 mb-2 px-4 text-muted small fw-bold">
+                    Gestiones
+                </div>
+            <NavLink class="nav-link py-3 ps-4" href="GestionRoles">
+                    <span class="bi bi-person-rolodex me-2" aria-hidden="true"></span>
+                <span class="nav-text">Gestión Roles</span>
+            </NavLink>
+            
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+            <NavLink class="nav-link py-3 ps-4" href="admin-pd">
+                    <span class="bi bi-key-fill me-2" aria-hidden="true"></span>
+                <span class="nav-text">KPI</span>
+            </NavLink>
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+            <NavLink class="nav-link py-3 ps-4" href="admin-prioridades">
+                    <span class="bi bi-wrench-adjustable-circle me-2" aria-hidden="true"></span>
+                <span class="nav-text">Gestion de objetivos</span>
+            </NavLink>
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+            @* --- AGREGA ESTO --- *@
+            
+
+            <NavLink class="nav-link py-3 ps-4" href="asignar-supervisores">
+                    <span class="bi bi-person-workspace me-2" aria-hidden="true"></span>
+                <span class="nav-text">Asignar Supervisores</span>
+            </NavLink>
+            @* ------------------- *@
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+        <NavLink class="nav-link py-3 ps-4" href="gestion-areas">
+                    <span class="bi bi-diagram-3-fill me-2" aria-hidden="true"></span>
+            <span class="nav-text">Áreas y Puestos</span>
+        </NavLink>
+        </AuthorizeView>
+
+        
+        <AuthorizeView Roles="Supervisor">
+            <NavLink class="nav-link py-3 ps-4" href="subordinados">
+                <span class="bi bi-people-fill me-2" aria-hidden="true"></span>
+                <span class="nav-text">Equipo</span>
+            </NavLink>
+        </AuthorizeView>
+
+            <AuthorizeView Roles="RH, HSE">
+            <NavLink class="nav-link py-3 ps-4" href="gestion-documentos">
+                    <span class="bi bi-files me-2" aria-hidden="true"></span>
+                <span class="nav-text">Gestión Documentos</span>
+            </NavLink>
+        </AuthorizeView>
+       
+        
+        
+        
+
+        
+
+ 
+
+    </nav> <div class="mt-auto pt-3">
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item-logout">
+                        <button class="nav-link w-100 text-start text-white border-0 bg-transparent"
+                            @onclick="MostrarConfirmacion">
+                        <span class="bi bi-arrow-bar-left-nav-menu me-2" aria-hidden="true"></span>
+                        <span class="nav-text">Salir</span>
+                    </button>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <NavLink class="nav-link py-3 ps-4" href="Account/Register">
+                    <span class="bi bi-person-nav-menu me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Register</span>
+                </NavLink>
+                <NavLink class="nav-link py-3 ps-4" href="Account/Login">
+                    <span class="bi bi-person-badge-nav-menu me-2" aria-hidden="true"></span>
+                    <span class="nav-text text-white">Login</span>
+                </NavLink>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        
+            <AuthorizeView Roles="Admin">
+                <NavLink class="nav-link py-3 ps-4" href="finanzas/hub" @onclick="()=>expandSubMenu= !expandSubMenu"> 
+                    <span class="bi bi-cash me-2" aria-hidden="true"></span>
+
+                    <span class="nav-text">FA</span>
+                </NavLink>
+                @if (expandSubMenu)
+                {
+                    <NavLink class="expand-menu py-3 ps-4" href="">
+                        <span class="oi oi-cart me-3" aria-hidden="true"></span>
+                        <span class="expand-menu text-white">Example</span>
+                    </NavLink>
+                }
+
+            </AuthorizeView>
+            
+        
+        </div>
+    </div>
+</div>
+
+<form action="Account/Logout" method="post" id="logoutForm" style="display:none">
+    <AntiforgeryToken />
+    <input type="hidden" name="returnUrl" value="Account/Login" />
+</form>
+
+<script>
+    function submitLogoutForm() {
+        document.getElementById('logoutForm').submit();
+    }
+</script>
+
+@if (mostrarModal)
+{
+    <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
+
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content text-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Salida</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro que deseas cerrar sesión?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="EjecutarSalidaReal">Sí, Salir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool collapseNavMenu = true;
+    private string? NavMenuCssClass => collapseNavMenu ? "nav-slider" : "nav-slider responsive-open";
+    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
+    private string? currentUrl;
+    private bool mostrarModal = false;
+    private bool expandSubMenu;
+
+    // --- NUEVA VARIABLE ---
+    private EmpleadoViewModel? empleadoActual;
+
+    private void MostrarConfirmacion() { mostrarModal = true; }
+    private void CerrarModal() { mostrarModal = false; }
+    private async Task EjecutarSalidaReal()
+    {
+        mostrarModal = false;
+        await JSRuntime.InvokeVoidAsync("submitLogoutForm");
+    }
+
+    // --- CAMBIAMOS A OnInitializedAsync ---
+    protected override async Task OnInitializedAsync()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+
+        // Consultamos los datos del usuario al cargar el menú
+        await CargarDatosEmpleado();
+    }
+
+    // --- LÓGICA PARA BUSCAR AL EMPLEADO ---
+    private async Task CargarDatosEmpleado()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var userId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                int empId = await EmpleadoService.GetEmpleadoIdByUserIdAsync(userId);
+                if (empId > 0)
+                {
+                    empleadoActual = await EmpleadoService.GetEmpleadoByIdAsync(empId);
+                }
+            }
+        }
+        catch
+        {
+            // Si hay un error (ej. base de datos caída o usuario sin empleado),
+            // empleadoActual quedará en null y Blazor usará la vista por defecto.
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private void CloseNavMenu()
+    {
+        if (!collapseNavMenu)
+        {
+            collapseNavMenu = true;
+        }
+    }
+}
+
+<style>
+    /* 1. ESTILO BASE (ESCRITORIO) */
+    .sidebar-container {
+        height: 100vh;
+        background-color: #033750;
+        overflow: hidden;
+    }
+
+    /* Clase principal del menú */
+    .nav-slider {
+        /* Color de fondo PROPIO del menú (para que tape al abrirse) */
+        background-color: #033750;
+        height: 100%;
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease-in-out;
+    }
+
+    /* Links */
+    .nav-link {
+        color: #d7d7d7;
+        padding: 0.8rem 1rem;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+        .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-link.active {
+            background-color: #1b6ec2;
+            color: white;
+        }
+
+    /*.custom-scroll::-webkit-scrollbar {
+        display: none;
+    } */
+
+    /* Ocultar scrollbar para Chrome, Safari y Opera */
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Ocultar scrollbar para Firefox, IE y Edge */
+    .hide-scrollbar {
+        -ms-overflow-style: none; /* IE y Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+
+    /* Ocultar lengüeta en PC */
+    .mobile-toggle-tab {
+        display: none;
+    }
+
+
+    /* 2. ESTILO MÓVIL Y TABLET (MENOR A 992px) */
+    /* Coincide con el breakpoint del MainLayout */
+    @@media (max-width: 991.98px) {
+
+        .sidebar-container {
+            width: 0;
+            overflow: visible !important;
+        }
+
+        .nav-slider {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 260px; /* Un poco más ancho para cubrir bordes */
+            z-index: 9999;
+            /* Escondido a la izquierda */
+            transform: translateX(-100%);
+            overflow: visible !important;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+        }
+            /* Clase para mostrar el menú */
+            .nav-slider.responsive-open {
+                transform: translateX(0);
+            }
+        /* LENGÜETA VISIBLE */
+        .mobile-toggle-tab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 80px;
+            right: -45px; /* Sale hacia la derecha */
+
+            width: 45px;
+            height: 45px;
+            background-color: #1b6ec2;
+            color: white;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            z-index: 10000;
+        }
+    }
+</style>

@@ -1,0 +1,108 @@
+/* --- 1. CONTENEDOR PRINCIPAL (ESTO LAS PONE HORIZONTALES) --- */
+.cards-wrapper[b-p3vi8h6xk3] {
+    display: flex; /* Obligatorio para alineación horizontal */
+    flex-direction: row; /* Asegura que vayan en fila */
+    justify-content: center; /* Las centra en la pantalla */
+    align-items: center;
+    gap: 25px; /* Espacio entre tarjetas */
+    margin-top: 30px;
+    flex-wrap: wrap; /* Si la pantalla es muy chica, permite que bajen */
+    width: 100%;
+}
+
+/* --- 2. DISEÑO DE LA TARJETA (LA CAJA) --- */
+.stat-card[b-p3vi8h6xk3] {
+    width: 250px;
+    height: 150px;
+    border: none; /* Quitamos bordes de Bootstrap */
+    border-radius: 15px;
+    padding: 15px;
+    color: white;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    /* Centrado interno */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- 3. DISEÑO INTERNO (NUMERO AL LADO DEL ICONO) --- */
+.stat-row[b-p3vi8h6xk3] {
+    display: flex; /* Fila interna */
+    align-items: center; /* Centrado vertical */
+    justify-content: center; /* Centrado horizontal */
+    gap: 15px; /* Espacio entre número e icono */
+    margin-bottom: 5px;
+    width: 100%;
+}
+
+/* --- 4. TIPOGRAFÍA E ICONOS --- */
+.stat-number[b-p3vi8h6xk3] {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.stat-icon[b-p3vi8h6xk3] {
+    font-size: 2.8rem;
+    line-height: 1;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.stat-label[b-p3vi8h6xk3] {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.stat-label-large[b-p3vi8h6xk3] {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+/* --- 5. COLORES Y CURSORES --- */
+.card-candidato[b-p3vi8h6xk3] {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    cursor: default; /* Sin manita */
+}
+
+.card-rechazado[b-p3vi8h6xk3] {
+    background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);
+    cursor: default; /* Sin manita */
+}
+
+.card-agregar[b-p3vi8h6xk3] {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    cursor: pointer; /* Con manita */
+}
+
+    .card-agregar:hover[b-p3vi8h6xk3] {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+    }
+
+/* --- 6. TUS ESTILOS GENERALES (CONSERVADOS) --- */
+.reclutamiento-container[b-p3vi8h6xk3] {
+    padding: 20px;
+}
+
+.title[b-p3vi8h6xk3] {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.year-filter-wrapper[b-p3vi8h6xk3] {
+    max-width: 180px;
+    margin-left: auto;
+    margin-right: 50px;
+    margin-top: 10px;
+}

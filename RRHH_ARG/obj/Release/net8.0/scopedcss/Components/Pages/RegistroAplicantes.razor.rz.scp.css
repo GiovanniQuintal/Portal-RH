@@ -1,0 +1,22 @@
+.modal-backdrop[b-1njpz5gid4] {
+    z-index: 1040;
+}
+
+.modal[b-1njpz5gid4] {
+    z-index: 1050;
+    overflow-y: auto;
+}
+
+.modal-dialog[b-1njpz5gid4] {
+    max-width: 800px;
+}
+
+.modal-header[b-1njpz5gid4], .modal-body[b-1njpz5gid4], .modal-footer[b-1njpz5gid4] {
+    border: none;
+}
+
+    .modal-body .form-control[b-1njpz5gid4], .modal-body .form-select[b-1njpz5gid4] {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 8px 12px;
+    }

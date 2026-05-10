@@ -1,0 +1,296 @@
+﻿@page "/finanzas/proyeccion-pasivos"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Services
+@using RRHH_ARG.Data
+@inject PasivoLaboralService PasivoLaboralService
+@inject EmpleadoService EmpleadoService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="payroll-container p-3">
+    <div class="top-panel mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="title text-dark fw-bold m-0"> Proyección de Pasivo Laboral</h3>
+            <p class="text-muted small m-0">Sábana masiva de obligaciones patronales a la fecha de corte.</p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick='() => Nav.NavigateTo("/finanzas/hub")'>
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+    </div>
+
+    @* --- PANEL DE CONTROLES REESTRUCTURADO --- *@
+    <div class="card shadow-sm border-0 mb-3 bg-light">
+        <div class="card-body py-3">
+            <div class="row g-3">
+                
+                @* 1. Fecha de corte *@
+                <div class="col-md-3 d-flex flex-column justify-content-start">
+                    <label class="form-label fw-bold small m-0 text-muted mb-1">Fecha de Corte (Proyección)</label>
+                    <input type="date" class="form-control border-primary shadow-sm" 
+                           value="@fechaCorte.ToString("yyyy-MM-dd")" @onchange="OnFechaChanged" />
+                </div>
+
+                @* 2. Toggle y Checkbox *@
+                <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
+                    <div class="custom-toggle-wrapper shadow-sm">
+                        <div class="custom-toggle-option @(isLiquidacion ? "" : "active")" @onclick="() => CambiarModo(false)">
+                            Finiquito
+                        </div>
+                        <div class="custom-toggle-option @(isLiquidacion ? "active" : "")" @onclick="() => CambiarModo(true)">
+                            Liquidación
+                        </div>
+                    </div>
+                    
+                    <div style="min-height: 24px; margin-top: 6px;">
+                        @if (isLiquidacion)
+                        {
+                            <div class="form-check m-0">
+                                <input class="form-check-input" type="checkbox" id="check20dias" @bind="incluir20Dias">
+                                <label class="form-check-label small fw-bold text-muted" for="check20dias" style="cursor: pointer;">
+                                    Incluir indemnización de 20 días por año
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @* 3. Botón Calcular *@
+                <div class="col-md-3 d-flex align-items-start justify-content-end">
+                    <button class="btn btn-primary px-4 fw-bold shadow-sm w-100" style="min-height: 48px;" @onclick="GenerarProyeccion" disabled="@isBusy">
+                        @if (isBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-calculator me-1"></i> Calcular
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- MATRIZ MASIVA (SÁBANA ESTILO EXCEL) --- *@
+    <div class="table-responsive bg-white shadow-sm border rounded" style="height: 62vh; overflow-y: auto; overflow-x: auto; position: relative;">
+        <table class="table mb-0 excel-grid align-middle text-nowrap">
+            <thead class="bg-navy position-sticky top-0" style="z-index: 10;">
+                <tr>
+                    <th style="min-width: 250px;">Empleado</th>
+                    <th class="text-center px-2">Antigüedad</th>
+                    <th class="text-end px-2">SD</th>
+                    <th class="text-end px-2" style="border-right: 2px solid #999 !important;">SDI</th>
+                    
+                    @* COLUMNAS DE FINIQUITO *@
+                    <th class="text-center px-2">Días Pend.</th>
+                    <th class="text-end px-2">Sueldo Pend.</th>
+                    <th class="text-end px-2">Aguinaldo Prop.</th>
+                    <th class="text-end px-2">Vacaciones Pend.</th>
+                    <th class="text-end px-2" style="border-right: 2px solid #999 !important;">Prima Vacacional</th>
+                    <th class="text-end px-2 text-warning fw-bold">TOTAL FINIQUITO</th>
+
+                    @* COLUMNAS DE LIQUIDACIÓN *@
+                    @if (isLiquidacion)
+                    {
+                        <th class="text-end px-2" style="border-left: 2px solid #999 !important;">Prima Antigüedad</th>
+                        <th class="text-end px-2">Indem. 90 Días</th>
+                        @if(incluir20Dias) { <th class="text-end px-2">Indem. 20 Días</th> }
+                        <th class="text-end px-2 text-danger fw-bold">TOTAL LIQUIDACIÓN</th>
+                    }
+
+                    <th class="text-end px-3 fw-bold" style="background-color: #1a2a44; font-size: 0.85rem;">GRAN TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (matrizProyeccion == null)
+                {
+                    <tr><td colspan="20" class="text-center py-5 text-muted" style="border: none !important;"></td></tr>
+                }
+                else if (!matrizProyeccion.Any())
+                {
+                    <tr><td colspan="20" class="text-center py-5 text-muted" style="border: none !important;">No se encontraron empleados activos.</td></tr>
+                }
+                else
+                {
+                    <Virtualize Items="@matrizProyeccion" Context="fila" ItemSize="30" OverscanCount="20">
+                        <tr>
+                            <td class="fw-bold text-dark px-2">
+                                @GetNombreEmpleado(fila.EmpleadoId)
+                            </td>
+                            <td class="text-center text-muted px-2">@fila.AniosCompletosTrabajados años</td>
+                            <td class="text-end text-muted px-2">@fila.SalarioDiario.ToString("C2")</td>
+                            <td class="text-end text-muted px-2" style="border-right: 2px solid #d4d4d4 !important;">@fila.SalarioDiarioIntegrado.ToString("C2")</td>
+                            
+                            @* FINIQUITO *@
+                            <td class="text-center text-muted px-2">@fila.DiasSueldoPendiente.ToString("0.##")</td>
+                            <td class="text-end px-2">@fila.MontoSueldoPendiente.ToString("C2")</td>
+                            <td class="text-end px-2">@fila.MontoAguinaldo.ToString("C2")</td>
+                            <td class="text-end px-2">@fila.MontoVacaciones.ToString("C2")</td>
+                            <td class="text-end px-2" style="border-right: 2px solid #d4d4d4 !important;">@fila.MontoPrimaVacacional.ToString("C2")</td>
+                            <td class="text-end px-2 fw-bold" style="background-color: #fffdf5; color: #b78a00;">@fila.TotalFiniquito.ToString("C2")</td>
+
+                            @* LIQUIDACIÓN *@
+                            @if (isLiquidacion)
+                            {
+                                <td class="text-end px-2" style="border-left: 2px solid #d4d4d4 !important;">@fila.MontoPrimaAntiguedad.ToString("C2")</td>
+                                <td class="text-end px-2">@fila.MontoIndemnizacion90Dias.ToString("C2")</td>
+                                @if(incluir20Dias) { <td class="text-end px-2">@fila.MontoIndemnizacion20Dias.ToString("C2")</td> }
+                                <td class="text-end px-2 fw-bold" style="background-color: #fff5f5; color: #c82333;">@fila.TotalLiquidacion.ToString("C2")</td>
+                            }
+
+                            <td class="text-end px-3 fw-bold" style="background-color: #eef2f7; color: #253C60; font-size: 0.85rem;">
+                                @fila.GranTotal.ToString("C2")
+                            </td>
+                        </tr>
+                    </Virtualize>
+                }
+            </tbody>
+            @if (matrizProyeccion != null && matrizProyeccion.Any())
+            {
+                <tfoot style="position: sticky; bottom: 0; z-index: 10;">
+                    <tr style="background-color: #e6e9ec; border-top: 3px solid #253C60 !important;">
+                        <td colspan="4" class="text-end pe-3 fw-bold text-dark">SUMATORIA DE PASIVO GLOBAL:</td>
+                        
+                        @* COLSPAN CORREGIDO: Ahora son 5 columnas huecas (Dias, Sueldo, Agui, Vac, Prima) *@
+                        <td colspan="5"></td>
+                        <td class="text-end px-2 fw-bold" style="color: #b78a00;">@matrizProyeccion.Sum(x => x.TotalFiniquito).ToString("C2")</td>
+                        
+                        @if (isLiquidacion)
+                        {
+                            @* COLSPAN CORREGIDO: 3 columnas huecas si incluye los 20 días, si no 2 *@
+                            <td colspan="@(incluir20Dias ? 3 : 2)"></td>
+                            <td class="text-end px-2 fw-bold" style="color: #c82333;">@matrizProyeccion.Sum(x => x.TotalLiquidacion).ToString("C2")</td>
+                        }
+                        
+                        <td class="text-end px-3 fw-bold" style="font-size: 1rem; color: #253C60;">
+                            @matrizProyeccion.Sum(x => x.GranTotal).ToString("C2")
+                        </td>
+                    </tr>
+                </tfoot>
+            }
+        </table>
+    </div>
+</div>
+
+@code {
+    private bool isBusy = false;
+    private DateTime fechaCorte = DateTime.Today;
+    private bool isLiquidacion = false;
+    private bool incluir20Dias = false;
+    
+    private List<CalculoPasivoDTO> matrizProyeccion;
+    private List<EmpleadoViewModel> catalogoNombres = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        catalogoNombres = await EmpleadoService.GetAllEmpleadosAsync();
+    }
+
+    private void CambiarModo(bool aLiquidacion)
+    {
+        isLiquidacion = aLiquidacion;
+        if (!isLiquidacion) incluir20Dias = false; 
+        matrizProyeccion = null; 
+    }
+
+    private void OnFechaChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out DateTime nuevaFecha))
+        {
+            fechaCorte = nuevaFecha;
+            matrizProyeccion = null;
+        }
+    }
+
+    private async Task GenerarProyeccion()
+    {
+        isBusy = true;
+        StateHasChanged();
+
+        try
+        {
+            // Calculamos automáticamente los días sugeridos de la quincena actual para pasarlos al servicio
+            int diasPendientes = fechaCorte.Day <= 15 ? fechaCorte.Day : (fechaCorte.Day - 15);
+            matrizProyeccion = await PasivoLaboralService.GenerarProyeccionMasivaAsync(fechaCorte, isLiquidacion, incluir20Dias, diasPendientes);
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private string GetNombreEmpleado(int id)
+    {
+        var emp = catalogoNombres.FirstOrDefault(e => e.Id == id);
+        return emp != null ? $"{emp.Nombre} {emp.ApellidoPaterno} {emp.ApellidoMaterno}" : $"Empleado {id}";
+    }
+}
+
+<style>
+    .bg-navy {
+        background-color: #253C60 !important;
+        color: #ffffff !important;
+    }
+    
+    .bg-navy th {
+        border-color: #3b5c8f !important;
+        font-weight: 500;
+        vertical-align: middle;
+    }
+
+    /* ========================================================= */
+    /* DISEÑO TIPO EXCEL (GRID)                                  */
+    /* ========================================================= */
+    .excel-grid {
+        font-family: "Segoe UI", Calibri, sans-serif;
+        border-collapse: collapse;
+        background-color: #fff;
+    }
+
+    .excel-grid th, .excel-grid td {
+        border: 1px solid #d4d4d4 !important; 
+        padding: 4px 8px !important; 
+        vertical-align: middle;
+    }
+
+    .excel-grid thead th {
+        font-weight: 500;
+        border-bottom: 2px solid #888 !important;
+    }
+
+    .excel-grid tbody tr:hover { 
+        background-color: #f1f3f5 !important; 
+    }
+
+    /* ========================================================= */
+    /* EL TOGGLE TIPO PÍLDORA (WRAPPER AZUL Y BLANCO)            */
+    /* ========================================================= */
+    .custom-toggle-wrapper {
+        display: flex;
+        background-color: #ffffff;
+        border: 2px solid #284482;
+        border-radius: 30px;
+        overflow: hidden;
+        padding: 3px;
+        width: 100%;
+        max-width: 450px; /* Aumentado para evitar saltos de línea */
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .custom-toggle-option {
+        flex: 1;
+        text-align: center;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: #284482;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+        white-space: nowrap; /* Fuerza a que el texto siempre quede en una línea */
+    }
+
+    .custom-toggle-option.active {
+        background-color: #284482;
+        color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+</style>

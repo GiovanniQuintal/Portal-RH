@@ -1,0 +1,453 @@
+﻿@page "/cursos"
+
+@using Microsoft.EntityFrameworkCore
+@using RRHH_ARG.Data
+@using RRHH_ARG.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavManager
+@inject RRHH_ARG.Services.MoodleSyncService MoodleService
+@inject IToastService ToastService
+@inject IConfiguration Configuration
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, Empleado, HSE, FA, Supervisor")]
+
+<style>
+    :root {
+        --moodle-blue: #0f6fc5;
+        --moodle-gray: #f8f9fa;
+        --moodle-border: #dee2e6;
+        --moodle-text: #343a40;
+    }
+
+    /* Estilo de Tabs al estilo Moodle */
+    .nav-tabs .nav-link {
+        color: #495057;
+        border: none;
+        border-bottom: 2px solid transparent;
+        font-weight: 500;
+        padding: 1rem 1.5rem;
+    }
+
+        .nav-tabs .nav-link.active {
+            color: var(--moodle-blue);
+            border-bottom: 2px solid var(--moodle-blue);
+            background: transparent;
+        }
+
+        .nav-tabs .nav-link:hover {
+            border-color: transparent;
+            color: var(--moodle-blue);
+        }
+
+    /* Cards estilo Dashboard Moodle */
+    .dashboard-card {
+        border: 1px solid rgba(0,0,0,.125);
+        box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+        height: 100%;
+        background-color: #fff;
+        border-radius: 0.25rem;
+    }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+    .dashboard-card-img {
+        height: 100px;
+        background-color: #5d63f6; /* Color fallback */
+        /* Patrón geométrico simulando el de Moodle */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0H5v5H0v1h5v94h1V6h94V5H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        background-size: cover;
+        background-position: center;
+    }
+
+    .card-body {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--moodle-blue);
+        margin-bottom: 0.25rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .category-badge {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+    }
+
+    .progress-wrapper {
+        margin-top: auto;
+    }
+
+    .moodle-progress {
+        height: 0.5rem;
+        background-color: #e9ecef;
+        border-radius: 1rem;
+    }
+
+    .moodle-progress-bar {
+        background-color: #11a676; /* Verde Moodle */
+        border-radius: 1rem;
+    }
+
+    .card-footer-moodle {
+        background: #fff;
+        border-top: none;
+        padding: 0.75rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-primary mb-0 fw-bold">Mis Cursos</h3>
+
+        <div class="d-flex align-items-center gap-2">
+            @if (!string.IsNullOrEmpty(_mensajeSync))
+            {
+                <span class="text-muted small me-2">
+                    @if (_isSyncing)
+                    {
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    }
+                    @_mensajeSync
+                </span>
+            }
+
+            <button class="btn btn-outline-primary d-flex align-items-center gap-2" @onclick="SincronizarAhora" disabled="@_isSyncing">
+                <i class="bi bi-arrow-repeat @(_isSyncing ? "spin-icon" : "")"></i>
+                <span>Sincronizar Moodle</span>
+            </button>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link @(_activeTabId == "tab-mis-cursos" ? "active" : "")"
+               href="javascript:void(0)"
+               @onclick='() => _activeTabId = "tab-mis-cursos"'>
+                <i class="bi bi-mortarboard me-2"></i>Mis Cursos
+            </a>
+        </li>
+        @if (_esSupervisor)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(_activeTabId == "tab-supervision" ? "active" : "")"
+                   href="javascript:void(0)"
+                   @onclick='() => _activeTabId = "tab-supervision"'>
+                    <i class="bi bi-people me-2"></i>Supervisión
+                </a>
+            </li>
+        }
+    </ul>
+
+    <div class="tab-content">
+
+        @if (_activeTabId == "tab-mis-cursos")
+        {
+            <div class="fade show active">
+                @if (_misCursos == null)
+                {
+                    <div class="d-flex justify-content-center p-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                }
+                else if (!_misCursos.Any())
+                {
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <div>
+                            No tienes cursos asignados en Moodle. <small class="d-block text-muted">Si crees que es un error, contacta a RRHH.</small>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var curso in _misCursos)
+                        {
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 d-flex align-items-stretch">
+                                <a href="@ObtenerUrlMoodle(curso.MoodleId)" target="_blank" class="text-decoration-none text-reset w-100">
+                                    <div class="card dashboard-card h-100">
+                                        <div class="card-img-top dashboard-card-img position-relative">
+                                            <span class="position-absolute top-0 end-0 badge m-2 shadow-sm"
+                                                  style="background-color: @curso.ClaseEstado; color: white;">
+                                                @curso.Estado
+                                            </span>
+                                        </div>
+
+                                        <div class="card-body">
+                                            <div class="category-badge text-truncate">
+                                                @curso.Codigo - @curso.Tipo
+                                            </div>
+
+                                            <h5 class="card-title" title="@curso.Nombre">
+                                                @curso.Nombre
+                                            </h5>
+
+                                            <div class="progress-wrapper mt-3">
+                                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                                    <span>Avance</span>
+                                                    <span>@((int)curso.Avance)%</span>
+                                                </div>
+                                                <div class="progress moodle-progress">
+                                                    <div class="progress-bar moodle-progress-bar" role="progressbar"
+                                                         style="width: @((int)curso.Avance)%"
+                                                         aria-valuenow="@((int)curso.Avance)" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card-footer-moodle">
+                                            
+                                            <div class="dropdown">
+                                                <i class="bi bi-three-dots-vertical text-muted"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        @if (_esSupervisor && _activeTabId == "tab-supervision")
+        {
+            <div class="fade show active p-1">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold">Seleccionar Empleado:</label>
+                        <FluentCombobox Items="@_subordinados"
+                                        OptionText="@(i => i.DisplayText)"
+                                        OptionValue="@(i => i.EmpId.ToString())"
+                                        ValueChanged="@(e => OnSubordinadoSeleccionado(e))"
+                                        Placeholder="Buscar empleado..."
+                                        Height="300px"
+                                        Style="width: 100%;" />
+                    </div>
+                </div>
+
+                @if (_cursosSubordinado != null)
+                {
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            @if (_cursosSubordinado.Any())
+                            {
+                                <FluentDataGrid Items="@_cursosSubordinado.AsQueryable()" ResizableColumns="true" ShowHover="true" Class="table table-hover mb-0">
+                                    <PropertyColumn Property="@(c => c.Codigo)" Title="Cód" Sortable="true" />
+                                    <PropertyColumn Property="@(c => c.Nombre)" Title="Curso" Sortable="true" />
+                                    <PropertyColumn Property="@(c => c.FechaInicio)" Title="Inicio" Format="dd/MM/yyyy" />
+
+                                    <TemplateColumn Title="Avance">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress moodle-progress flex-grow-1" style="height: 6px; width: 60px;">
+                                                <div class="progress-bar moodle-progress-bar" role="progressbar"
+                                                     style="width: @((int)context.Avance)%"
+                                                     aria-valuenow="@((int)context.Avance)" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <span class="small text-muted">@((int)context.Avance)%</span>
+                                        </div>
+                                    </TemplateColumn>
+
+                                    <TemplateColumn Title="Estado">
+                                        <span class="badge rounded-pill" style="background-color: @context.ClaseEstado">
+                                            @context.Estado
+                                        </span>
+                                    </TemplateColumn>
+                                </FluentDataGrid>
+                            }
+                            else
+                            {
+                                <div class="p-4 text-center text-muted">
+                                    <i class="bi bi-folder-x display-4 d-block mb-2"></i>
+                                    Este empleado no tiene cursos asignados.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+    </div>
+</div>
+
+@code {
+    // --- VARIABLES ---
+    private string _activeTabId = "tab-mis-cursos"; // Controlamos el tab con string simple
+    private bool _esSupervisor = false;
+    private int _currentUserId;
+    private bool _isSyncing = false;
+    private string _mensajeSync = "";
+
+    // --- DATOS ---
+    private List<CursoResumenDto> _misCursos;
+    private List<SubordinadoDTO> _subordinados = new();
+    private List<CursoResumenDto> _cursosSubordinado;
+    private string? _selectedEmpId;
+
+    // --- MANTENEMOS TU LÓGICA DE INICIALIZACIÓN INTACTA ---
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            var aspNetUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            // Usamos el Factory para evitar choques de hilos
+            using var context = DbFactory.CreateDbContext();
+
+            var empleadoDb = await context.Empleados
+                                          .FirstOrDefaultAsync(e => e.AspNetUserId == aspNetUserId);
+
+            if (empleadoDb != null)
+            {
+                _currentUserId = empleadoDb.EmpId;
+                await CargarMisCursos();
+
+                // Verificar supervisor con el mismo context temporal
+                _esSupervisor = await context.Empleados.AnyAsync(e => e.SupId == _currentUserId);
+                if (_esSupervisor) await CargarListaSubordinados();
+            }
+        }
+    }
+
+    private async Task CargarMisCursos()
+    {
+        _misCursos = await ObtenerCursosPorEmpleadoId(_currentUserId);
+    }
+
+    private async Task CargarListaSubordinados()
+    {
+        using var context = DbFactory.CreateDbContext(); // <-- NUEVO
+
+        _subordinados = await context.Empleados // <-- Cambiar DbContext por context
+            .Where(e => e.SupId == _currentUserId)
+            .Include(e => e.Per).ThenInclude(p => p.Pep).ThenInclude(pp => pp.Are)
+            .Select(e => new SubordinadoDTO
+            {
+                EmpId = e.EmpId,
+                NombreCompleto = (e.Per != null) ? (e.Per.PerNombre + " " + e.Per.PerApellidoPaterno) : "Desconocido",
+                Area = (e.Per != null && e.Per.Pep != null && e.Per.Pep.Are != null) ? e.Per.Pep.Are.AreNombre : "General"
+            })
+            .ToListAsync();
+    }
+
+    private async Task OnSubordinadoSeleccionado(string? idSeleccionado)
+    {
+        _selectedEmpId = idSeleccionado;
+        if (int.TryParse(idSeleccionado, out int empId))
+        {
+            _cursosSubordinado = await ObtenerCursosPorEmpleadoId(empId);
+        }
+        else
+        {
+            _cursosSubordinado = null;
+        }
+    }
+
+    // --- CONSULTA OPTIMIZADA ---
+    private async Task<List<CursoResumenDto>> ObtenerCursosPorEmpleadoId(int empId)
+    {
+        using var context = DbFactory.CreateDbContext(); // <-- NUEVO
+
+        var query = from mce in context.MoodleCursoEmpleados // <-- Cambiar DbContext por context
+                    join mc in context.MoodleCursos on mce.McId equals mc.McId
+                    join tic in context.TipoCursos on mc.TicId equals tic.TicId
+                    where mce.EmpId == empId && mce.MceEstado != 0
+                    select new CursoResumenDto
+                    {
+                        MoodleId = mc.MoodleCursoId,
+                        Codigo = mc.McCodigo,
+                        Nombre = mc.McNombre,
+                        FechaInicio = mce.MceFechaInicio,
+                        Tipo = tic.TicNombre ?? "Curso",
+                        Avance = mce.McePorcentajeAvance,
+                        Estado = TraducirEstado(mce.MceEstado),
+                        ClaseEstado = ObtenerColorEstado(mce.MceEstado)
+                    };
+
+        return await query.ToListAsync();
+    }
+
+    // --- LÓGICA DE SINCRONIZACIÓN ---
+    private async Task SincronizarAhora()
+    {
+        _isSyncing = true;
+        _mensajeSync = "Conectando con Moodle...";
+        StateHasChanged();
+
+        try
+        {
+            _mensajeSync = "Actualizando catálogo...";
+            await MoodleService.SincronizarCursosAsync();
+
+            _mensajeSync = "Descargando inscripciones y avances...";
+            await MoodleService.SincronizarInscripcionesMasivasAsync();
+
+            _mensajeSync = "¡Datos actualizados!";
+            ToastService.ShowSuccess("Sincronización completada correctamente");
+        }
+        catch (Exception ex)
+        {
+            _mensajeSync = "Error en sincronización.";
+            ToastService.ShowError($"Error al conectar con Moodle: {ex.Message}");
+            Console.WriteLine(ex.ToString());
+        }
+
+        await CargarMisCursos();
+        _isSyncing = false;
+    }
+
+    // --- HELPER PARA GENERAR URL ---
+    private string ObtenerUrlMoodle(int moodleCursoId)
+    {
+        var baseUrl = Configuration["MoodleConfig:BaseUrl"];
+        return $"{baseUrl}/course/view.php?id={moodleCursoId}";
+    }
+
+    private static string TraducirEstado(byte estado) => estado switch
+    {
+        1 => "En Progreso",
+        2 => "Completado",
+        3 => "Expirado",
+        _ => "Inactivo"
+    };
+
+    private static string ObtenerColorEstado(byte estado) => estado switch
+    {
+        1 => "#0078d4", // Azul
+        2 => "#107c10", // Verde
+        3 => "#a80000", // Rojo
+        _ => "#605e5c"  // Gris
+    };
+}

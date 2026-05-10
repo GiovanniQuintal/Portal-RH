@@ -1,0 +1,522 @@
+﻿@page "/qhse-dashboard"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@inject EmpleadoService Service
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = "HSE")]
+
+<div class="container-fluid vh-100 d-flex flex-column overflow-hidden" style="padding-top: 10px;">
+
+    <div class="row mb-2 px-3">
+        <div class="col-12 border-bottom pb-2 d-flex align-items-center">
+            <img src="images/stop.png" alt="STOP" class="title-icon-img" />
+            <h3 class="title text-dark fw-bold m-0">Gestión de Tarjetas STOP</h3>
+        </div>
+    </div>
+
+    <div class="row flex-grow-1 overflow-hidden g-0">
+
+        <div class="col-md-3 border-end bg-white d-flex flex-column h-100 overflow-auto shadow-sm">
+
+            <div class="p-3 bg-light border-bottom sticky-top">
+                <input type="text" class="form-control form-control-sm mb-2"
+                       placeholder="Buscar"
+                       @bind="searchTermList"
+                       @bind:event="oninput" />
+
+                <button class="btn btn-secondary btn-sm w-100 @(selectedEmpId == 0 ? "active" : "")"
+                        @onclick="VerVistaGlobal">
+                    <i class="bi bi-people-fill"></i> General
+                </button>
+            </div>
+
+            @if (isLoadingList)
+            {
+                <div class="text-center p-5"><div class="spinner-border text-primary"></div></div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var emp in FilteredEmpleadosList)
+                    {
+                        <button class="list-group-item list-group-item-action py-2 border-bottom @(selectedEmpId == emp.Id ? "active border-start border-4 border-primary bg-light" : "")"
+                                @onclick="() => SelectEmpleado(emp.Id)">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative me-2">
+                                    <img src="/api/Archivo/@emp.Id/Foto"
+                                         class="rounded-circle border shadow-sm"
+                                         style="width: 32px; height: 32px; object-fit: cover;"
+                                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=@emp.Nombre+@emp.ApellidoPaterno&background=random&color=fff';" />
+
+                                    @if (emp.TieneTarjetasSinRevisar)
+                                    {
+                                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 10px; height: 10px;"></span>
+                                    }
+                                </div>
+                                <div class="overflow-hidden w-100" style="line-height: 1.2;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="mb-0 text-truncate fw-bold text-dark" style="font-size: 0.85rem;">@emp.Nombre @emp.ApellidoPaterno</span>
+                                        @if (emp.TieneTarjetasSinRevisar)
+                                        {
+                                            <span class="badge bg-danger ms-1" style="font-size: 0.55rem;">NUEVO</span>
+                                        }
+                                    </div>
+                                    <small class="text-muted d-block text-truncate" style="font-size: 0.75rem;">@emp.Area</small>
+                                </div>
+                            </div>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="col-md-9 h-100 overflow-auto bg-light p-4">
+
+            @if (selectedEmpId == 0)
+            {
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-list-stars me-2"></i> Historial Global</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" @bind="filterStatusGlobal">
+                                <option value="-1">Estados</option>
+                                <option value="0">Nuevos</option>
+                                
+                                <option value="2">Asignado</option>
+                                <option value="3">Resuelto</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body p-0 table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th class="ps-4">Empleado</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Responsable</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var card in FilteredGlobalCards)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold">@card.Empleado?.Per?.PerNombre @card.Empleado?.Per?.PerApellidoPaterno</div>
+                                            <small class="text-muted">@card.Empleado?.Per?.Pep?.Are?.AreNombre</small>
+                                        </td>
+                                        <td>@card.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <span class="badge @card.EstatusColor rounded-pill px-3">@card.EstatusTexto</span>
+                                        </td>
+                                        <td>
+                                            @if (card.EmpleadoAsignado?.Per != null)
+                                            {
+                                                <div class="fw-semibold text-dark">
+                                                    <i class="bi bi-person-badge me-1 text-muted"></i> @card.EmpleadoAsignado.Per.PerNombre @card.EmpleadoAsignado.Per.PerApellidoPaterno
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic small">Sin asignar</span>
+                                            }
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirTarjeta(card.QhcId, card.Estatus)">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">Historial: @nombreEmpleadoSeleccionado</h5>
+                        <button class="btn btn-close" @onclick="VerVistaGlobal" title="Cerrar y volver a global"></button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Fecha</th>
+                                    <th>Lugar</th>
+                                    <th>Estado</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var card in tarjetasDelEmpleado)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-bold">@card.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td>@card.Lugar</td>
+                                        <td>
+                                            <span class="badge @card.EstatusColor rounded-pill px-3">@card.EstatusTexto</span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-sm btn-primary" @onclick="() => AbrirTarjeta(card.QhcId, card.Estatus)">
+                                                <i class="bi bi-eye"></i> Inspeccionar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (showModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.6); z-index: 9999;" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable" style="pointer-events: auto;">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Gestionar Tarjeta de @nombreEmpleadoModal</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body bg-white">
+                    <QhseForm IsReadOnly="true" ModelParameter="@modeloParaVer" />
+
+                    @* EL BLOQUE DE EVIDENCIA VA AQUÍ, ADENTRO DEL MODAL-BODY *@
+                    @if (tempStatus == 2)
+                    {
+                        <div class="mt-4 p-4 rounded" style="background-color: #f8f9fa; border: 2px solid #198754;">
+                            <h5 class="fw-bold text-success">
+                                <i class="bi bi-check-circle-fill me-2"></i>Evidencia de Resolución
+                            </h5>
+
+                            <div class="mb-3 mt-3">
+                                <label class="form-label fw-bold">Notas de la resolución:</label>
+                                <p class="form-control bg-white">@(string.IsNullOrEmpty(textoEvidenciaGlobal) ? "Sin notas registradas." : textoEvidenciaGlobal)</p>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(fotoEvidenciaGlobal))
+                            {
+                                <div class="mb-3 text-center">
+                                    <label class="form-label fw-bold d-block text-start">Evidencia Fotográfica:</label>
+                                    <img src="@fotoEvidenciaGlobal" alt="Evidencia" class="img-fluid rounded border shadow-sm" style="max-height: 400px; object-fit: contain;" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-3">
+                                    <p class="text-muted fst-italic"><i class="bi bi-image me-1"></i> No se adjuntó evidencia fotográfica.</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer bg-light d-flex justify-content-between align-items-center">
+                    @if (tempStatus == 0) // Si la tarjeta es Nueva, permitimos asignar
+                    {
+                        <div class="d-flex align-items-center w-100">
+                            <label class="fw-bold me-2 text-nowrap">Asignar Responsable:</label>
+                            <select class="form-select me-3" @bind="empleadoAsignadoId">
+                                <option value="0">-- Seleccione un responsable --</option>
+
+                                <optgroup label="Supervisores">
+                                    @foreach (var emp in listaParaAsignar.Where(e => e.TieneTarjetasSinRevisar))
+                                    {
+                                        <option value="@emp.Id">@emp.Nombre (@emp.Area)</option>
+                                    }
+                                </optgroup>
+
+                                <optgroup label="Empleados">
+                                    @foreach (var emp in listaParaAsignar.Where(e => !e.TieneTarjetasSinRevisar))
+                                    {
+                                        <option value="@emp.Id">@emp.Nombre (@emp.Area)</option>
+                                    }
+                                </optgroup>
+                            </select>
+
+                            <button class="btn btn-success px-4" disabled="@(empleadoAsignadoId == 0)" @onclick="PrepararAsignacion">
+                                <i class="bi bi-send"></i> Enviar a Responsable
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="w-100 d-flex justify-content-between">
+                            <span class="text-muted fw-bold mt-2">
+                                <i class="bi bi-info-circle"></i> Esta tarjeta ya fue asignada o resuelta.
+                            </span>
+                            <button class="btn btn-secondary" @onclick="CerrarModal">Cerrar</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@if (showConfirmacionModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.8); z-index: 10005;" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar Asignación</h5>
+                    <button type="button" class="btn-close" @onclick="() => showConfirmacionModal = false"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="fs-5 mb-1">¿Estás seguro de enviar esta tarjeta para su resolución a:</p>
+                    <h4 class="fw-bold text-primary my-3">@nombreEmpleadoConfirmacion</h4>
+                    <p class="text-muted small">El empleado recibirá una notificación en su panel para atenderla.</p>
+                </div>
+                <div class="modal-footer bg-light justify-content-center">
+                    <button type="button" class="btn btn-secondary px-4" @onclick="() => showConfirmacionModal = false">Cancelar</button>
+                    <button type="button" class="btn btn-success px-4" @onclick="ConfirmarAsignacion">
+                        <i class="bi bi-send-check-fill me-2"></i> Sí, Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    /* Estilos del Toggle */
+    .tri-state-toggle {
+        background: rgba(0,0,0,0.8);
+        box-shadow: inset 0 2px 8px 0 rgba(165,170,174,0.25);
+        border-radius: 24px;
+        display: inline-flex;
+        flex-direction: row;
+        transition: all 500ms ease;
+        padding: 2px;
+    }
+
+    .tri-state-toggle-button {
+        border-radius: 22px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 90px;
+        padding: 0 10px;
+        background-color: transparent;
+        border: 0px solid transparent;
+        margin: 0 2px;
+        color: white;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.5s ease;
+    }
+
+        .tri-state-toggle-button.active {
+            background-image: linear-gradient(90deg, rgba(229, 3, 87, 1) 0%, rgba(229, 3, 56, 1) 35%, rgba(219, 101, 17, 1) 100%);
+            border: 0px solid rgba(207,207,207,0.6);
+            box-shadow: 0 8px 16px 0 rgba(0,0,0,0.1);
+            color: white;
+            font-weight: 500;
+            transition: all .5s ease-in;
+        }
+
+        .tri-state-toggle-button:focus {
+            outline: none;
+        }
+
+    .title-icon-img {
+        height: 70px; /* Define una altura fija adecuada para un H4 */
+        width: auto; /* Mantiene la proporción */
+        margin-right: 12px; /* Espacio entre la imagen y el texto */
+    }
+</style>
+
+@code {
+    // --- COPIA AQUÍ TODO EL BLOQUE @CODE DE TU VERSIÓN ANTERIOR ---
+    // (No hubo cambios en la lógica C#, solo en el HTML de arriba)
+
+    // VARIABLES Y MÉTODOS EXISTENTES...
+    private List<QhseCard> todasLasTarjetas = new();
+    private List<EmpleadoDashboardItem> listaEmpleadosLateral = new();
+    private List<QhseCard> tarjetasDelEmpleado = new();
+    private string searchTermList = "";
+    private string searchGlobal = "";
+    private int filterStatusGlobal = -1;
+    private int selectedEmpId = 0;
+    private bool isLoadingList = true;
+    private bool showModal = false;
+    private int selectedCardId = 0;
+    private int tempStatus = 0;
+    private string nombreEmpleadoSeleccionado = "";
+    private QhseFormModel modeloParaVer = new();
+    private string nombreEmpleadoModal = "";
+    private List<EmpleadoDashboardItem> listaParaAsignar = new();
+    private int empleadoAsignadoId = 0;
+
+ 
+    private bool showConfirmacionModal = false;
+    private string nombreEmpleadoConfirmacion = "";
+
+    // Variables para mostrar la evidencia en el dashboard
+    private string textoEvidenciaGlobal = "";
+    private string fotoEvidenciaGlobal = "";
+
+    private IEnumerable<EmpleadoDashboardItem> FilteredEmpleadosList =>
+        string.IsNullOrWhiteSpace(searchTermList)
+            ? listaEmpleadosLateral
+            : listaEmpleadosLateral.Where(e => e.Nombre.Contains(searchTermList, StringComparison.OrdinalIgnoreCase)
+                                            || e.ApellidoPaterno.Contains(searchTermList, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<QhseCard> FilteredGlobalCards =>
+        todasLasTarjetas
+            .Where(c => (filterStatusGlobal == -1 || c.Estatus == filterStatusGlobal) &&
+                        (string.IsNullOrWhiteSpace(searchGlobal) ||
+                         (c.Empleado?.Per?.PerNombre + " " + c.Empleado?.Per?.PerApellidoPaterno).Contains(searchGlobal, StringComparison.OrdinalIgnoreCase)));
+
+    
+
+
+    private void PrepararAsignacion()
+    {
+        if (empleadoAsignadoId > 0)
+        {
+            var emp = listaParaAsignar.FirstOrDefault(e => e.Id == empleadoAsignadoId);
+            if (emp != null)
+            {
+                nombreEmpleadoConfirmacion = $"{emp.Nombre} ({emp.Area})";
+                showConfirmacionModal = true;
+                // NO cierres showModal aquí.
+            }
+        }
+    }
+
+    private async Task ConfirmarAsignacion()
+    {
+        await Service.AsignarTarjetaAsync(selectedCardId, empleadoAsignadoId);
+
+        // Refrescar UI global
+        var cardGlobal = todasLasTarjetas.FirstOrDefault(c => c.QhcId == selectedCardId);
+        if (cardGlobal != null) { cardGlobal.Estatus = 1; cardGlobal.AsignadoEmpId = empleadoAsignadoId; }
+
+        // Cerrar modales
+        showConfirmacionModal = false;
+        showModal = false;
+        empleadoAsignadoId = 0;
+
+        // Recargar panel lateral
+        listaEmpleadosLateral = await Service.GetEmpleadosConStatusTarjetasAsync();
+    }
+
+    private async Task CargarDatosIniciales()
+    {
+        isLoadingList = true;
+        listaEmpleadosLateral = await Service.GetEmpleadosConStatusTarjetasAsync();
+        todasLasTarjetas = await Service.GetAllQhseCardsAsync();
+        isLoadingList = false;
+    }
+
+    private void VerVistaGlobal()
+    {
+        selectedEmpId = 0;
+        nombreEmpleadoSeleccionado = "";
+    }
+
+    private async Task SelectEmpleado(int empId)
+    {
+        selectedEmpId = empId;
+        var emp = listaEmpleadosLateral.FirstOrDefault(e => e.Id == empId);
+        nombreEmpleadoSeleccionado = emp != null ? $"{emp.Nombre} {emp.ApellidoPaterno}" : "";
+        tarjetasDelEmpleado = await Service.GetQhseCardsByEmpleadoIdAsync(empId);
+    }
+
+
+    // Reemplaza tu método actual por este:
+    private async Task AbrirTarjeta(int cardId, int currentStatus)
+    {
+        selectedCardId = cardId;
+        tempStatus = currentStatus;
+        modeloParaVer = await Service.GetQhseCardForViewAsync(cardId);
+
+        // Buscamos la tarjeta en la lista global para extraer datos extra
+        var card = todasLasTarjetas.FirstOrDefault(c => c.QhcId == cardId);
+
+        if (card != null)
+        {
+            if (card.Empleado?.Per != null)
+            {
+                nombreEmpleadoModal = $"{card.Empleado.Per.PerNombre.Trim().Split(' ')[0]} {card.Empleado.Per.PerApellidoPaterno}";
+            }
+
+            // Cargamos la evidencia si existe
+            textoEvidenciaGlobal = card.EvidenciaTexto ?? "";
+            fotoEvidenciaGlobal = card.EvidenciaFoto ?? "";
+        }
+        else
+        {
+            nombreEmpleadoModal = "Desconocido";
+            textoEvidenciaGlobal = "";
+            fotoEvidenciaGlobal = "";
+        }
+
+        showModal = true;
+    }
+
+    private async Task GuardarCambiosEstado()
+    {
+        await Service.UpdateCardStatusAsync(selectedCardId, tempStatus);
+
+        var cardGlobal = todasLasTarjetas.FirstOrDefault(c => c.QhcId == selectedCardId);
+        if (cardGlobal != null) cardGlobal.Estatus = tempStatus;
+
+        var cardIndividual = tarjetasDelEmpleado.FirstOrDefault(c => c.QhcId == selectedCardId);
+        if (cardIndividual != null) cardIndividual.Estatus = tempStatus;
+
+        if (tempStatus != 0)
+        {
+            listaEmpleadosLateral = await Service.GetEmpleadosConStatusTarjetasAsync();
+        }
+
+        showModal = false;
+    }
+
+   
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatosIniciales();
+        // Cargamos la lista para el ComboBox
+        listaParaAsignar = await Service.GetEmpleadosParaAsignacionAsync();
+    }
+
+    private void CerrarModal()
+    {
+        showModal = false;
+        empleadoAsignadoId = 0; // Resetear
+    }
+
+    // Nuevo método para reemplazar el anterior de guardar cambios
+    private async Task AsignarYEnviar()
+    {
+        if (empleadoAsignadoId > 0)
+        {
+            await Service.AsignarTarjetaAsync(selectedCardId, empleadoAsignadoId);
+
+            // Refrescar UI
+            var cardGlobal = todasLasTarjetas.FirstOrDefault(c => c.QhcId == selectedCardId);
+            if (cardGlobal != null) { cardGlobal.Estatus = 1; cardGlobal.AsignadoEmpId = empleadoAsignadoId; }
+
+            showModal = false;
+            empleadoAsignadoId = 0;
+
+            // Recargar panel lateral por si cambiaron los badges "NUEVO"
+            listaEmpleadosLateral = await Service.GetEmpleadosConStatusTarjetasAsync();
+        }
+    }
+}

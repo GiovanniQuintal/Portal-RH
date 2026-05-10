@@ -1,0 +1,1483 @@
+﻿@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using Microsoft.AspNetCore.Components.Forms
+@inject EmpleadoService EmpleadoService
+@inject IWebHostEnvironment Environment
+@inject ILogger<RegistroAplicantes> Logger
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH")]
+
+@if (showModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+
+                @if (isBusy)
+                {
+                    <div style="position: fixed;top: 0;left: 0;width: 100vw;height: 100vh;background-color: rgba(0, 0, 0, 0.5);z-index: 9999;backdrop-filter: blur(2px);display: flex;justify-content: center;align-items: center;">
+
+                        <div class="text-center p-4 rounded bg-white shadow">
+                            <!-- Spinner CSS puro -->
+                            <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <h5 class="mt-3 text-dark fw-bold">Procesando...</h5>
+                        </div>
+                    </div>
+                }
+                <div class="modal-header">
+                    <h5 class="modal-title">@pageTitle</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+
+                <div class="modal-body">
+
+
+                    @*//MODIFICADO 17 DIC*@
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <button class="nav-link @(activeTab == "datos" ? "active" : "")" @onclick='() => activeTab = "datos"'>
+                                <i class="bi bi-person-vcard me-1"></i> Datos Personales
+                            </button>
+                        </li>
+
+                        <li class="nav-item">
+                            <button class="nav-link @(activeTab == "emergencia" ? "active" : "")" @onclick='() => activeTab = "emergencia"'>
+                                <i class="bi bi-heart-pulse me-1"></i> Salud y Emergencia
+                            </button>
+                        </li>
+
+                        @if (empleadoViewModel.Id > 0)
+                        {
+                            <li class="nav-item">
+                                <button class="nav-link @(activeTab == "expedientes" ? "active" : "")"
+                                        @onclick='() => activeTab = "expedientes"'>
+                                    <i class="bi bi-folder2-open me-1"></i> Expediente Digital
+                                </button>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <button class="nav-link @(activeTab == "epp" ? "active" : "")" @onclick='() => activeTab = "epp"'>
+                                <i class="bi bi-shield-check me-1"></i> Historial EPP
+                            </button>
+                        </li>
+                    
+
+                    <li class="nav-item">
+                        <button class="nav-link @(activeTab == "nomina" ? "active" : "")" @onclick='() => activeTab = "nomina"'>
+                            <i class="bi bi-currency-dollar me-1"></i> Finanzas / Nómina
+                        </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade @(activeTab == "datos" ? "show active" : "")">
+                            <div class="row g-3">
+
+                                @* --- INICIO: NUEVA SECCIÓN DE FOTO DE PERFIL --- *@
+                                <div class="col-12 d-flex justify-content-center mb-4">
+                                    <div class="position-relative" style="width: 150px; height: 150px;">
+                                        @if (!string.IsNullOrEmpty(UrlFotoPerfil))
+                                        {
+                                            @* Muestra la foto real si existe *@
+                                            <img src="@UrlFotoPerfil"
+                                                 alt="Foto Perfil"
+                                                 class="rounded-circle img-thumbnail shadow-sm border-2 border-primary"
+                                                 style="width: 150px; height: 150px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            @* Placeholder (Icono gris) si no hay foto *@
+                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary border shadow-sm"
+                                                 style="width: 150px; height: 150px;">
+                                                <i class="bi bi-person-fill" style="font-size: 5rem; opacity: 0.5;"></i>
+                                            </div>
+                                        }
+
+                                        @* Botón flotante para ir rápido a la pestaña de expedientes a subir la foto *@
+                                        @if (isEditable && empleadoViewModel.Id > 0)
+                                        {
+                                            <button class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle shadow"
+                                                    style="width: 40px; height: 40px;"
+                                                    @onclick='() => activeTab = "expedientes"'
+                                                    title="Ir a Expedientes para subir/cambiar foto">
+                                                <i class="bi bi-camera-fill"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                                @* --- FIN: NUEVA SECCIÓN DE FOTO DE PERFIL --- *@
+
+                                <div class="col-md-6">
+                                    @*MODIFICADO DIC 18*@
+                                    <label class="form-label fw-bold">No. Empleado / Código</label>
+                                    <input @bind="empleadoViewModel.CodigoEmpleado" class="form-control" placeholder="Ej. AC021" disabled="@(!isEditable)" />
+                                </div>
+                                <div class="col-md-6"><label class="form-label">Nombres</label><input @bind="empleadoViewModel.Nombre" class="form-control" disabled="@(!isEditable)" /></div>
+                                <div class="col-md-6"><label class="form-label">Apellido Paterno</label><input @bind="empleadoViewModel.ApellidoPaterno" class="form-control" disabled="@(!isEditable)" /></div>
+                                <div class="col-md-6"><label class="form-label">Apellido Materno</label><input @bind="empleadoViewModel.ApellidoMaterno" class="form-control" disabled="@(!isEditable)" /></div>
+                                <div class="col-md-6"><label class="form-label">Email</label><input @bind="empleadoViewModel.Email" class="form-control" disabled="@(!isEditable)" /></div>
+                                <div class="col-md-6"><label class="form-label">Teléfono</label><input @bind="empleadoViewModel.Telefono" class="form-control" disabled="@(!isEditable)" /></div>
+                                <div class="col-md-6"><label class="form-label">Fecha Nacimiento</label><input @bind="empleadoViewModel.FechaNacimiento" type="date" class="form-control" disabled="@(!isEditable)" /></div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Género</label>
+                                    <select @bind="empleadoViewModel.Genero" class="form-select" disabled="@(!isEditable)">
+                                        <option value="">Seleccionar...</option>
+                                        <option>Masculino</option>
+                                        <option>Femenino</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-12"><hr /></div>
+                                <h6 class="text-primary fw-bold"><i class="bi bi-briefcase"></i> Puesto Principal</h6>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Área</label>
+                                    <select @bind="SelectedArea" class="form-select" disabled="@(!isEditable)">
+                                        <option value="">Seleccione un área...</option>
+                                        @foreach (var area in areasList)
+                                        {
+                                            <option value="@area.AreNombre">@area.AreNombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Cargo Principal</label>
+                                    <select @bind="empleadoViewModel.Empleo" class="form-select" disabled="@(!isEditable || string.IsNullOrEmpty(SelectedArea))">
+                                        <option value="">Seleccione un cargo...</option>
+                                        @foreach (var cargo in cargosDisponiblesPrincipal)
+                                        {
+                                            <option value="@cargo.PepNombre">@cargo.PepNombre</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                @*<div class="col-md-12"><hr /></div>*@
+                                <small class="text-muted" style="font-size: 0.75rem;">El segundo cargo es opcional</small>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Área Secundaria</label>
+                                    <select @bind="SelectedAreaSecundaria" class="form-select" disabled="@(!isEditable)">
+                                        <option value="">Seleccionar...</option>
+                                        @foreach (var area in areasList)
+                                        {
+                                            <option value="@area.AreNombre">@area.AreNombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Segundo Cargo</label>
+                                    <select @bind="empleadoViewModel.Empleo2" class="form-select" disabled="@(!isEditable || string.IsNullOrEmpty(SelectedAreaSecundaria))">
+                                        <option value="">Seleccionar...</option>
+                                        @foreach (var cargo in cargosDisponiblesSecundario)
+                                        {
+                                            <option value="@cargo.PepNombre">@cargo.PepNombre</option>
+                                        }
+                                    </select>
+                                </div>
+
+
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-primary">Supervisor Inmediato</label>
+                                    <select @bind="empleadoViewModel.SupId" class="form-select border-primary" disabled="@(!isEditable)">
+                                        <option value="">-- Sin Supervisor --</option>
+                                        @foreach (var sup in supervisoresList)
+                                        {
+                                            // Evitar que un empleado sea su propio jefe
+                                            if (sup.Id != empleadoViewModel.Id)
+                                            {
+                                                <option value="@sup.Id">@sup.Nombre @sup.Apellidos (@sup.Empleo)</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Subsidiaria</label>
+                                    <select @bind="empleadoViewModel.Subsidiaria" class="form-select" disabled="@(!isEditable)">
+                                        <option value="">Seleccionar...</option>
+                                        @foreach (var sub in subsidiariasList)
+                                        {
+                                            <option value="@sub.SubNombre">@sub.SubNombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                @*//MODIFICADO 17 DIC*@
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha Contratación</label>
+                                    <input @bind="empleadoViewModel.FechaContratacion" type="date" class="form-control" disabled="@(!isEditable)" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label text-danger">Fecha de Baja (Finiquito)</label>
+                                    <input @bind="empleadoViewModel.FechaBaja" type="date" class="form-control border-danger" disabled="@(!isEditable)" />
+                                    <small class="text-muted" style="font-size: 0.7rem;">Solo llenar si el empleado será dado de baja.</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Tipo de Colaborador</label>
+                                    <select @bind="empleadoViewModel.TipId" class="form-select" disabled="@(!isEditable)">
+                                        <option value="0">Seleccionar...</option>
+                                        @foreach (var tipo in tiposList)
+                                        {
+                                            <option value="@tipo.TipId">@tipo.TipNombre</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-dark">Rol de Sistema (Permisos)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                                        <select @bind="empleadoViewModel.RolSeleccionado" class="form-select" disabled="@(!isEditable)">
+                                            <option value="">Seleccione un Rol...</option>
+
+                                            @* --- CAMBIO AQUÍ: Filtramos la lista para ignorar 'SUPERVISOR' --- *@
+                                            @foreach (var rol in rolesList.Where(r => !string.Equals(r, "SUPERVISOR", StringComparison.OrdinalIgnoreCase)))
+                                            {
+                                                <option value="@rol">@rol</option>
+                                            }
+
+                                        </select>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Define el acceso al sistema (Admin, Empleado, etc.)</small>
+                                </div>
+
+                                @* 2. EL NUEVO COMBO: ROL ADICIONAL MODIFICADO 30 ENE*@
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">Función de Mando</label>
+
+                                    @* CAMBIO CLAVE: Añadimos empleadoViewModel.TieneSubordinados a la condición de disabled *@
+                                    <InputSelect @bind-Value="empleadoViewModel.AsignarRolSupervisor" class="form-select" disabled="@(!isEditable || empleadoViewModel.TieneSubordinados)">
+                                        <option value="false">Solo Rol Principal</option>
+                                        <option value="true">Rol Principal + SUPERVISOR</option>
+                                    </InputSelect>
+
+                                    @* MENSAJE DINÁMICO DE ADVERTENCIA *@
+                                    @if (empleadoViewModel.TieneSubordinados)
+                                    {
+                                        <small class="text-danger mt-1 d-block fw-bold">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                            No puedes quitar este rol porque el empleado tiene personal a su cargo. Reasigna a sus subordinados primero.
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <div class="form-text">
+                                            Al seleccionar la segunda opción, el usuario tendrá DOBLE ROL.
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="card bg-light border-0">
+                                        <div class="card-body">
+                                            <label class="form-label fw-bold">Estatus del Empleado</label>
+                                            <div class="input-group">
+                                                <select @bind="empleadoViewModel.StaId" class="form-select" disabled="@(!isEditable)">
+                                                    @foreach (var st in statusList)
+                                                    {
+                                                        <option value="@st.StaId">@st.StaTipoStatus</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <small class="text-muted"><i class="bi bi-info-circle"></i> Si seleccionas <strong>Inactivo</strong>, se mostrará como tal en la tabla.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-content">
+
+                            <div class="tab-pane fade @(activeTab == "datos" ? "show active" : "")">
+                            </div>
+
+                            <div class="tab-pane fade @(activeTab == "emergencia" ? "show active" : "")">
+                                <div class="row g-3">
+
+                                    <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                                        <h6 class="text-primary mb-0"><i class="bi bi-telephone-plus"></i> Contactos de Emergencia</h6>
+                                        @if (isEditable)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="AgregarContacto">
+                                                <i class="bi bi-plus-circle"></i> Agregar Otro
+                                            </button>
+                                        }
+                                    </div>
+
+                                    @foreach (var contacto in empleadoViewModel.ContactosEmergencia)
+                                    {
+                                        <div class="col-12 bg-light p-3 rounded mb-3 position-relative">
+
+                                            @if (isEditable)
+                                            {
+                                                <button type="button" class="btn-close position-absolute top-0 end-0 m-2 small"
+                                                        @onclick="() => EliminarContactoDeLista(contacto)" title="Quitar este contacto"></button>
+                                            }
+
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Nombre Completo</label>
+                                                    <input @bind="contacto.CemNombreCompleto" class="form-control form-control-sm" placeholder="Nombre" disabled="@(!isEditable)" />
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small">Parentesco</label>
+                                                    <input @bind="contacto.CemParentesco" class="form-control form-control-sm" placeholder="Ej: Padre, Hermano" disabled="@(!isEditable)" />
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small">Teléfono Principal</label>
+                                                    <input @bind="contacto.CemTelefono1" class="form-control form-control-sm" placeholder="Móvil" disabled="@(!isEditable)" />
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small">Teléfono 2 (Opcional)</label>
+                                                    <input @bind="contacto.CemTelefono2" class="form-control form-control-sm" placeholder="Casa/Trabajo" disabled="@(!isEditable)" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    <div class="col-12 mt-4">
+                                        <h6 class="text-danger border-bottom pb-2 mb-3"><i class="bi bi-activity"></i> Información Médica</h6>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tipo de Sangre</label>
+                                        <select @bind="empleadoViewModel.ImeTipoSangre" class="form-select" disabled="@(!isEditable)">
+                                            <option value="">Seleccionar...</option>
+                                            <option>O+</option>
+                                            <option>O-</option>
+                                            <option>A+</option>
+                                            <option>A-</option>
+                                            <option>B+</option>
+                                            <option>B-</option>
+                                            <option>AB+</option>
+                                            <option>AB-</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-8">
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label class="form-label">Alergias</label>
+                                        <textarea @bind="empleadoViewModel.ImeAlergias" class="form-control" rows="2" placeholder="Describa alergias a medicamentos o alimentos..." disabled="@(!isEditable)"></textarea>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label class="form-label">Padecimientos Crónicos</label>
+                                        <textarea @bind="empleadoViewModel.ImePadecimientos" class="form-control" rows="2" placeholder="Diabetes, Hipertensión, etc..." disabled="@(!isEditable)"></textarea>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label class="form-label">Otras Observaciones Médicas</label>
+                                        <textarea @bind="empleadoViewModel.ImeObservaciones" class="form-control" rows="2" disabled="@(!isEditable)"></textarea>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="tab-pane fade @(activeTab == "expedientes" ? "show active" : "")">
+                            </div>
+
+                        </div>
+
+                        <div class="tab-pane fade @(activeTab == "expedientes" ? "show active" : "")">
+                            @if (empleadoViewModel.Id == 0)
+                            {
+                                <div class="alert alert-warning text-center mt-4 p-4">
+                                    <h4><i class="bi bi-lock"></i> Sección Bloqueada</h4>
+                                    <p>Primero guarda los datos personales para habilitar el expediente.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                                    <h6 class="text-primary mb-0"><i class="bi bi-folder"></i> Documentos del Empleado</h6>
+
+                                    @if (isEditable)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-success shadow-sm" @onclick="AbrirModalUnico">
+                                            <i class="bi bi-plus-lg"></i> Agregar Doc. Específico
+                                        </button>
+                                    }
+                                </div>
+
+                                @* --- 2. FORMULARIO MINI PARA CREAR NUEVO (ESTO FALTABA) --- *@
+                                @if (showModalUnico)
+                                {
+                                    <div class="card border-success mb-3 shadow-sm bg-light">
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title text-success mb-3"><i class="bi bi-file-earmark-plus"></i> Nuevo Requisito Específico</h6>
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-5">
+                                                    <label class="form-label small fw-bold">Nombre del Documento</label>
+                                                    <input @bind="nuevoDocNombre" class="form-control form-control-sm" placeholder="Ej. Diploma Curso Alturas" />
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small fw-bold">Nomenclatura (Corto)</label>
+                                                    <input @bind="nuevoDocNomenclatura" class="form-control form-control-sm" placeholder="Ej. DIP_ALTURAS" />
+                                                </div>
+                                                <div class="col-md-3 text-end">
+                                                    <button class="btn btn-sm btn-secondary me-1" @onclick="() => showModalUnico = false">Cancelar</button>
+                                                    <button class="btn btn-sm btn-success" @onclick="GuardarExpedienteUnico" disabled="@isBusy">Crear</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="table-responsive mt-3">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 40%">Documento</th>
+                                                <th style="width: 15%">Estado</th>
+                                                <th style="width: 20%">Vencimiento</th>
+                                                <th style="width: 25%">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var exp in expedientes)
+                                            {
+                                                @* CONDICIÓN: Si exp.DeuId tiene valor mayor a 0, es un documento único (Naranja) *@
+
+                                                <tr class="@(expedienteParaSubir?.DexId == exp.DexId && expedienteParaSubir?.DeuId == exp.DeuId ? "table-active border-bottom-0" : "")">
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+
+                                                            @* Ícono naranja para docs únicos *@
+                                                            @if (exp.DeuId > 0)
+                                                            {
+                                                                <div class="me-2 text-warning" title="Documento Específico (Adicional)">
+                                                                    <i class="bi bi-bookmark-plus-fill fs-5"></i>
+                                                                </div>
+                                                            }
+
+                                                            @* BOTÓN OJO: Solo para docs del catálogo estándar *@
+                                                            @if (isEditable && exp.DexId > 0 && exp.DeuId == null)
+                                                            {
+                                                                <button class="btn btn-sm btn-link p-0 me-2"
+                                                                        title="@(string.IsNullOrEmpty(exp.NombreArchivo) ? "Ocultar documento" : "No se puede ocultar, tiene archivo")"
+                                                                        disabled="@(!string.IsNullOrEmpty(exp.NombreArchivo))"
+                                                                        @onclick="() => OcultarDocumento(exp)">
+                                                                    <i class="bi bi-eye fs-5 text-secondary"></i>
+                                                                </button>
+                                                            }
+
+                                                            <div>
+                                                                <div class="fw-bold @(exp.DeuId > 0 ? "text-warning-emphasis" : "")">
+                                                                    @exp.Nombre
+                                                                </div>
+                                                                <small class="text-muted">@exp.Nomenclatura</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(exp.NombreArchivo))
+                                                        {
+                                                            <span class="badge bg-success"><i class="bi bi-check"></i> Cargado</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">Pendiente</span>
+                                                        }
+                                                    </td>
+                                                    <td>@(exp.FechaCaducidad?.ToShortDateString() ?? "-")</td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => PrepararSubida(exp)" disabled="@(!isEditable)" title="Subir archivo">
+                                                                <i class="bi bi-upload"></i> Subir
+                                                            </button>
+
+                                                            @if (!string.IsNullOrEmpty(exp.NombreArchivo) && exp.ExpId > 0)
+                                                            {
+                                                                <a href="/api/Archivo/@exp.ExpId" target="_blank" class="btn btn-sm btn-outline-info" title="Ver/Descargar">
+                                                                    <i class="bi bi-eye"></i> Ver
+                                                                </a>
+                                                                @if (isEditable)
+                                                                {
+                                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarArchivo(exp)" title="Eliminar archivo">
+                                                                        <i class="bi bi-trash"></i> Borrar
+                                                                    </button>
+                                                                }
+                                                            }
+
+                                                            
+
+                                                            @* Botón borrar: Solo docs únicos sin archivo *@
+                                                            @if (exp.DeuId.HasValue && exp.DeuId.Value > 0 && string.IsNullOrEmpty(exp.NombreArchivo) && isEditable)
+                                                            {
+                                                                <button class="btn btn-sm btn-outline-secondary ms-1"
+                                                                        title="Eliminar este requisito de la lista"
+                                                                        @onclick="() => BorrarRequisitoUnico(exp)">
+                                                                    <i class="bi bi-x-lg"></i>
+                                                                </button>
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                @* FORMULARIO DE SUBIDA DESPLEGABLE *@
+                                                @if (expedienteParaSubir != null &&
+                                                                                    ((exp.DexId > 0 && expedienteParaSubir.DexId == exp.DexId) ||
+                                                                                    (exp.DeuId > 0 && expedienteParaSubir.DeuId == exp.DeuId)))
+                                                {
+                                                    <tr class="table-light border-top-0">
+                                                        <td colspan="4" class="p-3">
+                                                            <div class="card border-primary shadow-sm">
+                                                                <div class="card-header bg-primary text-white py-1 d-flex justify-content-between align-items-center">
+                                                                    <small class="fw-bold">Subiendo: @exp.Nombre</small>
+                                                                    <button type="button" class="btn-close btn-close-white small" @onclick="CancelarSubida"></button>
+                                                                </div>
+                                                                <div class="card-body bg-white">
+                                                                    @if (!string.IsNullOrEmpty(fileErrorMessage))
+                                                                    {
+                                                                        <div class="alert alert-danger py-2 mb-2 small d-flex align-items-center">
+                                                                            <i class="bi bi-exclamation-triangle-fill me-2"></i><div>@fileErrorMessage</div>
+                                                                        </div>
+                                                                    }
+                                                                    <div class="row g-2 align-items-end">
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label small">Archivo (Max 10MB - @(EsFoto(exp) ? "Solo Imágenes" : "Solo PDF"))</label>
+                                                                            <InputFile OnChange="HandleFileSelected" class="form-control form-control-sm" accept="@(EsFoto(exp) ? ".jpg, .jpeg, .png, .webp, .avif, .heic, .raw, .tiff, .bmp" : ".pdf")" />
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="checkbox" @bind="tieneVencimiento" id="chk_@(exp.DexId > 0 ? exp.DexId : exp.DeuId)">
+                                                                                <label class="form-check-label small" for="chk_@(exp.DexId > 0 ? exp.DexId : exp.DeuId)">¿Vence?</label>
+                                                                            </div>
+                                                                            @if (tieneVencimiento)
+                                                                            {
+                                                                                <input type="date" @bind="fechaVencimientoInput" class="form-control form-control-sm mt-1" />
+                                                                            }
+                                                                        </div>
+                                                                        <div class="col-md-3 text-end">
+                                                                            <button class="btn btn-sm btn-secondary me-1" @onclick="CancelarSubida">Cancelar</button>
+                                                                            <button class="btn btn-sm btn-success" @onclick="ConfirmarSubida" disabled="@(archivoSeleccionado == null || isBusy)">
+                                                                                <i class="bi bi-save"></i> Guardar
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+
+                                    @if (isEditable && expedientesOcultos.Any())
+{
+    <div class="mt-3">
+        <h6 class="text-muted border-bottom pb-2">
+            <i class="bi bi-eye-slash me-1"></i> Documentos Ocultos
+        </h6>
+        <table class="table table-sm align-middle">
+            <tbody>
+                @foreach (var doc in expedientesOcultos)
+                {
+                    <tr class="text-muted">
+                        <td>
+                            <span class="fw-bold">@doc.DexNombre</span>
+                            <small class="ms-2">@doc.DexNomenclatura</small>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    title="Restaurar documento"
+                                    @onclick="() => RestaurarDocumento(doc.DexId)">
+                                <i class="bi bi-eye me-1"></i> Restaurar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+                                </div>
+                            }
+                        </div>
+
+                        <div class="tab-pane fade @(activeTab == "epp" ? "show active" : "")">
+                            @if (historialEpp == null || !historialEpp.Any())
+                            {
+                                <div class="text-center py-5 text-muted">
+                                    <i class="bi bi-box-seam display-4 opacity-50"></i>
+                                    <p class="mt-2">Este empleado no tiene registros de entrega de EPP.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive mt-3">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Equipos Entregados</th>
+                                                <th>Evidencia</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in historialEpp)
+                                            {
+                                                <tr>
+                                                    <td>@item.Fecha.ToShortDateString()</td>
+                                                    <td>
+                                                        @foreach (var equipo in item.ListaEpps.Split(','))
+                                                        {
+                                                            <span class="badge bg-secondary me-1">@equipo</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (item.TieneEvidencia)
+                                                        {
+                                                            <a href="api/Archivo/EntregaEpp/@item.EntId" target="_blank" class="btn btn-sm btn-outline-danger">
+                                                                <i class="bi bi-file-pdf"></i> Ver PDF
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted small">Sin archivo</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="tab-pane fade @(activeTab == "nomina" ? "show active" : "")">
+                            <div class="row g-3">
+                                <div class="col-12 border-bottom pb-2 mb-2">
+                                    <h6 class="text-primary m-0"><i class="bi bi-calculator"></i> Datos Salariales del Empleado</h6>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Salario Mensual Pactado</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" class="form-control"
+                                               @bind="empleadoViewModel.SaeMensual"
+                                               @bind:after="CalcularSalarios"
+                                               disabled="@(!isEditable)" />
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Ingresa el mensual y el resto se calculará solo.</small>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Salario Quincenal (Autocalculado)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">$</span>
+                                        <input type="number" class="form-control bg-light" @bind="empleadoViewModel.SaeQuincenal" readonly />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label text-primary fw-bold">S.D. (Salario Diario)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">$</span>
+                                        <input type="number" class="form-control bg-light text-primary fw-bold" @bind="empleadoViewModel.SaeSdi" readonly />
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Base para horas extras y festivos (Mensual / 30).</small>
+                                </div>
+
+
+                                @{
+                                    var listaBeneficios = empleadoViewModel.Beneficios.Where(b => b.Clasificacion == "BENEFICIO").ToList();
+                                    var listaDeducciones = empleadoViewModel.Beneficios.Where(b => b.Clasificacion == "DEDUCCION" || b.Clasificacion == "DEDUCCIONES").ToList();
+                                }
+
+                                @* ========================================== *@
+                                @* TABLA 1: BENEFICIOS ADICIONALES            *@
+                                @* ========================================== *@
+                                @if (listaBeneficios.Any())
+                                {
+                                    <div class="col-12 mt-4 border-bottom pb-2 mb-2">
+                                        <h6 class="text-success m-0 fw-bold"><i class="bi bi-plus-circle"></i> Beneficios Adicionales (Percepciones)</h6>
+                                    </div>
+                                    <div class="col-12">
+                                        <table class="table table-sm table-bordered align-middle mt-2" style="font-size: 0.85rem;">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Concepto</th>
+                                                    <th class="text-center" style="width: 150px;">Quincena 1</th>
+                                                    <th class="text-center" style="width: 150px;">Quincena 2</th>
+                                                    <th class="text-center" style="width: 150px;">Total Mensual</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var ben in listaBeneficios)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold text-secondary">@ben.ConceptoNombre</td>
+                                                        <td>
+                                                            <div class="input-group input-group-sm">
+                                                                <span class="input-group-text text-success">$</span>
+                                                                <input type="number" step="0.01" class="form-control text-end" @bind="ben.MontoQ1" disabled="@(!isEditable)" />
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group input-group-sm">
+                                                                <span class="input-group-text text-success">$</span>
+                                                                <input type="number" step="0.01" class="form-control text-end" @bind="ben.MontoQ2" disabled="@(!isEditable)" />
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-end fw-bold text-success">
+                                                            $@((ben.MontoQ1 + ben.MontoQ2).ToString("N2"))
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+
+                                @* ========================================== *@
+                                @* TABLA 2: DESCUENTOS FIJOS                  *@
+                                @* ========================================== *@
+                                @if (listaDeducciones.Any())
+                                {
+                                    <div class="col-12 mt-4 border-bottom pb-2 mb-2">
+                                        <h6 class="text-danger m-0 fw-bold"><i class="bi bi-dash-circle"></i> Descuentos Fijos (Deducciones)</h6>
+                                    </div>
+                                    <div class="col-12">
+                                        <table class="table table-sm table-bordered align-middle mt-2" style="font-size: 0.85rem;">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Concepto</th>
+                                                    <th class="text-center" style="width: 150px;">Quincena 1</th>
+                                                    <th class="text-center" style="width: 150px;">Quincena 2</th>
+                                                    <th class="text-center" style="width: 150px;">Total Mensual</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var ded in listaDeducciones)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold text-secondary">@ded.ConceptoNombre</td>
+                                                        <td>
+                                                            <div class="input-group input-group-sm">
+                                                                <span class="input-group-text text-danger">$</span>
+                                                                <input type="number" step="0.01" class="form-control text-end text-danger" @bind="ded.MontoQ1" disabled="@(!isEditable)" />
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group input-group-sm">
+                                                                <span class="input-group-text text-danger">$</span>
+                                                                <input type="number" step="0.01" class="form-control text-end text-danger" @bind="ded.MontoQ2" disabled="@(!isEditable)" />
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-end fw-bold text-danger">
+                                                            $@((ded.MontoQ1 + ded.MontoQ2).ToString("N2"))
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                        <small class="text-muted"><i class="bi bi-info-circle"></i> Estos montos fijos se integrarán automáticamente al generar cada periodo de nómina.</small>
+                                    </div>
+                                }
+
+
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="col-12 mb-2">
+                            <div class="alert alert-danger d-flex align-items-center mb-0 py-2" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div>@errorMessage</div>
+                            </div>
+                        </div>
+                    }
+
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" @onclick="Close">Cerrar</button>
+
+                        @if (isEditable)
+                        {
+                            <button type="button" class="btn btn-primary" @onclick="GuardarCambios" disabled="@isBusy">
+                                Guardar Todo
+                            </button>
+                        }
+                        else
+                        {
+                            @* SOLO MOSTRAMOS EL BOTÓN SI _allowEditSwitch ES TRUE *@
+                            @if (_allowEditSwitch)
+                            {
+                                <button type="button" class="btn btn-warning" @onclick="ToggleEditMode">Habilitar Edición</button>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showSuccessPopup)
+{
+    <div class="modal-backdrop fade show" style="z-index: 2000;"></div>
+    <div class="position-fixed top-50 start-50 translate-middle" style="z-index: 2050; min-width: 300px;">
+        <div class="card shadow-lg border-0">
+            <div class="card-body text-center p-4">
+                <div class="mb-3"><i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i></div>
+                <h4 class="fw-bold text-dark">¡Guardado!</h4>
+                <p class="text-muted mb-0">Los datos se actualizaron correctamente.</p>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool showModal = false;
+    private bool showSuccessPopup = false;
+    private string activeTab = "datos";
+    private bool isEditable = false;
+    private string pageTitle = "";
+    private string errorMessage = ""; // Error general del formulario
+    private string fileErrorMessage = ""; // Error específico de archivos
+
+    private EmpleadoViewModel empleadoViewModel = new();
+    private List<ExpedienteViewModel> expedientes = new();
+    private List<EmpleadoViewModel> supervisoresList = new();
+    private List<EntregaEppViewModel> historialEpp = new();
+
+    private List<Area> areasList = new();
+    private List<Subsidiarium> subsidiariasList = new();
+    private List<TipoAplicante> tiposList = new();
+    private List<PerfilPuesto> perfilesPuestoList = new();
+
+    // --- MODIFICADO: Listas independientes para el Puesto 1 y Puesto 2 ---
+    private List<PerfilPuesto> cargosDisponiblesPrincipal = new();
+    private List<PerfilPuesto> cargosDisponiblesSecundario = new();
+
+    private List<Status> statusList = new();
+    private List<string> rolesList = new(); // Nueva lista para el combo
+
+    private List<DetalleExpediente> expedientesOcultos = new();
+
+
+    private ExpedienteViewModel? expedienteParaSubir;
+    private IBrowserFile? archivoSeleccionado;
+    private bool tieneVencimiento = false;
+    private DateTime? fechaVencimientoInput;
+
+    private bool showModalUnico = false;
+    private string nuevoDocNombre = "";
+    private string nuevoDocNomenclatura = "";
+
+    private bool _allowEditSwitch = true;
+    private bool isBusy = false;
+
+    private void AbrirModalUnico()
+    {
+        nuevoDocNombre = "";
+        nuevoDocNomenclatura = "";
+        showModalUnico = true;
+    }
+
+    private async Task GuardarExpedienteUnico()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoDocNombre) || string.IsNullOrWhiteSpace(nuevoDocNomenclatura))
+        {
+            // Validación simple
+            return;
+        }
+
+        isBusy = true; // Mostramos spinner si lo tienes
+        StateHasChanged();
+
+        try
+        {
+            // Llamamos al service que creamos
+            await EmpleadoService.AddExpedienteUnicoAsync(empleadoViewModel.Id, nuevoDocNombre, nuevoDocNomenclatura);
+
+            // Recargamos la lista para ver el nuevo documento en la tabla
+            expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(empleadoViewModel.Id);
+
+            showModalUnico = false;
+        }
+        catch (Exception ex)
+        {
+            // Manejo de error (puedes usar tu variable errorMessage)
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    // 3. Borrar un requisito único (Botón X)
+    private async Task BorrarRequisitoUnico(ExpedienteViewModel exp)
+    {
+        if (exp.DeuId.HasValue && exp.DeuId.Value > 0)
+        {
+            // Opcional: Aquí podrías poner una confirmación con JSRuntime
+            // bool confirmed = await JS.InvokeAsync<bool>("confirm", "¿Seguro de eliminar este requisito?");
+            // if (!confirmed) return;
+
+            isBusy = true;
+            try
+            {
+                await EmpleadoService.DeleteRequisitoUnicoAsync(exp.DeuId.Value);
+                expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(empleadoViewModel.Id);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error borrando requisito: {ex.Message}");
+            }
+            finally
+            {
+                isBusy = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    // Función para identificar si el expediente actual es la foto
+
+    private bool EsFoto(ExpedienteViewModel exp)
+
+    {
+
+        if (exp == null) return false;
+
+
+
+        // OPCIÓN A: Si sabes el ID exacto de la foto en la BD (RECOMENDADO)
+
+        return exp.DexId == 13;
+
+
+
+        // OPCIÓN B: Por nombre (Más flexible pero cuidado con mayúsculas/tildes)
+
+        return exp.Nombre.Contains("Foto", StringComparison.OrdinalIgnoreCase) ||
+
+               exp.Nombre.Contains("Perfil", StringComparison.OrdinalIgnoreCase);
+
+    }
+
+    public async Task Open(int id, bool editable, string initialTab = "datos", bool allowEditSwitch = true)
+    {
+        // 1. ACTIVAR EL SPINNER AL INICIO
+        isBusy = true;
+        showModal = true;
+        StateHasChanged();
+        await Task.Delay(100); // Pequeña pausa para que Blazor pinte el spinner
+
+        try
+        {
+            showSuccessPopup = false;
+            errorMessage = ""; // Limpiar errores
+
+            activeTab = initialTab;
+            isEditable = editable;
+            _allowEditSwitch = allowEditSwitch;
+            expedienteParaSubir = null;
+
+            try
+            {
+                areasList = await EmpleadoService.GetAreasAsync();
+                subsidiariasList = await EmpleadoService.GetSubsidiariasAsync();
+                tiposList = await EmpleadoService.GetTiposAplicanteAsync();
+                perfilesPuestoList = await EmpleadoService.GetPerfilesPuestoAsync();
+                statusList = await EmpleadoService.GetStatusCatalogoAsync();
+
+                supervisoresList = await EmpleadoService.GetSupervisoresAsync();
+                rolesList = await EmpleadoService.GetAllRolesAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error cargando catálogos");
+                errorMessage = "Error de conexión cargando listas.";
+            }
+
+            if (id == 0)
+            {
+                pageTitle = "Nuevo Empleado";
+                empleadoViewModel = new EmpleadoViewModel { FechaNacimiento = null, StaId = 1 }; //MODIFICADO 17 DIC
+                expedientes = new List<ExpedienteViewModel>();
+
+                // --- MODIFICADO ---
+                cargosDisponiblesPrincipal = new List<PerfilPuesto>();
+                cargosDisponiblesSecundario = new List<PerfilPuesto>();
+            }
+            else
+            {
+                pageTitle = "Cargando datos..."; // Mensaje temporal
+                StateHasChanged();
+
+                try
+                {
+                    empleadoViewModel = await EmpleadoService.GetEmpleadoByIdAsync(id);
+                    pageTitle = $"Ficha de: {empleadoViewModel.Nombre} {empleadoViewModel.ApellidoPaterno}";
+                    expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(id);
+                    await CargarExpedientesOcultos(); // <--- AGREGAR AQUÍ
+                    historialEpp = await EmpleadoService.GetHistorialEppByEmpleadoIdAsync(id);
+
+                    RecargarListasDeCargos();
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = "Error al cargar datos del empleado.";
+                }
+            }
+            imageCacheId = DateTime.Now.Ticks.ToString();
+        }
+        finally
+        {
+            // 2. APAGAR EL SPINNER AL TERMINAR (Pase lo que pase)
+            isBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private void AgregarContacto()
+    {
+        empleadoViewModel.ContactosEmergencia.Add(new ContactoEmergenciaDTO());
+    }
+
+    private void EliminarContactoDeLista(ContactoEmergenciaDTO item)
+    {
+        empleadoViewModel.ContactosEmergencia.Remove(item);
+        // Si borramos todos, agregamos uno vacío para que no quede feo
+        if (empleadoViewModel.ContactosEmergencia.Count == 0)
+        {
+            empleadoViewModel.ContactosEmergencia.Add(new ContactoEmergenciaDTO());
+        }
+    }
+
+    private async Task Close() { showModal = false; await OnClose.InvokeAsync(); StateHasChanged(); }
+    private void ToggleEditMode() => isEditable = true;
+
+    // --- MODIFICADO: Propiedad para el Área Principal ---
+    private string SelectedArea
+    {
+        get => empleadoViewModel.Area ?? string.Empty;
+        set
+        {
+            if (empleadoViewModel.Area == value) return;
+
+            empleadoViewModel.Area = value;
+            empleadoViewModel.Empleo = ""; // Resetea el cargo porque el área cambió.
+
+            cargosDisponiblesPrincipal = string.IsNullOrEmpty(value)
+                ? new List<PerfilPuesto>()
+                : perfilesPuestoList.Where(p => p.Are != null && p.Are.AreNombre == value).ToList();
+        }
+    }
+
+    // --- NUEVO: Propiedad para el Área Secundaria ---
+    private string SelectedAreaSecundaria
+    {
+        get => empleadoViewModel.Area2 ?? string.Empty;
+        set
+        {
+            if (empleadoViewModel.Area2 == value) return;
+
+            empleadoViewModel.Area2 = value;
+            empleadoViewModel.Empleo2 = ""; // Resetea el puesto 2
+
+            cargosDisponiblesSecundario = string.IsNullOrEmpty(value)
+                ? new List<PerfilPuesto>()
+                : perfilesPuestoList.Where(p => p.Are != null && p.Are.AreNombre == value).ToList();
+        }
+    }
+
+    // --- NUEVO: Helper para recargar combos al abrir o guardar ---
+    private void RecargarListasDeCargos()
+    {
+        cargosDisponiblesPrincipal = string.IsNullOrEmpty(empleadoViewModel.Area)
+            ? new List<PerfilPuesto>()
+            : perfilesPuestoList.Where(p => p.Are != null && p.Are.AreNombre == empleadoViewModel.Area).ToList();
+
+        cargosDisponiblesSecundario = string.IsNullOrEmpty(empleadoViewModel.Area2)
+            ? new List<PerfilPuesto>()
+            : perfilesPuestoList.Where(p => p.Are != null && p.Are.AreNombre == empleadoViewModel.Area2).ToList();
+    }
+
+    // 1. AGREGA ESTA FUNCIÓN NUEVA PARA VALIDAR
+    private bool ValidarDatosPersonales()
+    {
+        // Validar textos básicos
+        if (string.IsNullOrWhiteSpace(empleadoViewModel.Nombre) ||
+            string.IsNullOrWhiteSpace(empleadoViewModel.ApellidoPaterno) ||
+            string.IsNullOrWhiteSpace(empleadoViewModel.ApellidoMaterno) ||
+            string.IsNullOrWhiteSpace(empleadoViewModel.Email) ||
+            string.IsNullOrWhiteSpace(empleadoViewModel.Telefono))
+        {
+            errorMessage = "Todos los campos de texto (Nombre, Apellidos, Email, Teléfono) son obligatorios.";
+            return false;
+        }
+
+        // Validar Combos (Strings)
+        if (string.IsNullOrEmpty(empleadoViewModel.Genero))
+        {
+            errorMessage = "Debes seleccionar un Género.";
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(empleadoViewModel.Empleo))
+        {
+            errorMessage = "Debes seleccionar un Cargo Principal.";
+            return false;
+        }
+
+        // --- NUEVO: Validar coherencia del segundo puesto ---
+        if (!string.IsNullOrEmpty(empleadoViewModel.Area2) && string.IsNullOrEmpty(empleadoViewModel.Empleo2))
+        {
+            errorMessage = "Si seleccionas un Área Secundaria, debes asignar también el Segundo Cargo.";
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(empleadoViewModel.Subsidiaria))
+        {
+            errorMessage = "Debes seleccionar una Subsidiaria.";
+            return false;
+        }
+        if (string.IsNullOrEmpty(empleadoViewModel.RolSeleccionado))
+        {
+            errorMessage = "Debes asignar un Rol de Sistema.";
+            return false;
+        }
+
+        if (empleadoViewModel.FechaContratacion == null ||
+        empleadoViewModel.FechaContratacion == DateTime.MinValue)
+        {
+            errorMessage = "La Fecha de Contratación es obligatoria.";
+            return false;
+        }
+
+        // Validar Combos (IDs numéricos)
+        if (empleadoViewModel.TipId == 0)
+        {
+            errorMessage = "Debes seleccionar el Tipo de Colaborador.";
+            return false;
+        }
+
+        // Validar Fecha (Evitar fecha por defecto 0001-01-01)
+        if (empleadoViewModel.FechaNacimiento == DateTime.MinValue ||
+            empleadoViewModel.FechaNacimiento == default)
+        {
+            errorMessage = "La Fecha de Nacimiento no es válida.";
+            return false;
+        }
+
+        return true;
+    }
+
+    // 2. MODIFICA EL MÉTODO GUARDARCAMBIOS ASÍ:
+    private async Task GuardarCambios()
+    {
+        errorMessage = ""; // Limpiar errores previos
+
+        // Llamamos a la validación antes de guardar
+        if (!ValidarDatosPersonales())
+        {
+            // Si falla, el errorMessage ya se llenó en la función, así que solo salimos.
+            // Forzamos el salto a la pestaña de datos para que el usuario vea el error
+            activeTab = "datos";
+            StateHasChanged();
+            return;
+        }
+
+        isBusy = true;
+        StateHasChanged();
+
+        try
+        {
+            await EmpleadoService.SaveEmpleadoAsync(empleadoViewModel);
+
+            showModal = false;
+            showSuccessPopup = true;
+            StateHasChanged();
+            await Task.Delay(1500);
+            showSuccessPopup = false;
+            await OnClose.InvokeAsync();
+
+            if (empleadoViewModel.Id > 0)
+            {
+                empleadoViewModel = await EmpleadoService.GetEmpleadoByIdAsync(empleadoViewModel.Id);
+                pageTitle = $"Ficha de: {empleadoViewModel.Nombre} {empleadoViewModel.ApellidoPaterno}";
+
+                // --- MODIFICADO ---
+                RecargarListasDeCargos();
+
+                // Recarga la lista de jefes por si este mismo empleado acaba de convertirse en uno
+                supervisoresList = await EmpleadoService.GetSupervisoresAsync();
+
+                imageCacheId = DateTime.Now.Ticks.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error guardando empleado");
+            errorMessage = $"Ocurrió un error al guardar: {ex.Message}";
+        }
+        finally
+        {
+            // LIBERAR LA PANTALLA (Incluso si hay error)
+            isBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private void PrepararSubida(ExpedienteViewModel exp)
+    {
+        expedienteParaSubir = exp;
+        archivoSeleccionado = null;
+        fileErrorMessage = "";
+        tieneVencimiento = exp.FechaCaducidad.HasValue;
+        fechaVencimientoInput = exp.FechaCaducidad ?? DateTime.Today;
+    }
+
+    private void CancelarSubida() { expedienteParaSubir = null; fileErrorMessage = ""; }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        fileErrorMessage = "";
+        archivoSeleccionado = null;
+        if (expedienteParaSubir == null) return;
+        var file = e.File;
+        long maxFileSize = 1024 * 1024 * 10;
+
+        if (file.Size > maxFileSize)
+        {
+            fileErrorMessage = $"Archivo muy pesado (Límite 10MB)";
+            return;
+        }
+
+        var ext = Path.GetExtension(file.Name).ToLower();
+        string[] permitidas;
+        string mensajeError;
+
+        if (EsFoto(expedienteParaSubir))
+        {
+            // Si es la foto, permitimos imágenes
+            permitidas = new[] { ".jpg", ".jpeg", ".png", ".webp", ".avif", ".heic", ".raw", ".tiff", ".bmp" };
+            mensajeError = "Solo se aceptan imágenes (JPG, PNG).";
+        }
+        else
+        {
+            // Para todo lo demás, solo PDF
+            permitidas = new[] { ".pdf" };
+            mensajeError = "Para este documento solo se acepta PDF.";
+        }
+        // ----------------------------
+
+        if (!permitidas.Contains(ext))
+        {
+            fileErrorMessage = $"Formato no permitido ({ext}). {mensajeError}";
+            return;
+        }
+
+        archivoSeleccionado = file;
+    }
+
+    private async Task ConfirmarSubida()
+
+    {
+
+        if (expedienteParaSubir == null || archivoSeleccionado == null) return;
+
+
+
+        // 2. ACTIVAR EL BLOQUEO
+
+        isBusy = true;
+
+        // Forzamos renderizado para que aparezca el spinner inmediatamente
+
+        StateHasChanged();
+
+
+
+        // Pequeña pausa para asegurar que la UI se actualice antes de empezar el proceso pesado
+
+        await Task.Delay(500);
+
+
+
+        try
+
+        {
+
+            using var stream = archivoSeleccionado.OpenReadStream(1024 * 1024 * 10);
+
+            expedienteParaSubir.NombreArchivo = archivoSeleccionado.Name;
+
+            expedienteParaSubir.FechaCaducidad = tieneVencimiento ? fechaVencimientoInput : null;
+
+
+
+            await EmpleadoService.UpdateExpedienteConArchivoAsync(expedienteParaSubir, stream);
+
+            CancelarSubida();
+
+            expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(empleadoViewModel.Id);
+
+            CancelarSubida();
+
+
+
+            expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(empleadoViewModel.Id);
+
+
+
+            // Agregamos esto para refrescar la imagen visualmente
+
+            imageCacheId = DateTime.Now.Ticks.ToString();
+
+
+
+            CancelarSubida();
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            Logger.LogError(ex, "Error subiendo archivo");
+
+            fileErrorMessage = "Error al subir el archivo a la BD.";
+
+        }
+
+        finally
+
+        {
+
+            // 3. DESACTIVAR EL BLOQUEO (Siempre, aunque falle)
+
+            isBusy = false;
+
+            StateHasChanged();
+
+        }
+
+    }
+
+    private async Task EliminarArchivo(ExpedienteViewModel exp)
+    {
+        if (exp.ExpId > 0)
+        {
+            await EmpleadoService.DeleteArchivoAsync(exp.ExpId);
+            expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(empleadoViewModel.Id);
+        }
+    }
+
+    // Variable para forzar la recarga de la imagen si se actualiza
+    private string imageCacheId = "";
+
+    // Propiedad para obtener la URL de la foto
+    private string UrlFotoPerfil
+    {
+        get
+        {
+            // Buscamos el expediente con DexId 13 (Foto) y que tenga un ID válido (ya subido)
+            var foto = expedientes.FirstOrDefault(x => x.DexId == 13 && x.ExpId > 0);
+
+            if (foto != null)
+            {
+                // Retornamos la ruta a tu API + un timestamp para evitar caché antiguo
+                return $"/api/Archivo/{foto.ExpId}?t={imageCacheId}";
+            }
+
+            // Si no hay foto, retornamos null (o podrías retornar una ruta a una imagen default)
+            return null;
+        }
+    }
+
+    private void CalcularSalarios()
+    {
+        if (empleadoViewModel.SaeMensual.HasValue)
+        {
+            // Se divide el mensual entre 2 para la quincena
+            empleadoViewModel.SaeQuincenal = Math.Round(empleadoViewModel.SaeMensual.Value / 2, 2);
+
+            // Según tu regla de negocio: se divide el mensual entre 30 para el SDI
+            empleadoViewModel.SaeSdi = Math.Round(empleadoViewModel.SaeMensual.Value / 30, 2);
+        }
+        else
+        {
+            empleadoViewModel.SaeQuincenal = null;
+            empleadoViewModel.SaeSdi = null;
+        }
+    }
+
+
+
+    private async Task CargarExpedientesOcultos()
+    {
+        expedientesOcultos = await EmpleadoService.GetExpedientesOcultosAsync(empleadoViewModel.Id);
+    }
+
+    private async Task OcultarDocumento(ExpedienteViewModel exp)
+    {
+        if (exp.DexId > 0)
+        {
+            isBusy = true;
+            try
+            {
+                await EmpleadoService.OcultarDocumentoEstandarAsync(empleadoViewModel.Id, exp.DexId);
+                expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(empleadoViewModel.Id);
+                await CargarExpedientesOcultos();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error al ocultar documento: {ex.Message}";
+            }
+            finally
+            {
+                isBusy = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task RestaurarDocumento(int dexId)
+    {
+        isBusy = true;
+        try
+        {
+            await EmpleadoService.MostrarDocumentoEstandarAsync(empleadoViewModel.Id, dexId);
+            expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(empleadoViewModel.Id);
+            await CargarExpedientesOcultos();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al restaurar documento: {ex.Message}";
+        }
+        finally
+        {
+            isBusy = false;
+            StateHasChanged();
+        }
+    }
+}

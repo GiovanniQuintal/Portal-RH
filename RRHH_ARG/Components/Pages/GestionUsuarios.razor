@@ -1,0 +1,210 @@
+﻿@page "/GestionUsuarios"
+@using Microsoft.AspNetCore.Identity
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@inject EmpleadoService EmpleadoService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Administración de Usuarios</h3>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="alert alert-info">Cargando usuarios...</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle shadow-sm bg-white rounded">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Nombre Completo</th>
+                        <th>Email</th>
+                        <th>Estado Contraseña</th>
+                        <th>Rol (Cambio Directo)</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in usuarios)
+                    {
+                        <tr>
+                            <td class="fw-bold text-secondary">@user.EmpleadoNombreCompleto</td>
+                            <td>@user.Email</td>
+                            <td class="text-center">
+                                @if (user.EsPrimerIngreso)
+                                {
+                                    <span class="badge bg-warning text-dark">Default / Sin Cambiar</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Modificada (OK)</span>
+                                }
+                            </td>
+                            <td>
+                                <select class="form-select"
+                                        value="@user.SelectedRoleDraft"
+                                        @onchange="@(e => PreparaCambioRol(user, e.Value.ToString()))">
+                                    @foreach (var rol in rolesDisponibles)
+                                    {
+                                        <option value="@rol">@rol</option>
+                                    }
+                                </select>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-outline-danger btn-sm"
+                                        @onclick="() => PreparaResetPassword(user)"
+                                        title="Reiniciar contraseña a default">
+                                    <i class="bi bi-key-fill"></i> Reiniciar Pass
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@* --- MODAL BOOLEANO DE CONFIRMACIÓN --- *@
+@if (mostrarModal)
+{
+    <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+    <div class="modal fade show d-block" tabindex="-1" style="z-index: 1055;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header @(esAccionPeligrosa ? "bg-danger text-white" : "bg-primary text-white")">
+                    <h5 class="modal-title">
+                        <i class="bi @(esAccionPeligrosa ? "bi-exclamation-triangle" : "bi-info-circle") me-2"></i>
+                        Confirmar Acción
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fs-5">@mensajeModal</p>
+                    @if (esAccionPeligrosa)
+                    {
+                        <div class="alert alert-warning mt-2">
+                            <small>Esta acción restaurará la contraseña por defecto y solicitará cambio al ingresar.</small>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="btn @(esAccionPeligrosa ? "btn-danger" : "btn-primary")"
+                            @onclick="EjecutarAccionPendiente">
+                        Sí, Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<UsuarioSistemaViewModel> usuarios = new List<UsuarioSistemaViewModel>();
+    private List<string> rolesDisponibles = new List<string>();
+    private bool isLoading = true;
+
+    // --- VARIABLES DEL MODAL ---
+    private bool mostrarModal = false;
+    private string mensajeModal = "";
+    private bool esAccionPeligrosa = false;
+    private Func<Task> accionPendiente; // Almacena la función que se va a ejecutar
+    private Action accionCancelar;      // Almacena qué hacer si se cancela (ej: revertir el select)
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        isLoading = true;
+        usuarios = await EmpleadoService.GetUsuariosSistemaAsync();
+        rolesDisponibles = await EmpleadoService.GetAllRolesAsync();
+        isLoading = false;
+    }
+
+    // 1. PREPARAR CAMBIO DE ROL (Al cambiar el select)
+    private void PreparaCambioRol(UsuarioSistemaViewModel user, string nuevoRol)
+    {
+        // Guardamos el rol anterior por si cancela
+        string rolAnterior = user.CurrentRole;
+
+        // Configuramos el modal
+        mensajeModal = $"¿Realmente deseas cambiar el rol de {user.EmpleadoNombreCompleto} de '{rolAnterior}' a '{nuevoRol}'?";
+        esAccionPeligrosa = false;
+
+        // Definimos qué pasa si dice SÍ
+        accionPendiente = async () =>
+        {
+            await EmpleadoService.UpdateUserRoleAsync(user.UserId, nuevoRol);
+            user.CurrentRole = nuevoRol; // Actualizamos visualmente
+            user.SelectedRoleDraft = nuevoRol;
+        };
+
+        // Definimos qué pasa si dice NO (Revertir el select visualmente)
+        accionCancelar = () =>
+        {
+            user.SelectedRoleDraft = rolAnterior; // Forzamos al select a volver atrás
+        };
+
+        mostrarModal = true;
+    }
+
+    // 2. PREPARAR RESET PASSWORD (Al hacer click en botón)
+    private void PreparaResetPassword(UsuarioSistemaViewModel user)
+    {
+        mensajeModal = $"¿Estás seguro de reiniciar la contraseña para {user.EmpleadoNombreCompleto}? Volverá a la password por defecto.";
+        esAccionPeligrosa = true;
+
+        accionPendiente = async () =>
+        {
+            await EmpleadoService.ResetPasswordToDefaultAsync(user.UserId);
+            user.EsPrimerIngreso = true; // Actualizamos visualmente la etiqueta
+        };
+
+        accionCancelar = () => { }; // No hay nada visual que revertir aquí
+
+        mostrarModal = true;
+    }
+
+    // 3. CERRAR / CANCELAR MODAL
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        if (accionCancelar != null)
+        {
+            accionCancelar.Invoke();
+        }
+    }
+
+    // 4. EJECUTAR ACCIÓN (El Form POST real)
+    private async Task EjecutarAccionPendiente()
+    {
+        mostrarModal = false;
+        try
+        {
+            if (accionPendiente != null)
+            {
+                await accionPendiente.Invoke();
+                // Opcional: Mostrar toast de éxito
+            }
+        }
+        catch (Exception ex)
+        {
+            // Manejo básico de errores (podrías usar un Toast o Alert JS)
+            Console.WriteLine($"Error: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", "Ocurrió un error al procesar la solicitud: " + ex.Message);
+            // Si falló, ejecutamos reversión visual
+            accionCancelar?.Invoke();
+        }
+    }
+}

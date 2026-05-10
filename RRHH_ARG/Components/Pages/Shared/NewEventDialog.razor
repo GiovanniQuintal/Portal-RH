@@ -1,0 +1,100 @@
+﻿@using  RRHH_ARG.Data  
+
+@if (IsVisible)
+{
+    <div class="modal fade show" style="display:block" aria-modal="true" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <EditForm Model="@newEvent" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Crear Nuevo Evento de RRHH</h5>
+                        <button type="button" class="btn-close" @onclick="Cancel"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="eventType" class="form-label">Tipo de Evento:</label>
+                            <InputSelect id="eventType" @bind-Value="newEvent.Type" class="form-select">
+                                @foreach (var eventType in Enum.GetValues(typeof(RHEvent.EventType)))
+                                {
+                                    <option value="@eventType">@eventType.ToString().Replace('_', ' ')</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Nombre/Título:</label>
+                            <InputText id="title" @bind-Value="newEvent.Title" class="form-control" />
+                            <ValidationMessage For="@(() => newEvent.Title)" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="date" class="form-label">Fecha:</label>
+                            <InputDate id="date" @bind-Value="newEvent.Date" class="form-control" />
+                            <ValidationMessage For="@(() => newEvent.Date)" />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Crear</button>
+                    </div>
+                </EditForm>
+
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<RHEvent?> OnClose { get; set; } // Devolverá el evento o null si se cancela
+
+    private NewEventModel newEvent = new();
+
+    protected override void OnParametersSet()
+    {
+        // Reinicia el modelo cada vez que el modal se hace visible
+        if (IsVisible)
+        {
+            newEvent = new NewEventModel();
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Lógica similar a tu getIconPathForType en Java
+        string iconPath = newEvent.Type switch
+        {
+            RHEvent.EventType.CUMPLEAÑOS => "images/birthday_icon.png",
+            RHEvent.EventType.ENTREVISTA => "images/interview_icon.png",
+            RHEvent.EventType.EXPEDIENTE_VENCIMIENTO => "images/document_icon.png",
+            _ => "images/document_icon.png",
+            
+
+        };
+
+        var finalEvent = new RHEvent(newEvent.Title, newEvent.Date, newEvent.Type, iconPath, 0);
+        await OnClose.InvokeAsync(finalEvent);
+    }
+
+    private async Task Cancel()
+    {
+        await OnClose.InvokeAsync(null);
+    }
+
+    // Modelo auxiliar para validaciones del formulario
+    public class NewEventModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El título es obligatorio.")]
+        public string Title { get; set; } = "";
+        public DateTime Date { get; set; } = DateTime.Today;
+        public RHEvent.EventType Type { get; set; } = RHEvent.EventType.ENTREVISTA;
+    }
+}

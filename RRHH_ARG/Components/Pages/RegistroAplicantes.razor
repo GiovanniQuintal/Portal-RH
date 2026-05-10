@@ -1,0 +1,580 @@
+﻿@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
+
+@inject IWebHostEnvironment Environment
+@inject ILogger<RegistroAplicantes> Logger
+@inject EmpleadoService EmpleadoService
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH")]
+
+@if (showModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@modalTitle</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                    <EditForm Model="@AplicanteModel" OnValidSubmit="OnValidSubmit" id="registroForm">
+                        
+                        <DataAnnotationsValidator />
+
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Fecha de registro</label>
+                                <InputDate TValue="DateTime ?" @bind-Value="AplicanteModel.FechaRegistro" class="form-control" disabled="@isReadOnly" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Nombres</label>
+                                <InputText @bind-Value="AplicanteModel.Nombre" class="form-control" disabled="@isReadOnly" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Apellido Paterno</label>
+                                <InputText @bind-Value="AplicanteModel.ApellidoPaterno" class="form-control" disabled="@isReadOnly" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Apellido Materno</label>
+                                <InputText @bind-Value="AplicanteModel.ApellidoMaterno" class="form-control" disabled="@isReadOnly" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Género</label>
+                                <InputSelect @bind-Value="AplicanteModel.Genero" class="form-select" disabled="@isReadOnly">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Femenino">Femenino</option>
+                                    <option value="Otro">Otro</option>
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha de nacimiento</label>
+                                <InputDate TValue="DateTime ?" @bind-Value="AplicanteModel.FechaNacimiento" class="form-control" disabled="@isReadOnly" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <InputText @bind-Value="AplicanteModel.Email" class="form-control" disabled="@isReadOnly" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Celular</label>
+                                <InputText @bind-Value="AplicanteModel.Telefono" class="form-control" disabled="@isReadOnly" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Área</label>
+                                <InputSelect TValue="string" @bind-Value="SelectedArea" class="form-select" disabled="@isReadOnly">
+                                    <option value="">Seleccione un área...</option>
+                                    @foreach (var area in areasList)
+                                    {
+                                        <option value="@area.AreNombre">@area.AreNombre</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Cargo</label>
+                                <InputSelect TValue="string" @bind-Value="AplicanteModel.Empleo" class="form-select" disabled="@(isReadOnly || string.IsNullOrEmpty(SelectedArea))">
+                                    <option value="">Seleccione un cargo...</option>
+                                    @foreach (var cargo in cargosDisponibles)
+                                    {
+                                        <option value="@cargo.PepNombre">@cargo.PepNombre</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Subsidiaria</label>
+                                <InputSelect TValue="string" @bind-Value="AplicanteModel.Subsidiaria" class="form-select" disabled="@isReadOnly">
+                                    <option value="">Seleccionar...</option>
+                                    @foreach (var sub in subsidiariasList)
+                                    {
+                                        <option value="@sub.SubNombre">@sub.SubNombre</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Aplicante</label>
+                                <InputSelect TValue="string" @bind-Value="AplicanteModel.TipoEmpleado" class="form-select" disabled="@isReadOnly">
+                                    <option value="">Seleccionar...</option>
+                                    @foreach (var tipo in tiposAplicanteList)
+                                    {
+                                        <option value="@tipo.TipNombre">@tipo.TipNombre</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            @if (currentMode != "Agregar")
+                            {
+                                <div class="col-md-6">
+                                    <label for="status" class="form-label">Estatus de Aplicante</label>
+                                    <InputSelect TValue="string" id="status" @bind-Value="StatusBinding" class="form-select" disabled="@isReadOnly">
+                                        <option value="Candidato">Candidato</option>
+                                        <option value="Rechazado">Rechazado</option>
+                                    </InputSelect>
+                                </div>
+                            }
+
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-12">
+                                <label class="form-label">Curriculum Vitae (CV)</label>
+
+                                @if (!string.IsNullOrEmpty(AplicanteModel.AplCv))
+                                {
+                                    <div class="input-group mb-3">
+                                        @if (archivoSeleccionado != null)
+                                        {
+                                            <span class="form-control text-secondary">
+                                                @AplicanteModel.AplCv (Pendiente de guardar)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <a href="/api/Archivo/Aplicante/@AplicanteModel.AplId" target="_blank" class="form-control text-decoration-none text-primary">
+                                                @AplicanteModel.AplCv
+                                            </a>
+                                        }
+
+                                        @if (!isReadOnly)
+                                        {
+                                            <button class="btn btn-outline-danger" type="button" @onclick="DeleteCv">
+                                                <i class="bi bi-trash"></i> Eliminar
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="input-group">
+                                        <InputFile id="cv" OnChange="HandleFileSelected" class="form-control" disabled="@isReadOnly" accept=".pdf,.doc,.docx,.jpg,.png" />
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(uploadStatusMessage))
+                                {
+                                    <div class="alert @(uploadStatusMessage.StartsWith("Error") ? "alert-danger" : "alert-info") mt-2 py-2" role="alert">
+                                        @uploadStatusMessage
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Inicio de Entrevista</label>
+                                <InputDate Type="InputDateType.DateTimeLocal"
+                                           @bind-Value="AplicanteModel.FechaInicioEntrevista"
+                                           class="form-control"
+                                           disabled="@isReadOnly" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Término de Entrevista</label>
+                                <InputDate Type="InputDateType.DateTimeLocal"
+                                           @bind-Value="AplicanteModel.FechaTerminoEntrevista"
+                                           class="form-control"
+                                           disabled="@isReadOnly" />
+                            </div>
+                        </div>
+
+                        <div class="modal-footer mt-3">
+                            @if (!string.IsNullOrEmpty(validationError))
+                            {
+                                <div class="col-12 mb-2">
+                                    <div class="alert alert-danger d-flex align-items-center py-2" role="alert">
+                                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                                        <div>@validationError</div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(uploadStatusMessage) && uploadStatusMessage.StartsWith("Error"))
+                            {
+                                <div class="col-12 mb-2">
+                                    <div class="alert alert-danger py-2" role="alert">
+                                        @uploadStatusMessage
+                                    </div>
+                                </div>
+                            }
+
+
+                            <button type="button" class="btn btn-secondary" @onclick="Close">@(isReadOnly ? "Cerrar" : "Cancelar")</button>
+                            @if (!isReadOnly)
+                            {
+                                <button type="submit" class="btn btn-primary" disabled="@(!string.IsNullOrEmpty(uploadStatusMessage) && uploadStatusMessage.StartsWith("Error"))">
+                                    Guardar
+                                </button>
+                            }
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<AplicanteViewModel> OnSubmit { get; set; }
+
+    private AplicanteViewModel AplicanteModel { get; set; } = new();
+    private bool showModal = false;
+    private string modalTitle = "";
+    private bool isReadOnly = false;
+    private string StatusBinding { get; set; } = "Candidato";
+    private string uploadStatusMessage = string.Empty;
+
+    // Archivo temporal (Stream)
+    private IBrowserFile? archivoSeleccionado;
+
+    private byte[]? archivoBytesTemp;           // ⬅️ NUEVO: Guardar bytes en memoria
+    private string? archivoNombreTemp;          // ⬅️ NUEVO: Guardar nombre
+
+    // Listas de datos
+    private List<Area> areasList = new();
+    private List<Subsidiarium> subsidiariasList = new();
+    private List<TipoAplicante> tiposAplicanteList = new();
+    private List<PerfilPuesto> perfilesPuestoList = new();
+    private List<PerfilPuesto> cargosDisponibles = new();
+
+    private string currentMode = "";
+    private string validationError = "";
+
+    public async Task Open(string mode, AplicanteViewModel? aplicante = null)
+    {
+        currentMode = mode;
+        isReadOnly = mode == "Ver";
+        cargosDisponibles = new List<PerfilPuesto>();
+
+        // Limpieza de estado de archivo
+        LimpiarArchivoTemporal();
+        uploadStatusMessage = string.Empty;
+
+        // Carga diferida de catálogos
+        if (areasList.Count == 0)
+        {
+            try
+            {
+                areasList = await EmpleadoService.GetAreasAsync();
+                subsidiariasList = await EmpleadoService.GetSubsidiariasAsync();
+                tiposAplicanteList = await EmpleadoService.GetTiposAplicanteAsync();
+                perfilesPuestoList = await EmpleadoService.GetPerfilesPuestoAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error cargando listas en Open()");
+            }
+        }
+
+        switch (mode)
+        {
+            case "Agregar":
+                modalTitle = "Registrar Nuevo Aplicante";
+                AplicanteModel = new AplicanteViewModel
+                {
+                    FechaRegistro = DateTime.Now,
+                    AplStatus = true,
+                    IsPromoted = false,
+                    Area = string.Empty,
+                    Empleo = string.Empty,
+                    Subsidiaria = string.Empty,
+                    TipoEmpleado = string.Empty,
+                    Genero = string.Empty
+                };
+                StatusBinding = "Candidato";
+                break;
+
+            case "Editar":
+            case "Ver":
+                modalTitle = (mode == "Editar") ? "Editar Aplicante" : "Detalles del Aplicante";
+                AplicanteModel = aplicante != null
+                    ? new AplicanteViewModel
+                    {
+                        AplId = aplicante.AplId,
+                        PerId = aplicante.PerId,
+                        Nombre = aplicante.Nombre,
+                        ApellidoPaterno = aplicante.ApellidoPaterno,
+                        ApellidoMaterno = aplicante.ApellidoMaterno,
+                        Email = aplicante.Email,
+                        Telefono = aplicante.Telefono,
+                        FechaNacimiento = aplicante.FechaNacimiento,
+                        FechaRegistro = aplicante.FechaRegistro,
+                        Genero = aplicante.Genero ?? string.Empty,
+                        Area = aplicante.Area ?? string.Empty,
+                        Empleo = aplicante.Empleo ?? string.Empty,
+                        Subsidiaria = aplicante.Subsidiaria ?? string.Empty,
+                        TipoEmpleado = aplicante.TipoEmpleado ?? string.Empty,
+                        AplStatus = aplicante.AplStatus,
+                        IsPromoted = aplicante.IsPromoted,
+                        AplCv = aplicante.AplCv,
+                        FechaInicioEntrevista = aplicante.FechaInicioEntrevista,
+                        FechaTerminoEntrevista = aplicante.FechaTerminoEntrevista
+                    }
+                    : new AplicanteViewModel { Area = string.Empty };
+
+                StatusBinding = AplicanteModel.Status;
+                break;
+        }
+
+        if (!string.IsNullOrEmpty(AplicanteModel.Area))
+        {
+            cargosDisponibles = perfilesPuestoList
+                .Where(p => p.Are != null && p.Are.AreNombre == AplicanteModel.Area)
+                .ToList();
+        }
+
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        StateHasChanged();
+    }
+
+    // --- NUEVA LÓGICA DE ARCHIVOS ---
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        uploadStatusMessage = string.Empty;
+        var file = e.File;
+
+        if (file == null)
+        {
+            LimpiarArchivoTemporal();
+            return;
+        }
+
+        // 1. Validar Tamaño (5MB)
+        long maxFileSize = 1024 * 1024 * 5;
+        if (file.Size > maxFileSize)
+        {
+            uploadStatusMessage = $"Error: Archivo muy grande. Máx 5MB. (Tu archivo: {(file.Size / 1024.0 / 1024.0):F2}MB)";
+            LimpiarArchivoTemporal();
+            return;
+        }
+
+        // 2. Validar Extensión
+        var extensionesPermitidas = new[] { ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx" };
+        var extensionArchivo = Path.GetExtension(file.Name).ToLower();
+
+        if (string.IsNullOrEmpty(extensionArchivo) || !extensionesPermitidas.Contains(extensionArchivo))
+        {
+            uploadStatusMessage = $"Error: Formato no permitido ({extensionArchivo}). Solo PDF, Word o Imágenes.";
+            LimpiarArchivoTemporal();
+            return;
+        }
+
+        try
+        {
+            // 3. ⭐ LEER EL ARCHIVO INMEDIATAMENTE (Aquí en el evento OnChange)
+            uploadStatusMessage = "Leyendo archivo...";
+            StateHasChanged();
+
+            using (var stream = file.OpenReadStream(maxFileSize))
+            using (var memoryStream = new MemoryStream())
+            {
+                await stream.CopyToAsync(memoryStream);
+                archivoBytesTemp = memoryStream.ToArray(); // ⬅️ Guardar en memoria
+            }
+
+            // 4. Guardar referencia y nombre
+            archivoSeleccionado = file;
+            archivoNombreTemp = file.Name;
+            AplicanteModel.AplCv = file.Name;
+
+            uploadStatusMessage = $" Archivo listo: {file.Name} ({(file.Size / 1024.0):F0} KB)";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al leer archivo");
+            uploadStatusMessage = $"Error al leer archivo: {ex.Message}";
+            LimpiarArchivoTemporal();
+        }
+    }
+
+    private async Task DeleteCv()
+    {
+        if (currentMode == "Editar" && AplicanteModel.AplId > 0)
+        {
+            try
+            {
+                await EmpleadoService.DeleteCvAplicanteAsync(AplicanteModel.AplId);
+                uploadStatusMessage = " Archivo eliminado de la BD.";
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error al eliminar CV de BD");
+                uploadStatusMessage = $"Error al eliminar: {ex.Message}";
+                return;
+            }
+        }
+
+        // Limpiar estado local
+        LimpiarArchivoTemporal();
+        AplicanteModel.AplCv = null;
+    }
+
+    private void LimpiarArchivoTemporal()
+    {
+        archivoSeleccionado = null;
+        archivoBytesTemp = null;
+        archivoNombreTemp = null;
+    }
+
+    private bool ValidarFormularioCompleto()
+    {
+        // Textos
+        if (string.IsNullOrWhiteSpace(AplicanteModel.Nombre) ||
+            string.IsNullOrWhiteSpace(AplicanteModel.ApellidoPaterno) ||
+            string.IsNullOrWhiteSpace(AplicanteModel.ApellidoMaterno) ||
+            string.IsNullOrWhiteSpace(AplicanteModel.Email) ||
+            string.IsNullOrWhiteSpace(AplicanteModel.Telefono))
+        {
+            validationError = "Faltan datos personales (Nombre, Apellidos, Email o Celular).";
+            return false;
+        }
+
+        // Combos
+        if (string.IsNullOrEmpty(AplicanteModel.Genero))
+        {
+            validationError = "Selecciona el Género.";
+            return false;
+        }
+        if (string.IsNullOrEmpty(AplicanteModel.Area))
+        {
+            validationError = "Selecciona el Área.";
+            return false;
+        }
+        if (string.IsNullOrEmpty(AplicanteModel.Empleo))
+        {
+            validationError = "Selecciona el Cargo.";
+            return false;
+        }
+        if (string.IsNullOrEmpty(AplicanteModel.Subsidiaria))
+        {
+            validationError = "Selecciona la Subsidiaria.";
+            return false;
+        }
+        if (string.IsNullOrEmpty(AplicanteModel.TipoEmpleado))
+        {
+            validationError = "Selecciona el Tipo de Aplicante.";
+            return false;
+        }
+
+        // Fechas (Deben tener valor porque son DateTime?)
+        if (!AplicanteModel.FechaNacimiento.HasValue)
+        {
+            validationError = "Ingresa la Fecha de Nacimiento.";
+            return false;
+        }
+
+        // Validación opcional: ¿Es obligatorio subir CV?
+        // Descomenta si quieres obligar a subir CV:
+        /*
+        if (string.IsNullOrEmpty(AplicanteModel.AplCv))
+        {
+             validationError = "Es obligatorio adjuntar el CV.";
+             return false;
+        }
+        */
+
+        return true;
+    }
+
+    // 3. ACTUALIZA EL ONVALIDSUBMIT
+    private async Task OnValidSubmit()
+    {
+        validationError = ""; // Limpiar error previo
+
+        // Validar antes de procesar
+        if (!ValidarFormularioCompleto())
+        {
+            StateHasChanged();
+            return; // Detiene el guardado
+        }
+
+        AplicanteModel.AplStatus = (StatusBinding == "Candidato");
+
+        try
+        {
+            uploadStatusMessage = "Guardando...";
+            StateHasChanged();
+
+            // ... (Resto de tu lógica original de guardado: streams, servicio, etc.) ...
+            Stream? streamParaServicio = null;
+            string? fileNameParaServicio = null;
+
+            if (archivoBytesTemp != null && archivoNombreTemp != null)
+            {
+                streamParaServicio = new MemoryStream(archivoBytesTemp);
+                fileNameParaServicio = archivoNombreTemp;
+            }
+
+            await EmpleadoService.SaveAplicanteAsync(
+                AplicanteModel,
+                streamParaServicio,
+                fileNameParaServicio
+            );
+
+            // Limpieza y cierre
+            if (streamParaServicio != null) await streamParaServicio.DisposeAsync();
+
+            uploadStatusMessage = string.Empty;
+            LimpiarArchivoTemporal();
+
+            if (OnSubmit.HasDelegate)
+            {
+                await OnSubmit.InvokeAsync(AplicanteModel);
+            }
+
+            Close();
+        }
+        catch (Exception ex)
+        {
+            // ... (Tu manejo de errores original) ...
+            Logger.LogError(ex, "Error al guardar aplicante");
+            validationError = $"Error del sistema: {ex.Message}"; // Usamos validationError para mostrarlo arriba
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+
+
+    private string SelectedArea
+    {
+        get => AplicanteModel?.Area ?? string.Empty;
+        set
+        {
+            if (AplicanteModel == null) return;
+            if (AplicanteModel.Area == value) return;
+
+            AplicanteModel.Area = value;
+            AplicanteModel.Empleo = string.Empty;
+
+            if (string.IsNullOrEmpty(value))
+            {
+                cargosDisponibles = new List<PerfilPuesto>();
+            }
+            else
+            {
+                cargosDisponibles = perfilesPuestoList
+                    .Where(p => p.Are != null && p.Are.AreNombre == value)
+                    .ToList();
+            }
+            StateHasChanged();
+        }
+    }
+}

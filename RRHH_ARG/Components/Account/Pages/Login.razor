@@ -1,0 +1,152 @@
+﻿@page "/"
+@page "/Account/Login"
+
+@using RRHH_ARG.Components.Layout
+@layout LoginLayout
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using RRHH_ARG.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager  
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+@* --- ESTRUCTURA VISUAL DEL VIEJO LOGIN --- *@
+<div class="login-page-container">
+    <div class="login-box">
+        @* Imágenes decorativas (Rutas originales mantenidas) *@
+        <img src="images/solo logo menos.png" class="large-decoration-logo" alt="Decoración Argos" />
+        <img src="images/Solo fuente argos.png" class="argos-text-logo" alt="ARGOS" />
+
+        <div class="fields-container">
+            @* Mensaje de error del sistema nuevo *@
+            <StatusMessage Message="@errorMessage" />
+
+            @* Formulario con la Lógica Nueva (EditForm, OnValidSubmit, etc) *@
+            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                <DataAnnotationsValidator />
+
+                @* Validaciones generales *@
+                <ValidationSummary class="text-danger" role="alert" />
+
+                @* --- CAMPO EMAIL (Estilo Viejo) --- *@
+                <div class="form-group">
+                    <label for="email" class="login-label">Email</label>
+                    <InputText @bind-Value="Input.Email"
+                               id="email"
+                               class="form-control login-input"
+                               autocomplete="username"
+                               aria-required="true"
+                               placeholder="name@example.com" />
+                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                </div>
+
+                @* --- CAMPO PASSWORD (Estilo Viejo) --- *@
+                <div class="form-group">
+                    <label for="password" class="login-label">Contraseña</label>
+                    <InputText type="password"
+                               @bind-Value="Input.Password"
+                               id="password"
+                               class="form-control login-input"
+                               autocomplete="current-password"
+                               aria-required="true"
+                               placeholder="password" />
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                </div>
+
+                @* --- REMEMBER ME (Requerido) --- *@
+                <div class="form-group mt-3" style="text-align: left;">
+                    <label class="form-label">
+                        <InputCheckbox @bind-Value="Input.RememberMe" class="form-check-input" />
+                        Recuérdame
+                    </label>
+                </div>
+
+                @* --- BOTÓN LOGIN (Estilo Viejo) --- *@
+                <div class="form-group login-button-container">
+                    <button type="submit" class="btn login-btn">Iniciar</button>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? errorMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+    }
+
+    public async Task LoginUser()
+    {
+        // Intentamos el login normal
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
+        if (result.Succeeded)
+        {
+            // 2. LÓGICA DE VERIFICACIÓN DE PRIMER INGRESO
+            var user = await UserManager.FindByEmailAsync(Input.Email);
+
+            if (user != null && user.EsPrimerIngreso)
+            {
+                Logger.LogInformation("Usuario es primer ingreso. Redirigiendo a cambio de contraseña forzoso.");
+                // Redirigimos a la nueva página que crearemos
+                RedirectManager.RedirectTo("Account/ForceChangePassword");
+            }
+            else
+            {
+                Logger.LogInformation("User logged in.");
+                RedirectManager.RedirectTo(ReturnUrl ?? "/Inicio");
+            }
+        }
+        else if (result.RequiresTwoFactor)
+        {
+            RedirectManager.RedirectTo(
+                "Account/LoginWith2fa",
+                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else
+        {
+            errorMessage = "Error: Invalid login attempt.";
+        }
+    }
+
+    private sealed class InputModel
+    {
+        // ... (Tu modelo original se queda igual) ...
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+    }
+}

@@ -1,0 +1,49 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
+
+<div class="input-archivo-container">
+    <label class="form-label">@Label</label>
+
+    <div class="input-group">
+        <InputFile OnChange="HandleFileSelected" class="form-control" />
+    </div>
+
+    @if (!string.IsNullOrEmpty(fileName))
+    {
+        <div class="file-info-badge">
+            Archivo seleccionado: <strong>@fileName</strong>
+            <button type="button" class="btn-clear" @onclick="ClearFile">x</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = "Adjuntar Archivo";
+
+    // EventCallback para notificar al padre sobre el archivo
+    [Parameter]
+    public EventCallback<IBrowserFile?> OnFileChanged { get; set; }
+
+    private string? fileName;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            // (En una app real, aquí limitarías el tamaño)
+            // Max file size 5MB
+            // if (file.Size > 5 * 1024 * 1024) { ... }
+
+            fileName = file.Name;
+            await OnFileChanged.InvokeAsync(file); // Envía el archivo al padre
+        }
+    }
+
+    private async Task ClearFile()
+    {
+        fileName = null;
+        await OnFileChanged.InvokeAsync(null); // Notifica al padre que se limpió
+    }
+}

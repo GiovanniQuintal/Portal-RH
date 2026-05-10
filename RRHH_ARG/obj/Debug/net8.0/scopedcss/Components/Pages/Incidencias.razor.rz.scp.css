@@ -1,0 +1,62 @@
+/* Puedes copiar y pegar el contenido exacto de Empleados.razor.css */
+/* o simplemente renombrar la clase principal */
+
+.incidencias-container[b-df7cc06e04] {
+    padding: 20px;
+    width: 100%;
+}
+
+.top-panel[b-df7cc06e04] {
+    width: 100%;
+    max-width: 1000px; /* Tamaño grande del contenedor principal */
+    margin: 0 auto;
+}
+
+.title[b-df7cc06e04] {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Estilos de Búsqueda y Filtro (Copiados de Empleados.razor.css) */
+.search-panel[b-df7cc06e04] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.search-input-group[b-df7cc06e04] {
+    max-width: 600px;
+    flex-grow: 1;
+}
+
+.search-btn[b-df7cc06e04] {
+    background-color: #253C60;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    margin-left: -1px;
+}
+
+    .search-btn img[b-df7cc06e04] {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+
+.table-container[b-df7cc06e04] {
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+.employee-table th[b-df7cc06e04] {
+    font-weight: bold;
+    font-size: 14px;
+}

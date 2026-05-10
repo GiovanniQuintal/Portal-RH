@@ -1,0 +1,372 @@
+﻿@page "/finanzas/kardex-vacaciones"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Services
+@using RRHH_ARG.Data
+@inject VacacionService VacacionService
+@inject EmpleadoService EmpleadoService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="p-3">
+    @* BARRA SUPERIOR CON BOTÓN DE REGRESO *@
+    <div class="d-flex justify-content-between align-items-center mb-3" style="max-width: 600px;">
+        <div class="d-flex align-items-center gap-2">
+            <label class="fw-bold small m-0">Empleado a capturar:</label>
+            <select class="form-select form-select-sm shadow-sm" style="width: 250px;" @onchange="OnEmpleadoChanged">
+                <option value="0">-- Seleccione --</option>
+                @foreach (var emp in listaEmpleados)
+                {
+                    <option value="@emp.Id">@emp.Nombre @emp.ApellidoPaterno</option>
+                }
+            </select>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick='() => Nav.NavigateTo("/finanzas/hub")'>
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+    </div>
+
+@* VENTANA CLÁSICA DEL KARDEX *@
+    <div class="classic-window-kardex shadow-sm">
+
+        @* BARRA SUPERIOR (Ajuste y PDF) *@
+        <div class="top-bar d-flex align-items-center justify-content-between p-3 border-bottom">
+
+            @* Lado Izquierdo: Ajuste Histórico *@
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-bold small text-primary m-0 text-black">
+                    Vacaciones tomadas antes del registro del empleado:
+                </span>
+                <div class="d-flex align-items-center">
+                    <input type="number" step="1" class="classic-input text-end" style="width: 80px;" @bind="ajusteHistoricoInput" />
+                    <button class="btn-save-classic" @onclick="AplicarAjuste" title="Guardar en Base de Datos">
+                        <i class="bi bi-arrow-down-square"></i>
+                    </button>
+                </div>
+            </div>
+
+            @* Lado Derecho: Reporte PDF *@
+            <div>
+                <button class="btn btn-danger btn-custom" @onclick="ImprimirReporte" title="Generar Reporte PDF">
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                </button>
+            </div>
+        </div>
+
+        @* TABLA EXACTA A LA IMAGEN (OPTIMIZADA) *@
+        <div class="table-container">
+            <table class="table table-bordered classic-table mb-0">
+                <thead>
+                    <tr>
+                        @* Le damos el 50% del espacio al concepto *@
+                        <th style="width: 50%;">Concepto</th>
+                        <th style="width: 14%;">Fecha<br>registro</th>
+                        @* Congelamos las 3 columnas numéricas a 12% cada una *@
+                        <th style="width: 12%;" class="text-end">Tomadas</th>
+                        <th style="width: 12%;" class="text-end">Con<br>derecho</th>
+                        <th style="width: 12%;" class="text-end">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (kardexEmpleado.Any())
+                    {
+                        decimal saldoAcumulado = 0;
+
+                        @* 1. FILA DE AJUSTE HISTÓRICO *@
+                        if (ajusteHistoricoInput > 0)
+                        {
+                            <tr>
+                                <td>Vac. tomadas antes del registro del empleado</td>
+                                <td></td>
+                                <td class="text-end">@ajusteHistoricoInput.ToString("0.000")</td>
+                                <td></td>
+                                <td class="text-end text-danger">-@ajusteHistoricoInput.ToString("0.000")</td>
+                            </tr>
+                        }
+
+                        @* 2. FILAS DE ANIVERSARIOS *@
+                        foreach (var fila in kardexEmpleado)
+                        {
+                            saldoAcumulado += fila.Derecho;
+                            saldoAcumulado -= fila.Tomados;
+                            bool isExpanded = filasExpandidas.Contains(fila.KardexId);
+
+                            <tr>
+                                <td class="d-flex align-items-center gap-2 border-0">
+                                    @* El Chevron Icono *@
+                                    @if (fila.Detalles.Any())
+                                    {
+                                        <i class="@(isExpanded ? "bi bi-caret-down-square-fill text-primary" : "bi bi-caret-right-square text-secondary")"
+                                           style="cursor: pointer; font-size: 1.1rem; line-height: 1;"
+                                           @onclick="() => ToggleFila(fila.KardexId)"
+                                           title="Ver detalles">
+                                        </i>
+                                    }
+                                    else
+                                    {
+                                        <span style="width: 16px; display:inline-block;"></span>
+                                    }
+
+                                    @* TEXTO DINÁMICO (Ej. "Aniversario laboral 2024 - 2025") *@
+                                    <span>Aniversario laboral <strong>@fila.Periodo</strong></span>
+                                </td>
+                                <td>@fila.FechaInicio.ToString("dd/MM/yyyy")</td>
+                                <td class="text-end">@(fila.Tomados > 0 ? fila.Tomados.ToString("0.000") : "")</td>
+                                <td class="text-end">@fila.Derecho.ToString("0.000")</td>
+                                <td class="text-end @(saldoAcumulado < 0 ? "text-danger" : "text-success") fw-bold">@saldoAcumulado.ToString("0.000")</td>
+                            </tr>
+
+                            @* SUB-TABLA DE DETALLES (EL CHEVRON) *@
+                            if (isExpanded)
+                            {
+                                <tr class="bg-light">
+                                    <td></td>
+                                    @* Colspan bajó a 4 porque quitamos 2 columnas de la tabla principal *@
+                                    <td colspan="4" class="p-2">
+                                        <table class="table table-sm table-bordered bg-white mb-0" style="font-size: 0.75rem;">
+                                            <thead>
+                                                <tr style="background-color: #e3e9ef;">
+                                                    <th>Fecha de Captura</th>
+                                                    <th>Inicio Vacaciones</th>
+                                                    <th>Fin Vacaciones</th>
+                                                    <th class="text-end">Días Descontados</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var det in fila.Detalles)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            
+
+                                                            @* ETIQUETA DE INCIDENCIA *@
+                                                            @if (det.IncidenciaId.HasValue && det.IncidenciaId > 0)
+                                                            {
+                                                                <a href="/incidencias" class="badge bg-info text-dark ms-2 text-decoration-none shadow-sm" title="Ir a control de incidencias">
+                                                                    <i class="bi bi-link-45deg"></i> INC-@det.IncidenciaId
+                                                                </a>
+                                                            }
+                                                        </td>
+                                                        @* <td>@det.FechaRegistro.ToShortDateString()</td>*@
+                                                        <td>@det.FechaInicio.ToShortDateString()</td>
+                                                        <td>@det.FechaFin.ToShortDateString()</td>
+                                                        <td class="text-end fw-bold text-danger">-@det.DiasDescontados.ToString("0.000")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            }
+                        }
+
+                        @* 3. FILA DE PROPORCIÓN DEL ÚLTIMO AÑO *@
+                        decimal diasProporcionales = CalcularProporcional();
+                        saldoAcumulado += diasProporcionales;
+                        <tr>
+                            <td>Proporción año actual (@DateTime.Now.Year)</td>
+                            <td>@DateTime.Now.ToString("dd/MM/yyyy")</td>
+                            <td></td>
+                            <td class="text-end">@diasProporcionales.ToString("0.000")</td>
+                            <td class="text-end fw-bold text-primary">@saldoAcumulado.ToString("0.000")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer-note p-2 text-muted border-top">
+            <small>*Las vacaciones acumuladas y pendientes se calculan a partir del estatus del empleado y su tipo de prestación</small>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<EmpleadoViewModel> listaEmpleados = new();
+    private EmpleadoViewModel? empleadoActivo;
+    private List<KardexRowDTO> kardexEmpleado = new();
+
+    private int ajusteHistoricoInput = 0; private bool isBusy = false;
+
+    private HashSet<int> filasExpandidas = new();
+
+    private void ToggleFila(int kardexId)
+    {
+        if (filasExpandidas.Contains(kardexId))
+            filasExpandidas.Remove(kardexId);
+        else
+            filasExpandidas.Add(kardexId);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaEmpleados = await EmpleadoService.GetAllEmpleadosAsync();
+    }
+
+    private async Task OnEmpleadoChanged(ChangeEventArgs e)
+    {
+        int id = int.Parse(e.Value?.ToString() ?? "0");
+        empleadoActivo = listaEmpleados.FirstOrDefault(x => x.Id == id);
+
+        if (empleadoActivo != null)
+        {
+            isBusy = true;
+            StateHasChanged();
+
+            // 1. Motor automático
+            await VacacionService.GenerarKardexAutomaticoAsync(empleadoActivo.Id);
+
+            // 2. Cargar datos incluyendo el ajuste de la BD
+            var resultado = await VacacionService.GetKardexEmpleadoAsync(empleadoActivo.Id);
+            kardexEmpleado = resultado.Filas;
+
+            // Si es nuevo o no tiene nada, aparecerá 0, si ya tiene registro, aparecerá el guardado
+            ajusteHistoricoInput = (int)resultado.AjusteInicial;
+
+            isBusy = false;
+        }
+    }
+
+    private async Task AplicarAjuste()
+    {
+        if (empleadoActivo == null) return;
+        isBusy = true;
+        try
+        {
+            // Llamamos al nuevo motor invencible
+            await VacacionService.GuardarAjusteYRecalcularAsync(empleadoActivo.Id, ajusteHistoricoInput);
+
+            // Recargar para que las sumatorias se actualicen visualmente
+            await CargarKardex(empleadoActivo.Id);
+        }
+        finally { isBusy = false; }
+    }
+
+    private void ImprimirReporte()
+    {
+        // Lógica para exportar a PDF
+        Console.WriteLine("Generando PDF...");
+    }
+
+    private decimal CalcularProporcional()
+    {
+        if (empleadoActivo == null || !empleadoActivo.FechaContratacion.HasValue) return 0;
+        
+        DateTime fechaIngreso = empleadoActivo.FechaContratacion.Value;
+        int añosCumplidos = kardexEmpleado.Count;
+        DateTime ultimoAniversario = fechaIngreso.AddYears(añosCumplidos);
+        
+        int diasTranscurridos = (DateTime.Now - ultimoAniversario).Days;
+        if (diasTranscurridos <= 0) return 0;
+
+        // Suponiendo que el siguiente año de ley le tocan "x" días (ej. 14, 16...)
+        decimal derechoProximoAno = 14m; // Deberías llamar a CalcularDiasPorLey(añosCumplidos + 1)
+        
+        return Math.Round((derechoProximoAno / 365m) * diasTranscurridos, 3);
+    }
+
+    private async Task CargarKardex(int id)
+    {
+        var resultado = await VacacionService.GetKardexEmpleadoAsync(id);
+        kardexEmpleado = resultado.Filas;
+        ajusteHistoricoInput = resultado.AjusteInicial;
+    }
+}
+
+<style>
+    .classic-window-kardex {
+        background-color: #f0f0f0;
+        border: 1px solid #999;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        max-width: 900px;
+    }
+    .top-bar {
+        background-color: #f2f2f2;
+    }
+    .classic-label-top {
+        font-size: 0.85rem;
+        color: #000;
+    }
+
+    .classic-input {
+        border: 1px solid #7a9eb1;
+        padding: 0 4px;
+        font-size: 0.85rem;
+        height: 26px; /* Altura exacta */
+        outline: none;
+        border-radius: 0;
+    }
+
+    .classic-input:focus {
+            border-color: #0078d7;
+    }
+
+    .btn-save-classic {
+        border: 1px solid #7a9eb1;
+        border-left: none; /* Une visualmente el botón con el input */
+        background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);
+        height: 26px; /* Misma altura que el input */
+        width: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #253C60;
+        padding: 0;
+    }
+
+        .btn-save-classic:hover {
+            background: #e0e0e0;
+            color: #107c41;
+        }
+
+    /* BOTÓN PDF MEJOR PROPORCIONADO */
+    .btn-custom {
+        height: 32px;
+        width: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        border-radius: 4px;
+    }
+
+    .classic-btn-small {
+        border: 1px solid #7a9eb1;
+        background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);
+        height: 22px;
+        width: 22px;
+        font-size: 0.6rem;
+    }
+    .classic-btn-large {
+        border: 1px solid #999;
+        background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+        padding: 3px 15px;
+        font-size: 0.85rem;
+        color: #000;
+    }
+    .classic-btn-large:hover { background: linear-gradient(to bottom, #fff, #e8e8e8); }
+    
+    /* ESTILOS EXACTOS DE LA TABLA */
+    .table-container {
+        background-color: #fff;
+        padding: 2px;
+    }
+    .classic-table {
+        font-size: 0.8rem;
+        color: #333;
+    }
+    .classic-table thead th {
+        background: linear-gradient(to bottom, #fcfcfc, #e6e6e6);
+        border: 1px solid #c0c0c0;
+        font-weight: normal;
+        padding: 4px;
+        color: #555;
+    }
+    .classic-table tbody td {
+        padding: 3px 5px;
+        border: 1px solid #e0e0e0;
+        vertical-align: middle;
+    }
+    .footer-note { font-size: 0.7rem; background-color: #f0f0f0; }
+</style>

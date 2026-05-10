@@ -1,0 +1,315 @@
+﻿@page "/GestionRoles"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using RRHH_ARG.Data
+@using Microsoft.AspNetCore.Authorization
+
+@inject RoleManager<IdentityRole> RoleManager
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Gestión de Roles</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Gestión de Roles</h3>
+        <button class="btn btn-success" @onclick="AbrirModalCrear">
+            <i class="bi bi-plus-circle"></i> Agregar Rol
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensaje))
+    {
+        <div class="alert @(mensajeEsError ? "alert-danger" : "alert-success") alert-dismissible fade show" role="alert">
+            @mensaje
+            <button type="button" class="btn-close" @onclick="() => mensaje = string.Empty"></button>
+        </div>
+    }
+
+    @* Cambiamos la validación para usar la nueva lista *@
+    @if (listaRolesVista == null)
+    {
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    }
+    else if (listaRolesVista.Count == 0)
+    {
+        <p class="text-muted">No hay roles registrados.</p>
+    }
+    else
+    {
+        <table class="table table-hover table-bordered shadow-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>Nombre del Rol</th>
+                    <th style="width: 200px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in listaRolesVista)
+                {
+                    <tr>
+                        @* Accedemos a item.Rol.Name *@
+                        <td>@item.Rol.Name</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning me-2" @onclick="() => AbrirModalEditar(item.Rol)">
+                                Renombrar
+                            </button>
+
+                            @* // <--- 2. LÓGICA VISUAL: Solo mostramos si NO tiene usuarios *@
+                            @if (!item.TieneUsuarios)
+                            {
+                                <button class="btn btn-sm btn-danger" @onclick="() => SolicitarEliminar(item.Rol)">
+                                    Eliminar
+                                </button>
+                            }
+                            else
+                            {
+                                @* Opcional: Mostrar un texto o icono indicando por qué no se puede borrar *@
+                                <span class="badge bg-secondary" title="Este rol tiene usuarios asignados">En uso</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@* ... (LOS MODALES SE MANTIENEN IGUAL QUE ANTES) ... *@
+
+@if (mostrarModalFormulario)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(esEdicion ? "Editar Rol" : "Nuevo Rol")</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalFormulario"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="rolActual" OnValidSubmit="SolicitarGuardado">
+                        <DataAnnotationsValidator />
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <InputText @bind-Value="rolActual.Name" class="form-control" />
+                            <ValidationMessage For="@(() => rolActual.Name)" />
+                        </div>
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" @onclick="CerrarModalFormulario">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">
+                                @(esEdicion ? "Guardar Cambios" : "Crear Rol")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarModalConfirmacion)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">Confirmación Requerida</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalConfirmacion"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fw-bold">@textoConfirmacion</p>
+                    <p class="text-muted small">¿Está seguro de continuar?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModalConfirmacion">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="ConfirmarAccion">Sí, Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    // --- 3. NUEVA CLASE AUXILIAR ---
+    // Usamos esto para guardar el rol y saber si está ocupado
+    public class RolVistaDto
+    {
+        public IdentityRole Rol { get; set; }
+        public bool TieneUsuarios { get; set; }
+    }
+
+    // Cambiamos la lista original por una lista de nuestra clase auxiliar
+    private List<RolVistaDto> listaRolesVista;
+
+    private string mensaje = "";
+    private bool mensajeEsError = false;
+
+    private bool mostrarModalFormulario = false;
+    private bool esEdicion = false;
+    private RolesDTO rolActual = new RolesDTO();
+    private string idRolEditando = "";
+
+    private bool mostrarModalConfirmacion = false;
+    private string textoConfirmacion = "";
+    private Func<Task>? accionPendiente;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarRoles();
+    }
+
+    // --- 4. LÓGICA DE CARGA ACTUALIZADA ---
+    private async Task CargarRoles()
+    {
+        var rolesRaw = await RoleManager.Roles.OrderBy(r => r.Name).ToListAsync();
+
+        listaRolesVista = new List<RolVistaDto>();
+
+        foreach (var rol in rolesRaw)
+        {
+            // Consultamos si hay usuarios en este rol
+            var usuariosEnRol = await UserManager.GetUsersInRoleAsync(rol.Name);
+
+            listaRolesVista.Add(new RolVistaDto
+            {
+                Rol = rol,
+                TieneUsuarios = usuariosEnRol.Any() // True si hay al menos uno
+            });
+        }
+
+        StateHasChanged();
+    }
+
+    // ... (RESTO DE MÉTODOS IGUALES: AbrirModal, SolicitarGuardado, etc.) ...
+
+    private void AbrirModalCrear()
+    {
+        mensaje = "";
+        rolActual = new RolesDTO();
+        esEdicion = false;
+        mostrarModalFormulario = true;
+    }
+
+    private void AbrirModalEditar(IdentityRole rolExistente)
+    {
+        mensaje = "";
+        rolActual = new RolesDTO { Name = rolExistente.Name };
+        idRolEditando = rolExistente.Id;
+        esEdicion = true;
+        mostrarModalFormulario = true;
+    }
+
+    private void CerrarModalFormulario()
+    {
+        mostrarModalFormulario = false;
+    }
+
+    private void SolicitarGuardado()
+    {
+        textoConfirmacion = esEdicion
+            ? $"Se renombrará el rol a: {rolActual.Name}"
+            : $"Se creará el nuevo rol: {rolActual.Name}";
+
+        accionPendiente = EjecutarGuardadoReal;
+        mostrarModalConfirmacion = true;
+    }
+
+    private void SolicitarEliminar(IdentityRole rol)
+    {
+        textoConfirmacion = $"Se eliminará permanentemente el rol: {rol.Name}";
+        accionPendiente = async () => await EjecutarEliminacionReal(rol);
+        mostrarModalConfirmacion = true;
+    }
+
+    private void CerrarModalConfirmacion()
+    {
+        mostrarModalConfirmacion = false;
+        accionPendiente = null;
+    }
+
+    private async Task ConfirmarAccion()
+    {
+        if (accionPendiente != null)
+        {
+            await accionPendiente.Invoke();
+        }
+        CerrarModalConfirmacion();
+    }
+
+    private async Task EjecutarGuardadoReal()
+    {
+        try
+        {
+            if (esEdicion)
+            {
+                var rolEnDb = await RoleManager.FindByIdAsync(idRolEditando);
+                if (rolEnDb != null)
+                {
+                    rolEnDb.Name = rolActual.Name;
+                    var resultado = await RoleManager.UpdateAsync(rolEnDb);
+                    await ProcesarResultado(resultado, "Rol renombrado exitosamente.");
+                }
+                else
+                {
+                    MostrarError("El rol ya no existe.");
+                }
+            }
+            else
+            {
+                var nuevoRol = new IdentityRole { Name = rolActual.Name };
+                var resultado = await RoleManager.CreateAsync(nuevoRol);
+                await ProcesarResultado(resultado, "Rol creado exitosamente.");
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarError($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task EjecutarEliminacionReal(IdentityRole rol)
+    {
+        var resultado = await RoleManager.DeleteAsync(rol);
+        if (resultado.Succeeded)
+        {
+            mensaje = $"El rol '{rol.Name}' ha sido eliminado.";
+            mensajeEsError = false;
+            await CargarRoles();
+        }
+        else
+        {
+            MostrarError("No se pudo eliminar el rol.");
+        }
+    }
+
+    private async Task ProcesarResultado(IdentityResult resultado, string mensajeExito)
+    {
+        if (resultado.Succeeded)
+        {
+            mensaje = mensajeExito;
+            mensajeEsError = false;
+            mostrarModalFormulario = false;
+            await CargarRoles();
+        }
+        else
+        {
+            MostrarError(string.Join(", ", resultado.Errors.Select(e => e.Description)));
+        }
+    }
+
+    private void MostrarError(string texto)
+    {
+        mensaje = texto;
+        mensajeEsError = true;
+    }
+
+    public class RolesDTO
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre es obligatorio")]
+        public string Name { get; set; }
+    }
+
+}

@@ -1,0 +1,307 @@
+﻿@page "/reclutamiento"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using Microsoft.AspNetCore.WebUtilities 
+@using BlazorBootstrap
+
+@inject EmpleadoService EmpleadoService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, HSE")]
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">
+        <h4>Error Fatal al Cargar la Página:</h4>
+        <pre>@errorMessage</pre>
+    </div>
+}
+else
+{
+    <div class="reclutamiento-container">
+
+        @if (isBusy)
+        {
+            <div style="position: fixed;top: 0;left: 0;width: 100vw;height: 100vh;background-color: rgba(0, 0, 0, 0.5);z-index: 9999;backdrop-filter: blur(2px);display: flex;justify-content: center;align-items: center;">
+
+                <div class="text-center p-4 rounded bg-white shadow">
+                    <!-- Spinner CSS puro -->
+                    <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <h5 class="mt-3 text-dark fw-bold">Promoviendo Candidato</h5>
+                </div>
+            </div>
+        }
+
+        <div class="top-row-header">
+            <h1 class="title">Reclutamiento</h1>
+            <div class="year-filter-wrapper">
+                <select class="form-select" @bind="SelectedYearString">
+                    <option value="0">Todos los Años</option>
+                    @foreach (var year in availableYears)
+                    {
+                        <option value="@year">@year</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="cards-wrapper">@*MODIFICADO DIC 18*@
+
+            <div class="card stat-card card-candidato">
+                <div class="stat-row">
+                    <span class="stat-number">@filteredAplicantes.Count(a => a.Status == "Candidato")</span>
+                    <i class="bi bi-person-lines-fill stat-icon"></i>
+                </div>
+                <span class="stat-label">Candidatos</span>
+            </div>
+
+            <div class="card stat-card card-rechazado">
+                <div class="stat-row">
+                    <span class="stat-number">@filteredAplicantes.Count(a => a.Status == "Rechazado")</span>
+                    <i class="bi bi-person-x-fill stat-icon"></i>
+                </div>
+                <span class="stat-label">Rechazados</span>
+            </div>
+
+            <button class="card stat-card card-agregar" @onclick="OpenAgregarModal">
+                <div class="stat-row">
+                    <i class="bi bi-person-plus-fill stat-icon"></i>
+                    <span class="stat-label-large">Nuevo<br>Aplicante</span>
+                </div>
+            </button>
+
+        </div>
+
+        <div class="table-responsive mt-4">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Área</th>
+                        <th>Teléfono</th>
+                        <th>Empleo</th>
+                        <th>Estatus</th>
+                        <th>Acciones</th>
+                        <th>Agregar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var aplicante in filteredAplicantes)
+                    {
+                        <tr>
+                            <td>@aplicante.Nombre @aplicante.Apellidos</td>
+                            <td>@aplicante.Area</td>
+                            <td>@aplicante.Telefono</td>
+                            <td>@aplicante.Empleo</td>
+                            <td class="align-middle text-center">@*MODIFICADO DIC 18*@
+                                <button type="button"
+                                        class="btn btn-sm @(aplicante.Status == "Candidato" ? "btn-info text-white" : "btn-danger")"
+                                        style="cursor: default; pointer-events: none; opacity: 1; border: none; border-radius: 50px; padding: 4px 12px; font-weight: 500;"
+                                        tabindex="-1">
+                                    @aplicante.Status
+                                </button>
+                            </td>
+
+                            <td class="align-middle">
+                                <button class="btn btn-primary btn-sm me-2"
+                                        @onclick="() => OpenVerModal(aplicante)"
+                                        title="Ver detalles"
+                                        style="border-radius: 6px;">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+
+                                <button class="btn btn-warning btn-sm text-dark"
+                                        @onclick="() => OpenEditarModal(aplicante)"
+                                        disabled="@aplicante.IsPromoted"
+                                        title="Editar información"
+                                        style="border-radius: 6px;">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                            </td>@*HASTA AQUI*@
+                            <td>
+                                @if (aplicante.Status == "Candidato" && !aplicante.IsPromoted)
+                                {
+                                    <button class="btn btn-success btn-sm" @onclick="() => PromoteToEmpleado(aplicante)" disabled="@isBusy">Promover</button>
+                                }
+                                @if (aplicante.IsPromoted)
+                                {
+                                    <span class="badge bg-success">Ascendido</span> //MODIFICADO DIC 17
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<RegistroAplicantes @ref="registroModal" OnSubmit="HandleRegistroSubmit" />
+
+@code {
+    private List<AplicanteViewModel> allAplicantes = new();
+    private List<AplicanteViewModel> filteredAplicantes = new();
+    private RegistroAplicantes registroModal = null!;
+    private string? errorMessage;
+    private List<int> availableYears = new();
+    private string _selectedYearString = "0";
+
+    private bool isBusy = false;
+
+    private string SelectedYearString
+    {
+        get => _selectedYearString;
+        set { _selectedYearString = value; ApplyFilters(); }
+    }
+
+    private int selectedYear => int.TryParse(_selectedYearString, out var year) ? year : 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Llama al nuevo método del servicio que usa la BD
+            allAplicantes = await EmpleadoService.GetAplicantesViewModelAsync();
+
+            availableYears = allAplicantes
+                .Where(a => a.FechaRegistro.HasValue && a.FechaRegistro.Value != default(DateTime))
+                .Select(a => a.FechaRegistro.Value.Year)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToList();
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ocurrió un error al inicializar el componente. DETALLES: {ex.Message} {ex.InnerException?.Message}";
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        IEnumerable<AplicanteViewModel> query = allAplicantes;
+
+        if (selectedYear != 0)
+        {
+            query = query.Where(a => a.FechaRegistro.HasValue && a.FechaRegistro.Value.Year == selectedYear);
+        }
+
+        filteredAplicantes = query.ToList();
+    }
+
+    /* private async Task ToggleStatus(AplicanteViewModel aplicante)
+     {
+         if (aplicante.IsPromoted) return;
+         aplicante.AplStatus = !aplicante.AplStatus;
+         await EmpleadoService.SaveAplicanteAsync(aplicante); // Guarda en la BD
+         ApplyFilters();
+     }*/
+
+    private async Task OpenAgregarModal() // <-- async Task
+    {
+        await registroModal.Open("Agregar", new AplicanteViewModel()); // <-- await
+    }
+
+    private async Task OpenVerModal(AplicanteViewModel aplicante) // <-- async Task
+    {
+        await registroModal.Open("Ver", aplicante); // <-- await
+    }
+
+    private async Task OpenEditarModal(AplicanteViewModel aplicante) // <-- async Task
+    {
+        if (aplicante.IsPromoted) return;
+        await registroModal.Open("Editar", aplicante); // <-- await
+    }
+
+    private async Task HandleRegistroSubmit(AplicanteViewModel aplicanteGuardado)
+    {
+        allAplicantes = await EmpleadoService.GetAplicantesViewModelAsync();
+        ApplyFilters();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task PromoteToEmpleado(AplicanteViewModel aplicanteVM)
+    {
+        // Confirmación simple (Opcional: podrías usar un modal de JS para confirmar)
+        bool confirmado = true; // O usa JSInterop para confirm("¿Seguro?");
+
+        if (confirmado)
+        {
+            isBusy = true;
+            StateHasChanged();
+            await Task.Delay(500);
+            try
+            {
+
+                await EmpleadoService.PromoteAplicanteToEmpleadoAsync(aplicanteVM.AplId);
+
+                var item = allAplicantes.FirstOrDefault(a => a.AplId == aplicanteVM.AplId);
+                if (item != null)
+                {
+                    item.IsPromoted = true;
+                }
+                ApplyFilters(); // Re-aplicar filtros por si acaso
+
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"ERROR: {ex.Message} - {ex.InnerException?.Message}";
+            }
+            finally
+            {
+                // 3. DESACTIVAR BLOQUEO
+                isBusy = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    // ... dentro de @code ...
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // 1. Pequeña pausa para evitar conflicto con la carga de datos (OnInitialized)
+                await Task.Delay(500);
+
+                // 2. Leer la URL
+                var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+
+                // 3. Buscar si existe el parámetro "?editar="
+                if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("editar", out var idVal))
+                {
+                    if (int.TryParse(idVal, out int idParaAbrir))
+                    {
+                        // 4. Buscar al aplicante en la lista memoria (allAplicantes ya se cargó en OnInitialized)
+                        var aplicante = allAplicantes.FirstOrDefault(a => a.AplId == idParaAbrir);
+
+                        if (aplicante != null && registroModal != null)
+                        {
+                            // Si el aplicante ya es empleado (Promoted), lo abrimos en modo "Ver" (Solo lectura)
+                            // Si no, en modo "Editar" para gestionar la entrevista.
+                            string modo = aplicante.IsPromoted ? "Ver" : "Editar";
+
+                            // Abrimos el modal
+                            await registroModal.Open(modo, aplicante);
+
+                            // Forzamos actualización de la UI
+                            StateHasChanged();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al intentar abrir modal de reclutamiento: {ex.Message}");
+            }
+        }
+    }
+}

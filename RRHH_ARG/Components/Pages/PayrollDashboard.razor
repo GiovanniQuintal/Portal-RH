@@ -1,0 +1,1594 @@
+﻿@page "/nomina/dashboard"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using System.Text
+@using System.Globalization
+@inject PayrollService PayrollService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="payroll-container p-3">
+    <div class="top-panel mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="title text-dark fw-bold m-0"><i class="bi bi-cash-coin"></i> Sábana de Prenómina</h3>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick='() => Nav.NavigateTo("/finanzas/hub")'>
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+    </div>
+
+    @* --- PANEL DE FILTROS SIMPLIFICADO --- *@
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label fw-bold small m-0">Año Fiscal</label>
+                    <select class="form-select form-select-sm" style="min-width: 100px;" @bind="selectedAnio" @bind:after="OnAnioChanged">
+                        @for (int i = DateTime.Now.Year - 1; i <= DateTime.Now.Year + 1; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label fw-bold small m-0">Periodo de Pago</label>
+                    <select class="form-select form-select-sm" style="min-width: 180px;" @onchange="OnPeriodoChanged">
+                        @foreach (var p in opcionesPeriodos)
+                        {
+                            @* APLICAMOS ESTILO VISUAL SI LA SÁBANA YA EXISTE *@
+                            if (p.EsGenerada)
+                            {
+                                <option value="@p.IdCombo" selected="@(p.Mes == selectedMes && p.Quincena == selectedQuincena)" style="color: #198754; font-weight: bold; background-color: #f0fdf4;">
+                                    ✓ @p.Nombre
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@p.IdCombo" selected="@(p.Mes == selectedMes && p.Quincena == selectedQuincena)">
+                                    @p.Nombre
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                @* BOTONES AGRUPADOS A LA IZQUIERDA *@
+                <div class="col-auto d-flex gap-2">
+                    <button class="btn btn-sm btn-primary px-4 fw-bold shadow-sm" @onclick="CargarNomina" disabled="@isBusy">
+                        @if (isBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search me-1"></i> Consultar
+                    </button>
+
+                    <button class="btn btn-sm btn-outline-success px-3 fw-bold shadow-sm" @onclick="ExportarExcel" disabled="@(matrizNomina == null || !matrizNomina.Any())" title="Exportar a Excel">
+                        <i class="bi bi-file-earmark-excel"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* TÍTULO DINÁMICO Y CANDADO DE SEGURIDAD *@
+    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+        <h5 class="m-0 fw-bold text-secondary">
+            <span class="text-dark">P@(((selectedMes - 1) * 2) + selectedQuincena) @GetNombreMes(selectedMes) @selectedAnio</span>
+        </h5>
+
+        @if (periodoActual != null)
+        {
+            <div class="d-flex gap-2 align-items-center">
+
+                @* NUEVO: BOTÓN ELIMINAR SÁBANA (Solo si no está bloqueada) *@
+                @if (!isLocked)
+                {
+                    <button class="btn btn-outline-danger shadow-sm d-flex justify-content-center align-items-center p-0"
+                            style="width: 38px; height: 38px; border-radius: 6px;"
+                            @onclick="() => showConfirmDeleteSabanaModal = true"
+                            title="Eliminar Sábana Completa">
+                        <i class="bi bi-trash3-fill fs-5 m-0"></i>
+                    </button>
+                }
+
+                @* BOTÓN RESTAURAR EMPLEADO *@
+                @if (matrizNomina != null && !isLocked)
+                {
+                    <button class="btn btn-warning shadow-sm d-flex justify-content-center align-items-center p-0"
+                            style="width: 38px; height: 38px; border-radius: 6px;"
+                            @onclick="() => showConfirmRestoreModal = true"
+                            title="Restaurar empleados excluidos">
+                        <i class="bi bi-arrow-counterclockwise fs-5 text-dark m-0"></i>
+                    </button>
+                }
+
+                @* BOTÓN CANDADO *@
+                <button class="btn @(isLocked ? "btn-danger" : "btn-success") shadow-sm d-flex justify-content-center align-items-center p-0"
+                        style="width: 38px; height: 38px; border-radius: 6px;"
+                        @onclick="ToggleLock"
+                        title="@(isLocked ? "Desbloquear Sábana" : "Bloquear Sábana")">
+                    <i class="bi @(isLocked ? "bi-lock-fill" : "bi-unlock-fill") fs-5 text-white m-0"></i>
+                </button>
+            </div>
+        }
+    </div>
+
+    @* --- MATRIZ PRINCIPAL --- *@
+    <div class="table-responsive bg-white shadow-sm border rounded" style="height: 60vh; overflow-y: scroll; overflow-x: auto; position: relative;">
+        <table class="table table-hover mb-0 excel-table align-middle text-nowrap" style="font-size: 0.75rem;">
+            <thead class="bg-navy">
+                <tr>
+                    <th class="text-center sticky-header-1" style="min-width: 45px; width: 45px; max-width: 45px;">Est</th>
+                    <th class="sticky-header-2 user-select-none" style="min-width: 220px; width: 220px; max-width: 220px; cursor: pointer;" @onclick="SortByEmpleado" title="Clic para ordenar por Apellidos">
+    Empleado
+    @if (sortColumn == "Empleado")
+    {
+        <i class="bi @(isSortAscending ? "bi-sort-alpha-down" : "bi-sort-alpha-up") ms-1 text-warning"></i>
+    }
+</th>
+<th class="user-select-none" style="min-width: 140px; cursor: pointer;" @onclick="SortBySubsidiaria" title="Clic para agrupar por Subsidiaria">
+    Subsidiaria
+    @if (sortColumn == "Subsidiaria")
+    {
+        <i class="bi @(isSortAscending ? "bi-sort-alpha-down" : "bi-sort-alpha-up") ms-1 text-warning"></i>
+    }
+</th>
+                    <th class="text-end px-1">Qnal Pactado</th>
+                    <th class="text-center px-1">Días P.</th>
+                    <th class="text-end px-1 text-info fw-bold" style="background-color: #1a2a44;">Sueldo Deveng.</th>
+
+                    @if (columnasOrdenadas != null)
+                    {
+                        @foreach (var c in columnasOrdenadas)
+                        {
+                            <th class="text-end px-1">
+                                @(c.Concepto.ToUpper().Contains("DOMINICAL") ? "7MO DÍA / PRIMA DOMINICAL" :
+                                                c.Concepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : c.Concepto)
+                                @if (c.CeldaEditable)
+                                {
+                                    <i class="bi bi-calculator ms-1 opacity-50" title="Calculado Automáticamente"></i>
+                                }
+                            </th>
+                        }
+                    }
+                    <th class="text-end px-1">T. Percepciones</th>
+                    <th class="text-end px-1">T. Deducciones</th>
+                    <th class="text-end px-1 fw-bold text-warning">TOTAL A PAGAR</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (matrizNomina == null)
+                {
+                    <tr>
+                        <td colspan="30" class="text-center py-5 text-muted">
+                            <i class="bi bi-search display-6 d-block mb-3 opacity-25"></i>
+                            Seleccione el periodo y presione "Consultar"
+                        </td>
+                    </tr>
+                }
+                else if (!matrizNomina.Any())
+                {
+                    <tr>
+                        <td colspan="30" class="text-center py-5 text-muted">
+                            No hay recibos generados para este periodo. Presione "Restaurar Eliminados" si desea regenerarlos.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    <Virtualize Items="@matrizNomina" Context="fila" ItemSize="40" OverscanCount="15">
+                        <tr class="@(isLocked ? "opacity-75" : "")">
+                            <td class="text-center sticky-col-1" style="min-width: 45px; width: 45px; max-width: 45px;">
+                                <div class="status-circle @GetStatusColor(fila.Estado)" title="@fila.Estado"></div>
+                            </td>
+                            <td class="fw-bold text-primary cursor-pointer name-link px-2 sticky-col-2" style="min-width: 220px; width: 220px; max-width: 220px;" @onclick="() => AbrirModalEdicion(fila)">
+                                @fila.NombreCompleto
+                            </td>
+
+                            <td class="text-muted px-2" style="font-size: 0.7rem;">
+                                <i class="bi bi-building me-1"></i>@fila.NombreSubsidiaria
+                            </td>
+
+                            <td class="text-end text-muted px-1">@fila.SaeQuincenalPactado.ToString("C2")</td>
+                            <td class="text-center fw-bold text-dark px-1 bg-light">@fila.DiasPagados.ToString("0.##")</td>
+
+                            <td class="text-end fw-bold text-primary px-1" style="background-color: #f8fbfb;">
+                                @{
+                                    int diasTotalesQ = selectedQuincena == 1 ? 15 : DateTime.DaysInMonth(selectedAnio, selectedMes) - 15;
+                                    decimal customSd = fila.SaeQuincenalPactado / (decimal)diasTotalesQ;
+                                    decimal devengado = Math.Round(customSd * fila.DiasPagados, 2);
+                                }
+                                @devengado.ToString("C2")
+                            </td>
+
+                            @if (columnasOrdenadas != null)
+                            {
+                                @foreach (var c in columnasOrdenadas)
+                                {
+                                    if (!fila.Conceptos.ContainsKey(c.ConceptoId)) fila.Conceptos[c.ConceptoId] = new CeldaNominaDTO();
+                                    var celda = fila.Conceptos[c.ConceptoId];
+
+                                    <td class="text-end p-0 position-relative" style="min-width: 65px;">
+                                        @if (celda.IsEditing && !isLocked)
+                                        {
+                                            <input type="number" step="0.01" autofocus
+                                                   class="excel-input-dashboard fw-bold"
+                                                   @bind="celda.ValorEditado"
+                                                   @onblur="() => ProcesarCeldaInline(fila, c, celda)"
+                                                   @onkeyup="@(e => { if (e.Key == "Enter") ProcesarCeldaInline(fila, c, celda); })" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-100 h-100 d-flex align-items-center justify-content-end px-1 @(isLocked ? "" : "cell-clickable")"
+                                                 @ondblclick="() => { if (!isLocked) ActivarEdicionCelda(celda, c); }">
+                                                @if (celda.Total > 0)
+                                                {
+                                                    <span class="@(c.Tipo == "P" ? "pill-success" : "pill-danger") px-1">
+                                                        @celda.Total.ToString("N2")
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted opacity-25">-</span>
+                                                }
+                                            </div>
+                                        }
+                                    </td>
+                                }
+                            }
+                            <td class="text-end bg-light px-1">
+                                <span class="text-success fw-bold">@fila.TotalPercepciones.ToString("C2")</span>
+                            </td>
+                            <td class="text-end bg-light px-1">
+                                <span class="text-danger fw-bold">@fila.TotalDeducciones.ToString("C2")</span>
+                            </td>
+                            <td class="text-end fw-bold px-1" style="font-size: 0.85rem; background-color: #eef2f7;">
+                                @fila.TotalPagado.ToString("C2")
+                            </td>
+                        </tr>
+                    </Virtualize>
+                }
+            </tbody>
+
+            @* TOTALES GENERALES DE LA SÁBANA *@
+            @if (matrizNomina != null && matrizNomina.Any())
+            {
+                <tfoot style="position: sticky; bottom: 0; z-index: 10; background-color: #eef2f7; border-top: 2px solid #253C60;">
+                    <tr>
+                        <td class="sticky-col-1" style="background-color: #eef2f7;"></td>
+                        <td class="sticky-col-2 text-end fw-bold text-dark pe-3" style="background-color: #eef2f7;">TOTAL:</td>
+                        <td colspan="4" style="background-color: #eef2f7;"></td>
+
+                        @if (columnasOrdenadas != null)
+                        {
+                            @foreach (var c in columnasOrdenadas)
+                            {
+                                <td class="text-end fw-bold text-muted px-1" style="background-color: #eef2f7;">
+                                    @{
+                                        decimal sumaColumna = matrizNomina.Sum(f => f.Conceptos.ContainsKey(c.ConceptoId) ? f.Conceptos[c.ConceptoId].Total : 0);
+                                    }
+                                    @(sumaColumna > 0 ? sumaColumna.ToString("C2") : "-")
+                                </td>
+                            }
+                        }
+                        <td class="text-end fw-bold text-success px-1" style="background-color: #eef2f7;">
+                            @matrizNomina.Sum(f => f.TotalPercepciones).ToString("C2")
+                        </td>
+                        <td class="text-end fw-bold text-danger px-1" style="background-color: #eef2f7;">
+                            @matrizNomina.Sum(f => f.TotalDeducciones).ToString("C2")
+                        </td>
+                        <td class="text-end fw-bold text-dark px-1" style="font-size: 0.9rem; background-color: #eef2f7;">
+                            @matrizNomina.Sum(f => f.TotalPagado).ToString("C2")
+                        </td>
+                    </tr>
+                </tfoot>
+            }
+        </table>
+    </div>
+</div>
+
+@* ========================================================= *@
+@* MODAL PARA CONFIRMAR GENERACIÓN (NUEVA SÁBANA)            *@
+@* ========================================================= *@
+@if (showConfirmGenerateModal)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.6); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-primary text-white py-2">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-magic"></i> Inicializar Periodo</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => showConfirmGenerateModal = false"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <h5 class="fw-bold">No existe sábana para este periodo.</h5>
+                    <p class="text-muted">¿Desea inicializar y generar una nueva prenómina para <strong>P@(((selectedMes - 1) * 2) + selectedQuincena) @GetNombreMes(selectedMes) @selectedAnio</strong>?</p>
+                    <p class="small text-primary fw-bold"><i class="bi bi-info-circle-fill"></i> El sistema importará automáticamente los beneficios contractuales y las incidencias reportadas en estas fechas.</p>
+                </div>
+                <div class="modal-footer bg-light justify-content-center">
+                    <button class="btn btn-secondary px-4 fw-bold" @onclick="() => showConfirmGenerateModal = false">Cancelar</button>
+                    <button class="btn btn-primary px-4 fw-bold shadow-sm" @onclick="ConfirmarGeneracion" disabled="@isBusy">
+                        @if (isBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Sí, Generar Nómina
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================================================= *@
+@* MODAL PARA CONFIRMAR RESTAURACIÓN                         *@
+@* ========================================================= *@
+@if (showConfirmRestoreModal)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.6); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-warning text-dark py-2">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-arrow-counterclockwise"></i> Restaurar Recibos</h5>
+                    <button type="button" class="btn-close" @onclick="() => showConfirmRestoreModal = false"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <h5 class="fw-bold text-dark">¿Restaurar recibos eliminados?</h5>
+                    <p class="text-muted">Si excluyó algún empleado de esta sábana y desea que vuelva a aparecer, el sistema reconstruirá su recibo con los valores por defecto y beneficios actuales.</p>
+                    <p class="small text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Esta acción no afectará los recibos que ya haya modificado y guardado.</p>
+                </div>
+                <div class="modal-footer bg-light justify-content-center">
+                    <button class="btn btn-secondary px-4 fw-bold" @onclick="() => showConfirmRestoreModal = false">Cancelar</button>
+                    <button class="btn btn-warning px-4 fw-bold shadow-sm text-dark" @onclick="ConfirmarGeneracion" disabled="@isBusy">
+                        @if (isBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Sí, Restaurar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================================================= *@
+@* MODAL PARA CONFIRMAR EXCLUSIÓN (ELIMINAR RECIBO INDIVIDUAL)*@
+@* ========================================================= *@
+@if (showConfirmDeleteModal && empleadoSeleccionado != null)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.7); z-index: 1100;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-danger border-2">
+                <div class="modal-header bg-danger text-white py-2">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-x-fill"></i> Excluir Empleado</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => showConfirmDeleteModal = false"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <h5 class="fw-bold text-danger">¿Está seguro de excluir a <br />@empleadoSeleccionado.NombreCompleto?</h5>
+                    <p class="text-muted mt-3">Se borrará su recibo de este periodo de pago.</p>
+                    <div class="alert alert-warning small p-2 mb-0">
+                        <i class="bi bi-info-circle-fill"></i> Esta acción <strong>NO</strong> borra al empleado del sistema, solo lo quita de esta quincena. Podrá restaurarlo después si lo necesita.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light justify-content-center">
+                    <button class="btn btn-secondary px-4 fw-bold" @onclick="() => showConfirmDeleteModal = false">Cancelar</button>
+                    <button class="btn btn-danger px-4 fw-bold shadow-sm" @onclick="EjecutarEliminacionRecibo" disabled="@isModalBusy">
+                        @if (isModalBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Sí, Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================================================= *@
+@* NUEVO MODAL: ELIMINAR SÁBANA COMPLETA                     *@
+@* ========================================================= *@
+@if (showConfirmDeleteSabanaModal && periodoActual != null)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.7); z-index: 1100;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-danger border-2">
+                <div class="modal-header bg-danger text-white py-2">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-trash3-fill"></i> Eliminar Sábana Completa</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => showConfirmDeleteSabanaModal = false"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <h5 class="fw-bold text-danger">¿Está seguro de eliminar toda la sábana de <br />P@(((selectedMes - 1) * 2) + selectedQuincena) @GetNombreMes(selectedMes) @selectedAnio?</h5>
+                    <p class="text-muted mt-3">Esta acción borrará todos los recibos y conceptos calculados de esta quincena de la base de datos.</p>
+                    <div class="alert alert-warning small p-2 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Esta acción <strong>NO</strong> se puede deshacer. Tendrá que generar la nómina desde cero nuevamente.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light justify-content-center">
+                    <button class="btn btn-secondary px-4 fw-bold" @onclick="() => showConfirmDeleteSabanaModal = false">Cancelar</button>
+                    <button class="btn btn-danger px-4 fw-bold shadow-sm" @onclick="EjecutarEliminacionSabana" disabled="@isBusy">
+                        @if (isBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Sí, Eliminar Sábana
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================================================= *@
+@* MODAL PRINCIPAL DE EDICIÓN DEL RECIBO                     *@
+@* ========================================================= *@
+@if (showModal)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.6); z-index: 1050;">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 0;">
+                <div class="modal-header text-white py-2" style="background-color: #008080; border-radius: 0;">
+                    <h5 class="modal-title mb-0" style="font-family: 'Tahoma', sans-serif;">
+                        <i class="bi bi-receipt"></i> Detalle de Pre-nómina
+                        @if (isLocked)
+                        {
+                            <span class="badge bg-danger ms-2"><i class="bi bi-lock-fill"></i> BLOQUEADA</span>
+                        }
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body bg-white p-4" style="font-family: 'Tahoma', sans-serif;">
+                    @if (isModalBusy)
+                    {
+                        <div class="text-center py-5"><span class="spinner-border text-primary"></span></div>
+                    }
+                    else if (desgloseRecibo != null && empleadoSeleccionado != null)
+                    {
+                        // Separación inteligente usando la base de datos (TRES GRUPOS)
+                        var conceptosBeneficios = desgloseRecibo.Where(d => d.Clasificacion == "BENEFICIO").ToList();
+                        var conceptosDescuentos = desgloseRecibo.Where(d => d.Clasificacion == "DEDUCCIONES").ToList();
+                        var conceptosRegulares = desgloseRecibo.Where(d => d.Clasificacion != "BENEFICIO" && d.Clasificacion != "DEDUCCIONES").ToList();
+
+                        var percepciones = conceptosRegulares.Where(c => c.Tipo == "P").ToList();
+                        var deducciones = conceptosRegulares.Where(c => c.Tipo == "D").ToList();
+
+                        int totalRows = Math.Max(percepciones.Count + 1, deducciones.Count);
+
+                        // CÁLCULO BASE PROPORCIONAL
+                        int diasTotalesQuincena = selectedQuincena == 1 ? 15 : DateTime.DaysInMonth(selectedAnio, selectedMes) - 15;
+                        decimal customSdSueldo = empleadoSeleccionado.SaeQuincenalPactado / (decimal)diasTotalesQuincena;
+                        decimal sueldoBaseProporcional = Math.Round(customSdSueldo * empleadoSeleccionado.DiasPagados, 2);
+
+                        decimal totalPercepcionesRegulares = sueldoBaseProporcional + percepciones.Sum(p => p.Total);
+                        decimal totalDeduccionesRegulares = deducciones.Sum(d => d.Total);
+                        decimal netoRegulares = totalPercepcionesRegulares - totalDeduccionesRegulares;
+
+                        @* ENCABEZADO DE INFORMACIÓN *@
+                        <div class="aspel-info-box mb-3">
+                            <div class="row gx-2 align-items-center mb-1">
+                                <div class="col-6"><strong>Empleado:</strong>  @empleadoSeleccionado.NombreCompleto</div>
+                            </div>
+                            <div class="row gx-2 align-items-center">
+                                <div class="col-4"><strong>Sub:</strong> @empleadoSeleccionado.NombreSubsidiaria</div>
+                                <div class="col-3 text-center"><strong>S.D:</strong> @empleadoSeleccionado.SaeSdi.ToString("C2")</div>
+                                <div class="col-3 text-center text-primary">
+                                    <strong>Periodo:</strong> @GetNombreMes(selectedMes) P@(((selectedMes - 1) * 2) + selectedQuincena)
+                                </div>
+                                <div class="col-2 text-end"><strong>Sueldo:</strong> @empleadoSeleccionado.SaeMensualPactado.ToString("C2")</div>
+                            </div>
+                        </div>
+
+                        @* TABLA PRINCIPAL DIVIDIDA *@
+                        <div class="table-responsive shadow-sm">
+                            <table class="aspel-table">
+                                <thead>
+                                    <tr>
+                                        <th colspan="3" class="aspel-header aspel-border-center">Percepciones</th>
+                                        <th colspan="3" class="aspel-header">Deducciones</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="aspel-subheader" style="width: 25%;">Concepto</th>
+                                        <th class="aspel-subheader" style="width: 8%;">Valor</th>
+                                        <th class="aspel-subheader aspel-border-center" style="width: 17%;">Importe</th>
+
+                                        <th class="aspel-subheader" style="width: 25%;">Concepto</th>
+                                        <th class="aspel-subheader" style="width: 8%;">Valor</th>
+                                        <th class="aspel-subheader" style="width: 17%;">Importe</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < totalRows; i++)
+                                    {
+                                        <tr>
+                                            @* LADO IZQUIERDO: PERCEPCIONES *@
+                                            @if (i == 0)
+                                            {
+                                                <td class="aspel-cell aspel-cell-concept fw-bold">1. Sueldo Base Quincenal</td>
+                                                <td class="aspel-cell text-center">
+                                                    <input type="number" step="0.5" class="aspel-input d-inline text-center bg-white border border-primary text-primary fw-bold w-100"
+                                                           @bind="empleadoSeleccionado.DiasPagados"
+                                                           @bind:after="StateHasChanged"
+                                                           disabled="@isLocked" title="Días Trabajados" />
+                                                </td>
+                                                <td class="aspel-cell aspel-border-center text-end fw-bold text-primary">
+                                                    $ @sueldoBaseProporcional.ToString("N2")
+                                                </td>
+                                            }
+                                            else if (i - 1 < percepciones.Count)
+                                            {
+                                                var p = percepciones[i - 1];
+                                                <td class="aspel-cell aspel-cell-concept">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <span class="text-truncate">
+                                                            @(p.NombreConcepto.ToUpper().Contains("DOMINICAL") ? "7MO DÍA / PRIMA DOMINICAL" :
+                                                                                                    p.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : p.NombreConcepto)
+                                                        </span>
+
+                                                        @if (p.RequiereCantidad || p.NombreConcepto.ToUpper().Contains("DOMINICAL"))
+                                                        {
+                                                            @if (p.IncidenciaId.HasValue)
+                                                            {
+                                                                <a href="javascript:void(0)" class="badge bg-info text-dark ms-2 text-decoration-none" title="Ver Folio de Incidencia" @onclick="() => AbrirModalIncidencia(p)"><i class="bi bi-link-45deg"></i> INC-@p.IncidenciaId.Value</a>
+                                                            }
+                                                            else if (p.Cantidad > 0)
+                                                            {
+                                                                <span class="badge bg-warning text-dark ms-2" title="Se generará el folio al guardar" style="font-size: 0.65rem;"><i class="bi bi-hourglass-split"></i> PENDIENTE</span>
+                                                            }
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td class="aspel-cell">
+                                                    @if (p.RequiereCantidad)
+                                                    {
+                                                        <input type="number" step="0.5" class="aspel-input text-center" placeholder="-" @bind="p.Cantidad" @bind:after="() => CalcularLinea(p)" disabled="@isLocked" />
+                                                    }
+                                                </td>
+                                                <td class="aspel-cell aspel-border-center">
+                                                    <div class="d-flex align-items-center h-100 w-100">
+                                                        <span class="text-muted ms-1">$</span>
+                                                        <input type="number" step="0.01" class="aspel-input text-end w-100" placeholder="-" @bind="p.Total" @bind:after="() => SincronizarImporte(p)" disabled="@isLocked" />
+                                                    </div>
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td class="aspel-cell"></td>
+                                                <td class="aspel-cell"></td>
+                                                <td class="aspel-cell aspel-border-center"></td>
+                                            }
+
+                                            @* LADO DERECHO: DEDUCCIONES *@
+                                            @if (i < deducciones.Count)
+                                            {
+                                                var d = deducciones[i];
+                                                <td class="aspel-cell aspel-cell-concept">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <span class="text-truncate">
+                                                            @(d.NombreConcepto.ToUpper().Contains("DOMINICAL") ? "7MO DÍA / PRIMA DOMINICAL" :
+                                                                                                    d.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : d.NombreConcepto)
+                                                        </span>
+
+                                                        @if (d.RequiereCantidad || d.NombreConcepto.ToUpper().Contains("DOMINICAL"))
+                                                        {
+                                                            @if (d.IncidenciaId.HasValue)
+                                                            {
+                                                                <a href="javascript:void(0)" class="badge bg-info text-dark ms-2 text-decoration-none" title="Ver Folio de Incidencia" @onclick="() => AbrirModalIncidencia(d)"><i class="bi bi-link-45deg"></i> INC-@d.IncidenciaId.Value</a>
+                                                            }
+                                                            else if (d.Cantidad > 0)
+                                                            {
+                                                                <span class="badge bg-warning text-dark ms-2" title="Se generará el folio al guardar" style="font-size: 0.65rem;"><i class="bi bi-hourglass-split"></i> PENDIENTE</span>
+                                                            }
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td class="aspel-cell">
+                                                    @if (d.RequiereCantidad)
+                                                    {
+                                                        <input type="number" step="0.5" class="aspel-input text-center text-danger" placeholder="-" @bind="d.Cantidad" @bind:after="() => CalcularLinea(d)" disabled="@isLocked" />
+                                                    }
+                                                </td>
+                                                <td class="aspel-cell">
+                                                    <div class="d-flex align-items-center h-100 w-100">
+                                                        <span class="text-muted ms-1">$</span>
+                                                        <input type="number" step="0.01" class="aspel-input text-danger text-end w-100" placeholder="-" @bind="d.Total" @bind:after="() => SincronizarImporte(d)" disabled="@isLocked" />
+                                                    </div>
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td class="aspel-cell"></td>
+                                                <td class="aspel-cell"></td>
+                                                <td class="aspel-cell"></td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="aspel-footer">
+                                        <td colspan="2" class="aspel-cell text-end pe-3">Suma de percepciones</td>
+                                        <td class="aspel-cell aspel-border-center text-end">$ @totalPercepcionesRegulares.ToString("N2")</td>
+                                        <td colspan="2" class="aspel-cell text-end pe-3">Suma de deducciones</td>
+                                        <td class="aspel-cell text-end">$ @totalDeduccionesRegulares.ToString("N2")</td>
+                                    </tr>
+                                    <tr class="aspel-footer">
+                                        <td colspan="3" class="aspel-border-center" style="background-color: white; border-bottom: none !important;"></td>
+                                        <td colspan="2" class="aspel-cell text-end pe-3">Neto a pagar</td>
+                                        <td class="aspel-cell text-end fw-bold">$ @netoRegulares.ToString("N2")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        @* TABLA DE BENEFICIOS ADICIONALES (TIPO P) *@
+                        @if (conceptosBeneficios.Any())
+                        {
+                            <div class="mt-4">
+                                <h6 class="fw-bold mb-2 text-success"> Beneficios Adicionales (Percepciones)</h6>
+                                <div class="table-responsive shadow-sm">
+                                    <table class="aspel-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="aspel-subheader" style="width: 50%; text-align: left; padding-left: 10px;">Concepto</th>
+                                                <th class="aspel-subheader" style="width: 25%;">Valor</th>
+                                                <th class="aspel-subheader" style="width: 25%;">Importe</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in conceptosBeneficios)
+                                            {
+                                                <tr>
+                                                    <td class="aspel-cell aspel-cell-concept fw-bold">
+                                                        <div class="d-flex align-items-center justify-content-between px-2">
+                                                            <span>@item.NombreConcepto</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="aspel-cell">
+                                                        @if (item.RequiereCantidad)
+                                                        {
+                                                            <input type="number" step="0.5" class="aspel-input text-center" placeholder="-" @bind="item.Cantidad" @bind:after="() => CalcularLinea(item)" disabled="@isLocked" />
+                                                        }
+                                                    </td>
+                                                    <td class="aspel-cell">
+                                                        <div class="d-flex align-items-center h-100 w-100 px-2">
+                                                            <span class="text-muted ms-1">$</span>
+                                                            <input type="number" step="0.01" class="aspel-input text-success text-end w-100" placeholder="-" @bind="item.Total" @bind:after="() => SincronizarImporte(item)" disabled="@isLocked" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="aspel-footer">
+                                                <td colspan="2" class="aspel-cell text-end pe-3">Total Beneficios Adicionales</td>
+                                                <td class="aspel-cell text-end text-success fw-bold">$ @(conceptosBeneficios.Sum(b => b.Total).ToString("N2"))</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+
+                        @* NUEVA TABLA: DESCUENTOS FIJOS (TIPO D) *@
+                        @if (conceptosDescuentos.Any())
+                        {
+                            <div class="mt-4">
+                                <h6 class="fw-bold mb-2 text-danger"> Descuentos Fijos (Deducciones)</h6>
+                                <div class="table-responsive shadow-sm">
+                                    <table class="aspel-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="aspel-subheader" style="width: 50%; text-align: left; padding-left: 10px;">Concepto</th>
+                                                <th class="aspel-subheader" style="width: 25%;">Valor</th>
+                                                <th class="aspel-subheader" style="width: 25%;">Importe a Descontar</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in conceptosDescuentos)
+                                            {
+                                                <tr>
+                                                    <td class="aspel-cell aspel-cell-concept fw-bold">
+                                                        <div class="d-flex align-items-center justify-content-between px-2">
+                                                            <span>@item.NombreConcepto</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="aspel-cell">
+                                                        @if (item.RequiereCantidad)
+                                                        {
+                                                            <input type="number" step="0.5" class="aspel-input text-center text-danger" placeholder="-" @bind="item.Cantidad" @bind:after="() => CalcularLinea(item)" disabled="@isLocked" />
+                                                        }
+                                                    </td>
+                                                    <td class="aspel-cell">
+                                                        <div class="d-flex align-items-center h-100 w-100 px-2">
+                                                            <span class="text-muted ms-1">$</span>
+                                                            <input type="number" step="0.01" class="aspel-input text-danger text-end w-100" placeholder="-" @bind="item.Total" @bind:after="() => SincronizarImporte(item)" disabled="@isLocked" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="aspel-footer">
+                                                <td colspan="2" class="aspel-cell text-end pe-3">Total Descuentos Fijos</td>
+                                                <td class="aspel-cell text-end text-danger fw-bold">$ @(conceptosDescuentos.Sum(b => b.Total).ToString("N2"))</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="mt-4 d-flex justify-content-between align-items-center" style="font-family: 'Segoe UI', sans-serif;">
+                            <div>
+                                <button type="button" class="btn btn-outline-danger btn-sm fw-bold shadow-sm"
+                                        @onclick="() => showConfirmDeleteModal = true" disabled="@(isLocked)">
+                                    <i class="bi bi-person-x-fill"></i> Excluir Empleado de esta Sábana
+                                </button>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <label class="fw-bold me-2 small text-muted">Estatus del Recibo:</label>
+                                <select class="form-select form-select-sm w-auto fw-bold" @bind="estadoEditado" disabled="@isLocked">
+                                    <option value="EN_PROCESO">🟡 En Proceso / Revisión</option>
+                                    <option value="APROBADA">🟢 Aprobada</option>
+                                </select>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer py-2 d-flex justify-content-between align-items-center" style="background-color: #f1f3f5; border-radius: 0;">
+                    <div class="d-flex align-items-center">
+                        @if (empleadoSeleccionado != null && matrizNomina != null)
+                        {
+                            int currentIndex = matrizNomina.FindIndex(m => m.NomId == empleadoSeleccionado.NomId);
+                            <button type="button" class="btn btn-outline-secondary btn-sm fw-bold me-3 shadow-sm"
+                                    @onclick="GuardarYAnteriorModal" disabled="@(isModalBusy || currentIndex <= 0 || isLocked)">
+                                <i class="bi bi-arrow-left-circle"></i> Anterior
+                            </button>
+                            <span class="text-muted small fw-bold">Empleado @(currentIndex + 1) de @matrizNomina.Count</span>
+                        }
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary btn-sm shadow-sm" @onclick="CerrarModal">Cerrar</button>
+                        <button type="button" class="btn btn-primary btn-sm fw-bold mx-1 shadow-sm" style="background-color: #008080; border-color: #008080;" @onclick="GuardarModal" disabled="@(isModalBusy || isLocked)">
+                            <i class="bi bi-save"></i> Guardar
+                        </button>
+                        @if (empleadoSeleccionado != null && matrizNomina != null)
+                        {
+                            int currentIndex = matrizNomina.FindIndex(m => m.NomId == empleadoSeleccionado.NomId);
+                            <button type="button" class="btn btn-success btn-sm fw-bold shadow-sm"
+                                    @onclick="GuardarYSiguienteModal" disabled="@(isModalBusy || currentIndex >= matrizNomina.Count - 1 || isLocked)">
+                                Siguiente <i class="bi bi-arrow-right-circle"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================================================= *@
+@* MINI MODAL (DETALLE DE INCIDENCIA OFICIAL)                *@
+@* ========================================================= *@
+@if (showIncidenciaModal && itemComentarioActivo != null)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.4); z-index: 1060;">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content shadow" style="border-radius: 0;">
+                <div class="modal-header py-2" style="background-color: #008080; color: white;">
+                    <h6 class="modal-title m-0 fw-bold"><i class="bi bi-file-earmark-text"></i> Detalle de Incidencia</h6>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalIncidencia"></button>
+                </div>
+                <div class="modal-body p-4 text-center bg-light">
+                    <h4 class="fw-bold" style="color: #008080;">#INC-@itemComentarioActivo.IncidenciaId</h4>
+                    <div class="mb-3 mt-2">
+                        <span class="badge bg-secondary">
+                            @(itemComentarioActivo.NombreConcepto.ToUpper().Contains("DOMINICAL") ? "7MO DÍA / PRIMA DOMINICAL" :
+                                                                                    itemComentarioActivo.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : itemComentarioActivo.NombreConcepto)
+                        </span>
+                    </div>
+                    <div class="alert alert-info border-info p-2 small text-start">
+                        <strong>Cantidad/Días:</strong> @(itemComentarioActivo.Cantidad?.ToString("0.##") ?? "0")<br />
+                        <strong>Descripción:</strong><br />
+                        <span class="text-muted">@itemComentarioActivo.Comentario</span>
+                    </div>
+                    <p class="small text-muted mb-0">Para modificar justificaciones, auditar o adjuntar documentos de respaldo, ingrese al módulo de <strong>Incidencias</strong>.</p>
+                </div>
+                <div class="modal-footer py-2 bg-light">
+                    <button type="button" class="btn btn-sm w-100 fw-bold text-white shadow-sm" style="background-color: #008080;"
+                            @onclick="CerrarModalIncidencia">
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================================================= *@
+@* MODAL DE ÉXITO AUTO-CERRABLE                              *@
+@* ========================================================= *@
+@if (showSuccessModal)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.3); z-index: 1200;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 0;">
+                <div class="modal-header text-white py-2 justify-content-center" style="background-color: #198754; border-radius: 0;">
+                    <h6 class="modal-title m-0 fw-bold"><i class="bi bi-check-circle me-1"></i> Aviso</h6>
+                </div>
+                <div class="modal-body p-3 text-center bg-white">
+                    <h6 class="mt-2 mb-1 fw-bold text-dark">Cambios Guardados</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private int selectedAnio;
+    private int selectedMes;
+    private int selectedQuincena;
+    private bool isBusy = false;
+
+    private Nomina periodoActual;
+    private bool isLocked = false;
+
+    private List<NominaConceptos> catalogoConceptos;
+    private List<NominaConceptos> columnasOrdenadas;
+    private List<NominaMatrizDTO> matrizNomina;
+
+    private bool showModal = false;
+    private bool showConfirmGenerateModal = false;
+    private bool showConfirmRestoreModal = false;
+    private bool showConfirmDeleteModal = false;
+    private bool showConfirmDeleteSabanaModal = false;
+    private bool isModalBusy = false;
+    private NominaMatrizDTO empleadoSeleccionado;
+    private List<NominaImporteDTO> desgloseRecibo;
+    private string estadoEditado = "EN_PROCESO";
+
+    private bool showIncidenciaModal = false;
+    private NominaImporteDTO itemComentarioActivo = null;
+
+    private bool showSuccessModal = false;
+
+    // SIMPLIFICACIÓN DEL COMBOBOX
+    public class ComboPeriodo { 
+        public int Mes { get; set; } 
+        public int Quincena { get; set; } 
+        public string Nombre { get; set; } 
+        public string IdCombo => $"{Mes}|{Quincena}"; 
+        public bool EsGenerada { get; set; } = false; // <--- NUEVA PROPIEDAD
+    }
+    private List<ComboPeriodo> opcionesPeriodos = new();
+
+    // VARIABLES PARA ORDENAMIENTO
+    private string sortColumn = "Subsidiaria"; // Por defecto agrupamos por subsidiaria
+    private bool isSortAscending = true;
+
+    private void SortByEmpleado()
+    {
+        if (matrizNomina == null || !matrizNomina.Any()) return;
+
+        if (sortColumn == "Empleado")
+            isSortAscending = !isSortAscending; // Invierte de A-Z a Z-A
+        else
+        {
+            sortColumn = "Empleado";
+            isSortAscending = true;
+        }
+        AplicarOrdenamiento();
+    }
+
+    private void SortBySubsidiaria()
+    {
+        if (matrizNomina == null || !matrizNomina.Any()) return;
+
+        if (sortColumn == "Subsidiaria")
+            isSortAscending = !isSortAscending; // Invierte de A-Z a Z-A
+        else
+        {
+            sortColumn = "Subsidiaria";
+            isSortAscending = true;
+        }
+        AplicarOrdenamiento();
+    }
+
+    private void AplicarOrdenamiento()
+    {
+        if (matrizNomina == null) return;
+
+        if (sortColumn == "Empleado")
+        {
+            // Rompe el grupo de subsidiarias y ordena a todos parejo por apellidos
+            matrizNomina = isSortAscending 
+                ? matrizNomina.OrderBy(m => m.NombreCompleto).ToList() 
+                : matrizNomina.OrderByDescending(m => m.NombreCompleto).ToList();
+        }
+        else if (sortColumn == "Subsidiaria")
+        {
+            // Agrupa por subsidiaria y luego por apellidos
+            matrizNomina = isSortAscending 
+                ? matrizNomina.OrderBy(m => m.NombreSubsidiaria).ThenBy(m => m.NombreCompleto).ToList() 
+                : matrizNomina.OrderByDescending(m => m.NombreSubsidiaria).ThenBy(m => m.NombreCompleto).ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hoy = DateTime.Now;
+        selectedAnio = hoy.Year;
+        selectedMes = hoy.Month;
+        selectedQuincena = hoy.Day <= 15 ? 1 : 2;
+
+        catalogoConceptos = await PayrollService.GetConceptosAsync();
+        columnasOrdenadas = catalogoConceptos;
+        
+        await ActualizarEstadoPeriodosAsync(); // <--- LLAMADA AL NUEVO MÉTODO
+        await CargarNomina();
+    }
+
+    private async Task ActualizarEstadoPeriodosAsync()
+    {
+        opcionesPeriodos.Clear();
+
+        // 1. Le pedimos al Servicio que nos traiga la lista (¡Sin violar la seguridad!)
+        var periodosExistentes = await PayrollService.GetPeriodosGeneradosAsync(selectedAnio);
+
+        // 2. Armamos la lista del 1 al 12
+        for (int i = 1; i <= 12; i++)
+        {
+            string nombreMes = GetNombreMes(i);
+            int p1 = ((i - 1) * 2) + 1;
+            int p2 = ((i - 1) * 2) + 2;
+
+            opcionesPeriodos.Add(new ComboPeriodo
+            {
+                Mes = i,
+                Quincena = 1,
+                Nombre = $"{nombreMes} (P{p1})",
+                EsGenerada = periodosExistentes.Contains($"P{p1}")
+            });
+
+            opcionesPeriodos.Add(new ComboPeriodo
+            {
+                Mes = i,
+                Quincena = 2,
+                Nombre = $"{nombreMes} (P{p2})",
+                EsGenerada = periodosExistentes.Contains($"P{p2}")
+            });
+        }
+    }
+
+    // --- NUEVO MÉTODO CUANDO CAMBIA EL AÑO ---
+    private async Task OnAnioChanged()
+    {
+        await ActualizarEstadoPeriodosAsync();
+        await CargarNomina();
+    }
+
+    private string GetNombreMes(int mes)
+    {
+        if (mes < 1 || mes > 12) return "";
+        return new DateTime(2000, mes, 1).ToString("MMMM", new CultureInfo("es-MX")).ToUpper();
+    }
+
+    private void OnPeriodoChanged(ChangeEventArgs e)
+    {
+        var parts = e.Value.ToString().Split('|');
+        selectedMes = int.Parse(parts[0]);
+        selectedQuincena = int.Parse(parts[1]);
+        matrizNomina = null;
+    }
+
+    // BOTÓN "CONSULTAR"
+    private async Task CargarNomina()
+    {
+        isBusy = true;
+        try
+        {
+            periodoActual = await PayrollService.GetPeriodoAsync(selectedAnio, selectedMes, selectedQuincena);
+
+            if (periodoActual == null)
+            {
+                // NO EXISTE: Preguntamos si quiere crearlo
+                matrizNomina = null;
+                showConfirmGenerateModal = true;
+                isLocked = false;
+            }
+            else
+            {
+                // SÍ EXISTE: Lo cargamos y ordenamos columnas
+                isLocked = periodoActual.Bloqueado;
+                var matriz = await PayrollService.GetMatrizNominaAsync(periodoActual.NominaId);
+                matrizNomina = matriz;
+                AplicarOrdenamiento();
+                OrdenarColumnasDinamicas();
+            }
+        }
+        finally { isBusy = false; }
+    }
+
+    // BOTÓN "SÍ, GENERAR / RESTAURAR" DEL MODAL
+    private async Task ConfirmarGeneracion()
+    {
+        isBusy = true;
+        try
+        {
+            periodoActual = await PayrollService.GenerarNuevaNominaAsync(selectedAnio, selectedMes, selectedQuincena);
+            var matriz = await PayrollService.GetMatrizNominaAsync(periodoActual.NominaId);
+matrizNomina = matriz;
+AplicarOrdenamiento();
+            OrdenarColumnasDinamicas();
+            showConfirmGenerateModal = false;
+            showConfirmRestoreModal = false;
+            
+            await ActualizarEstadoPeriodosAsync(); // <--- Refrescamos el combo
+        }
+        finally { isBusy = false; }
+    }
+
+    private void OrdenarColumnasDinamicas()
+    {
+        if (matrizNomina == null || !matrizNomina.Any())
+        {
+            columnasOrdenadas = catalogoConceptos;
+            return;
+        }
+
+        var conceptosLlenos = catalogoConceptos.Where(c =>
+            matrizNomina.Any(m => m.Conceptos.ContainsKey(c.ConceptoId) && m.Conceptos[c.ConceptoId].Total > 0)
+        ).ToList();
+
+        var conceptosVacios = catalogoConceptos.Except(conceptosLlenos).ToList();
+
+        columnasOrdenadas = conceptosLlenos.Concat(conceptosVacios).ToList();
+    }
+
+    private async Task ToggleLock()
+    {
+        if (periodoActual != null)
+        {
+            // Invertimos el estado actual del candado
+            isLocked = !isLocked;
+
+            await PayrollService.ToggleBloqueoAsync(periodoActual.NominaId, isLocked);
+            periodoActual.Bloqueado = isLocked;
+            StateHasChanged();
+        }
+    }
+
+    private string GetStatusColor(string estado) => estado switch
+    {
+        "APROBADA" => "status-green",
+        "EN_PROCESO" or "EN_REVISION" => "status-orange",
+        "RETENIDA" => "status-red",
+        _ => "status-gray"
+    };
+
+    private void ActivarEdicionCelda(CeldaNominaDTO celda, NominaConceptos concepto)
+    {
+        if (isLocked) return;
+        celda.ValorEditado = concepto.CeldaEditable ? celda.Cantidad : (celda.Total == 0 ? null : celda.Total);
+        celda.IsEditing = true;
+    }
+
+    private async Task ProcesarCeldaInline(NominaMatrizDTO fila, NominaConceptos concepto, CeldaNominaDTO celda)
+    {
+        if (isLocked) { celda.IsEditing = false; return; }
+
+        celda.IsEditing = false;
+        decimal valorEntrado = celda.ValorEditado ?? 0;
+        decimal sdi = fila.SaeSdi;
+        decimal salarioDiarioNormal = fila.SaeQuincenalPactado / 15m;
+
+        if (concepto.CeldaEditable)
+        {
+            celda.Cantidad = valorEntrado;
+            string nombreConcepto = concepto.Concepto.ToUpper();
+
+            if (nombreConcepto.Contains("HORAS EXTRAS")) celda.Total = Math.Round(valorEntrado * ((sdi / 8m) * 2m), 2);
+            else if (nombreConcepto.Contains("FESTIVO") || nombreConcepto.Contains("DESCANSO")) celda.Total = Math.Round(valorEntrado * (sdi * 3m), 2);
+            else if (nombreConcepto.Contains("DOMINICAL")) celda.Total = Math.Round(valorEntrado * (salarioDiarioNormal * 0.25m), 2);
+            else if (nombreConcepto.Contains("BAJA") || nombreConcepto.Contains("FALTA")) celda.Total = Math.Round(valorEntrado * sdi, 2);
+            else celda.Total = 0;
+        }
+        else
+        {
+            celda.Total = valorEntrado;
+            celda.Cantidad = null;
+        }
+
+        int diasTotalesQ = selectedQuincena == 1 ? 15 : DateTime.DaysInMonth(selectedAnio, selectedMes) - 15;
+        decimal customSdSueldo = fila.SaeQuincenalPactado / (decimal)diasTotalesQ;
+        decimal sueldoBaseProporcional = Math.Round(customSdSueldo * fila.DiasPagados, 2);
+
+        // Aquí está la corrección:
+        fila.TotalPercepciones = sueldoBaseProporcional + catalogoConceptos
+            .Where(c => c.Tipo == "P")
+            .Sum(c => fila.Conceptos.GetValueOrDefault(c.ConceptoId)?.Total ?? 0);
+
+        fila.TotalDeducciones = catalogoConceptos
+            .Where(c => c.Tipo == "D")
+            .Sum(c => fila.Conceptos.GetValueOrDefault(c.ConceptoId)?.Total ?? 0);
+
+        // REGLA DE ORO: NETO = P - D
+        fila.TotalPagado = fila.TotalPercepciones - fila.TotalDeducciones;
+
+        if (fila.Estado == "NO_REGISTRADO") fila.Estado = "EN_PROCESO";
+
+        var desgloseFalso = new List<NominaImporteDTO>();
+        foreach (var kvp in fila.Conceptos)
+        {
+            var cat = catalogoConceptos.First(c => c.ConceptoId == kvp.Key);
+            desgloseFalso.Add(new NominaImporteDTO { ConId = kvp.Key, Tipo = cat.Tipo, Total = kvp.Value.Total, Importe = kvp.Value.Total, Cantidad = kvp.Value.Cantidad });
+        }
+
+        var desgloseRealBD = await PayrollService.GetDesgloseParaEdicionAsync(fila.NomId);
+        foreach (var itemBD in desgloseRealBD)
+        {
+            var itemFalso = desgloseFalso.FirstOrDefault(df => df.ConId == itemBD.ConId);
+            if (itemFalso != null) itemFalso.NdeId = itemBD.NdeId;
+        }
+
+        await PayrollService.GuardarReciboAsync(fila.NomId, fila.DiasPagados, desgloseFalso, fila.Estado);
+    }
+
+    private void CalcularLinea(NominaImporteDTO item)
+    {
+        if (!item.Cantidad.HasValue || empleadoSeleccionado == null)
+        {
+            item.Total = 0; item.Importe = 0; StateHasChanged(); return;
+        }
+
+        decimal sdi = empleadoSeleccionado.SaeSdi;
+        decimal salarioDiarioNormal = empleadoSeleccionado.SaeQuincenalPactado / 15m;
+        string nombreConcepto = item.NombreConcepto.ToUpper();
+
+        if (nombreConcepto.Contains("HORAS EXTRAS")) item.Total = Math.Round(item.Cantidad.Value * ((sdi / 8m) * 2m), 2);
+        else if (nombreConcepto.Contains("FESTIVO") || nombreConcepto.Contains("DESCANSO")) item.Total = Math.Round(item.Cantidad.Value * (sdi * 3m), 2);
+        else if (nombreConcepto.Contains("DOMINICAL")) item.Total = Math.Round(item.Cantidad.Value * (salarioDiarioNormal * 0.25m), 2);
+        else if (nombreConcepto.Contains("BAJA") || nombreConcepto.Contains("FALTA")) item.Total = Math.Round(item.Cantidad.Value * sdi, 2);
+
+        item.Importe = item.Total;
+        StateHasChanged();
+    }
+
+    private void SincronizarImporte(NominaImporteDTO item)
+    {
+        item.Importe = item.Total;
+        StateHasChanged();
+    }
+
+    private async Task ExportarExcel()
+    {
+        if (matrizNomina == null || !matrizNomina.Any()) return;
+
+        var sb = new StringBuilder();
+        sb.Append("Subsidiaria,Empleado,Sueldo Quincenal,Dias a Pagar,Sueldo Devengado,");
+        foreach (var c in columnasOrdenadas) sb.Append($"{QuitarAcentos(c.Concepto)},");
+        sb.AppendLine("Total Percepciones,Total Deducciones,Total Pagado");
+
+        foreach (var fila in matrizNomina)
+        {
+            string nombreLimpio = QuitarAcentos(fila.NombreCompleto);
+            string subNombre = QuitarAcentos(fila.NombreSubsidiaria);
+
+            int diasTotalesQ = selectedQuincena == 1 ? 15 : DateTime.DaysInMonth(selectedAnio, selectedMes) - 15;
+            decimal customSd = fila.SaeQuincenalPactado / (decimal)diasTotalesQ;
+            decimal sueldoDevengado = Math.Round(customSd * fila.DiasPagados, 2);
+
+            sb.Append($"\"{subNombre}\",\"{nombreLimpio}\",{fila.SaeQuincenalPactado},{fila.DiasPagados},{sueldoDevengado},");
+            foreach (var c in columnasOrdenadas)
+            {
+                decimal valor = fila.Conceptos.GetValueOrDefault(c.ConceptoId)?.Total ?? 0;
+                sb.Append($"{valor},");
+            }
+            sb.AppendLine($"{fila.TotalPercepciones},{fila.TotalDeducciones},{fila.TotalPagado}");
+        }
+
+        var preamble = Encoding.UTF8.GetPreamble();
+        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+        var finalBytes = new byte[preamble.Length + bytes.Length];
+        Buffer.BlockCopy(preamble, 0, finalBytes, 0, preamble.Length);
+        Buffer.BlockCopy(bytes, 0, finalBytes, preamble.Length, bytes.Length);
+
+        var base64 = Convert.ToBase64String(finalBytes);
+        var filename = $"Nomina_{selectedAnio}_M{selectedMes}_Q{selectedQuincena}.csv";
+
+        await JS.InvokeVoidAsync("eval",
+            $@"var link = document.createElement('a');
+               link.download = '{filename}';
+               link.href = 'data:text/csv;charset=utf-8;base64,{base64}';
+               document.body.appendChild(link);
+               link.click();
+               document.body.removeChild(link);");
+    }
+
+    private async Task AbrirModalEdicion(NominaMatrizDTO fila)
+    {
+        empleadoSeleccionado = fila;
+        estadoEditado = fila.Estado == "NO_REGISTRADO" ? "EN_PROCESO" : fila.Estado;
+        showModal = true;
+        isModalBusy = true;
+        try
+        {
+            desgloseRecibo = await PayrollService.GetDesgloseParaEdicionAsync(fila.NomId);
+        }
+        finally { isModalBusy = false; StateHasChanged(); }
+    }
+
+    private void CerrarModal()
+    {
+        showModal = false;
+        empleadoSeleccionado = null;
+        desgloseRecibo = null;
+    }
+
+    private async Task GuardarModal()
+    {
+        if (isLocked) return;
+        isModalBusy = true;
+        try
+        {
+            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, desgloseRecibo, estadoEditado);
+            CerrarModal();
+            await CargarNomina();
+            await MostrarAvisoExitoAsync();
+        }
+        finally { isModalBusy = false; }
+    }
+
+    private async Task GuardarYSiguienteModal()
+    {
+        if (isLocked) return;
+        isModalBusy = true;
+        try
+        {
+            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, desgloseRecibo, estadoEditado);
+            int currentIndex = matrizNomina.FindIndex(m => m.NomId == empleadoSeleccionado.NomId);
+            await CargarNomina();
+
+            await MostrarAvisoExitoAsync();
+
+            if (currentIndex >= 0 && currentIndex < matrizNomina.Count - 1)
+                await AbrirModalEdicion(matrizNomina[currentIndex + 1]);
+            else
+                CerrarModal();
+        }
+        finally { isModalBusy = false; }
+    }
+
+    private async Task GuardarYAnteriorModal()
+    {
+        if (isLocked) return;
+        isModalBusy = true;
+        try
+        {
+            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, desgloseRecibo, estadoEditado);
+            int currentIndex = matrizNomina.FindIndex(m => m.NomId == empleadoSeleccionado.NomId);
+            await CargarNomina();
+
+            await MostrarAvisoExitoAsync();
+
+            if (currentIndex > 0)
+                await AbrirModalEdicion(matrizNomina[currentIndex - 1]);
+            else
+                CerrarModal();
+        }
+        finally { isModalBusy = false; }
+    }
+
+    // BOTÓN DE EXCLUIR EMPLEADO INDIVIDUAL
+    private async Task EjecutarEliminacionRecibo()
+    {
+        if (isLocked || empleadoSeleccionado == null) return;
+        isModalBusy = true;
+        try
+        {
+            await PayrollService.EliminarReciboAsync(empleadoSeleccionado.NomId);
+            CerrarModal();
+            showConfirmDeleteModal = false;
+            await CargarNomina(); // Refrescamos
+        }
+        finally { isModalBusy = false; }
+    }
+
+    // NUEVO: BOTÓN DE ELIMINAR SÁBANA COMPLETA
+    private async Task EjecutarEliminacionSabana()
+    {
+        if (isLocked || periodoActual == null) return;
+        isBusy = true;
+        try
+        {
+            await PayrollService.EliminarSabanaCompletaAsync(periodoActual.NominaId);
+            showConfirmDeleteSabanaModal = false;
+            periodoActual = null;
+            matrizNomina = null;
+            await MostrarAvisoExitoAsync();
+            await ActualizarEstadoPeriodosAsync(); // <--- Refrescamos el combo
+        }
+        finally { isBusy = false; }
+    }
+
+    private void AbrirModalIncidencia(NominaImporteDTO item)
+    {
+        itemComentarioActivo = item;
+        showIncidenciaModal = true;
+    }
+
+    private void CerrarModalIncidencia()
+    {
+        showIncidenciaModal = false;
+        itemComentarioActivo = null;
+        StateHasChanged();
+    }
+
+    private string QuitarAcentos(string texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto)) return string.Empty;
+        var normalizedString = texto.Normalize(NormalizationForm.FormD);
+        var stringBuilder = new StringBuilder();
+        foreach (var c in normalizedString)
+        {
+            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                stringBuilder.Append(c);
+        }
+        return stringBuilder.ToString().Normalize(NormalizationForm.FormC).Replace("\"", "");
+    }
+
+    private async Task MostrarAvisoExitoAsync()
+    {
+        showSuccessModal = true;
+        StateHasChanged();
+        await Task.Delay(1500);
+        showSuccessModal = false;
+        StateHasChanged();
+    }
+}
+
+<style>
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .excel-table {
+        border-collapse: separate !important;
+        border-spacing: 0;
+    }
+
+        .excel-table th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #253C60 !important;
+            color: #ffffff !important;
+            border-bottom: 1px solid #3b5c8f !important;
+            border-right: 1px solid #3b5c8f !important;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .excel-table td {
+            border-bottom: 1px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+
+    .sticky-col-1 {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 5;
+    }
+
+    .sticky-col-2 {
+        position: sticky !important;
+        left: 45px !important;
+        z-index: 5;
+        border-right: 2px solid #adb5bd !important;
+    }
+
+    thead th.sticky-col-1, thead th.sticky-col-2 {
+        z-index: 15 !important;
+        border-right: 2px solid #1a2a44 !important;
+    }
+
+    .excel-table tbody tr td.sticky-col-1, .excel-table tbody tr td.sticky-col-2 {
+        background-color: #ffffff;
+    }
+
+    .excel-table tbody tr:nth-child(even) td.sticky-col-1, .excel-table tbody tr:nth-child(even) td.sticky-col-2 {
+        background-color: #fcfcfc;
+    }
+
+    .excel-table tbody tr:hover td.sticky-col-1, .excel-table tbody tr:hover td.sticky-col-2 {
+        background-color: #f1f3f5;
+    }
+
+    .bg-navy {
+        background-color: #253C60 !important;
+        color: #ffffff !important;
+    }
+
+    .text-navy {
+        color: #253C60 !important;
+    }
+
+    .name-link:hover {
+        text-decoration: underline;
+        color: #0056b3 !important;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .cell-clickable {
+        cursor: cell;
+        min-height: 26px;
+        transition: background-color 0.1s;
+    }
+
+        .cell-clickable:hover {
+            background-color: #e2e6ea;
+            border: 1px dashed #107c41;
+        }
+
+    .status-circle {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        margin: 0 auto;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .status-gray {
+        background-color: #adb5bd;
+    }
+
+    .status-orange {
+        background-color: #ffc107;
+    }
+
+    .status-green {
+        background-color: #198754;
+    }
+
+    .status-red {
+        background-color: #dc3545;
+    }
+
+    .excel-input-dashboard {
+        border: 2px solid transparent;
+        background-color: transparent;
+        width: 100%;
+        height: 100%;
+        min-height: 26px;
+        padding: 2px 4px;
+        font-size: 0.75rem;
+        text-align: right;
+        outline: none;
+        font-family: inherit;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+        .excel-input-dashboard:focus {
+            border: 2px solid #107c41;
+            background-color: #fff;
+            z-index: 100;
+            box-shadow: 0 0 5px rgba(16,124,65,0.3);
+        }
+
+        .excel-input-dashboard::-webkit-outer-spin-button, .excel-input-dashboard::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+    .pill-success {
+        background-color: #d1f4e0;
+        color: #0d6832;
+        padding: 2px 4px;
+        border-radius: 4px;
+        display: inline-block;
+        min-width: 50px;
+        text-align: right;
+    }
+
+    .pill-danger {
+        background-color: #fce8e6;
+        color: #b3261e;
+        padding: 2px 4px;
+        border-radius: 4px;
+        display: inline-block;
+        min-width: 50px;
+        text-align: right;
+    }
+
+    /* ================================================= */
+    /* ESTILOS PARA EL MODAL TIPO ASPEL / NOI            */
+    /* ================================================= */
+
+    .aspel-info-box {
+        border-top: 3px solid #008080;
+        border-bottom: 3px solid #008080;
+        background-color: #fdfdfd;
+        padding: 8px 12px;
+        font-family: 'Tahoma', sans-serif;
+        font-size: 0.8rem;
+        color: #000;
+    }
+
+    .aspel-table {
+        border-collapse: collapse;
+        width: 100%;
+        border: 1px solid #008080;
+        background-color: #ffffe6;
+        font-family: 'Tahoma', sans-serif;
+        font-size: 0.75rem;
+    }
+
+    .aspel-header {
+        background-color: #008080;
+        color: white;
+        text-align: center;
+        font-weight: bold;
+        padding: 4px;
+        border: 1px solid #008080;
+    }
+
+    .aspel-subheader {
+        background-color: #e6f2f2;
+        color: black;
+        text-align: center;
+        font-weight: bold;
+        border: 1px solid #c0c0c0;
+        padding: 4px;
+    }
+
+    .aspel-cell {
+        border: 1px solid #e0e0e0;
+        padding: 2px 4px;
+        vertical-align: middle;
+        height: 26px;
+    }
+
+    .aspel-cell-concept {
+        color: #333;
+    }
+
+    .aspel-border-center {
+        border-right: 2px solid #008080 !important;
+        border-top-width: 1px !important;
+        border-bottom-width: 1px !important;
+        border-left-width: 1px !important;
+    }
+
+    .aspel-footer {
+        background-color: #fdfdfd;
+        font-weight: bold;
+    }
+
+    .aspel-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        text-align: right;
+        outline: none;
+        font-weight: bold;
+        color: #000;
+    }
+
+        .aspel-input:focus {
+            background-color: white;
+            border: 1px solid #008080;
+        }
+
+        .aspel-input:disabled {
+            color: #999;
+        }
+</style>

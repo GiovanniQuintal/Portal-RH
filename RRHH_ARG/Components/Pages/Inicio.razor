@@ -1,0 +1,308 @@
+﻿@page "/Inicio"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Forms
+@using RRHH_ARG.Data
+@using RRHH_ARG.Models
+@using RRHH_ARG.Components.Pages.Shared
+@using RRHH_ARG.Components.Layout
+@using System.Security.Claims
+
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
+@inject EventoService EventoService
+@inject AuthenticationStateProvider AuthStateProvider
+
+@attribute [Authorize(Roles = "RH, Empleado, HSE, FA, Supervisor")]
+
+<div class="container-fluid p-4">
+    <h1 class="display-4 mb-4">Dashboard</h1>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #253C60;">@GetTodayDateHeader()</h5>
+                    <hr />
+                    <div class="mb-3">
+                        <select class="form-select w-auto">
+                            <option>Próximos eventos</option>
+                        </select>
+                    </div>
+
+                    <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                        @if (timelineEvents == null)
+                        {
+                            <div class="text-center p-3">Cargando eventos...</div>
+                        }
+                        else if (!timelineEvents.Any(e => e.Date >= DateTime.Today))
+                        {
+                            <div class="text-center p-3">No hay eventos próximos.</div>
+                        }
+                        else
+                        {
+                            @foreach (var ev in timelineEvents.Where(e => e.Date >= DateTime.Today).Take(20))
+                            {
+                                <div class="list-group-item d-flex align-items-center p-3">
+                                    <img src="@ev.IconPath" alt="Icono" style="width: 24px; height: 24px;" class="me-3" />
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold">@ev.Title</div>
+                                        <small class="text-muted">
+                                            @ev.Type.ToString().Replace('_', ' ') &bull; @FormatDateDetail(ev.Date)
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0" style="color: #253C60;">Calendario</h5>
+
+                        @* --- MODIFICACIÓN 1: Ocultar botón si no es RH/Admin  
+                        <AuthorizeView Roles="Admin, RH">
+                            <Authorized>
+                                <button class="btn text-white" style="background-color: #253C60;" @onclick="OpenDialog">
+                                    <i class="bi bi-plus-circle"></i> Nuevo Evento
+                                </button>
+                            </Authorized>
+                        </AuthorizeView>
+                        @* ------------------------------------------------------- *@
+
+                    </div>
+                    <hr />
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<NewEventDialog IsVisible="isDialogVisible" OnClose="HandleDialogClose" />
+
+@code {
+    private List<RHEvent> timelineEvents = new();
+    private bool isDialogVisible = false;
+    private bool shouldRenderCalendar = false;
+    private bool esSoloRH = false;
+
+    // Variables para el confeti
+    private bool hayCumpleanosHoy = false;
+    private bool confetiLanzado = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        esSoloRH = user.IsInRole("RH");
+        
+        if (user.IsInRole("Admin") && !user.IsInRole("RH"))
+        {
+            NavManager.NavigateTo("GestionRoles");
+            return;
+        }
+
+        await LoadDashboardData(user);
+    }
+
+    private async Task LoadDashboardData(ClaimsPrincipal user)
+    {
+        try
+        {
+            var dtos = await EventoService.GetDashboardEventsAsync(user);
+
+            timelineEvents = dtos.Select(dto => new RHEvent(
+                dto.Title, dto.Start, ParseEventType(dto.Type), dto.IconPath, dto.ReferenceId
+            )).ToList();
+
+            var year = DateTime.Today.Year;
+            timelineEvents.AddRange(ObtenerDiasFestivos(year));
+            timelineEvents.AddRange(ObtenerDiasFestivos(year + 1));
+
+            timelineEvents = timelineEvents.OrderBy(e => e.Date).ToList();
+
+            // Verificamos si hay un cumpleaños HOY
+            hayCumpleanosHoy = timelineEvents.Any(e => 
+                e.Type == RHEvent.EventType.CUMPLEAÑOS && 
+                e.Date.Date == DateTime.Today);
+
+            shouldRenderCalendar = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cargando datos: {ex.Message}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RenderCalendar();
+        }
+
+        if (shouldRenderCalendar)
+        {
+            shouldRenderCalendar = false;
+            await RenderCalendar();
+        }
+
+        // Aquí disparamos la animación global si toca
+        if (hayCumpleanosHoy && !confetiLanzado)
+        {
+            confetiLanzado = true;
+            await JSRuntime.InvokeVoidAsync("lanzarConfetiGlobal");
+        }
+    }
+
+    private async Task RenderCalendar()
+    {
+        var eventosParaCalendario = timelineEvents.Where(e =>
+        {
+            if (e.Type == RHEvent.EventType.CUMPLEAÑOS && esSoloRH)
+            {
+                return false;
+            }
+            return true;
+        });
+
+        var jsEvents = eventosParaCalendario.Select(e => new
+        {
+            title = e.Title,
+            start = (e.Type == RHEvent.EventType.ENTREVISTA)
+                    ? e.Date.ToString("yyyy-MM-ddTHH:mm:ss")
+                    : e.Date.ToString("yyyy-MM-dd"),
+            allDay = (e.Type != RHEvent.EventType.ENTREVISTA),
+            backgroundColor = GetEventColor(e.Type),
+            borderColor = GetEventColor(e.Type),
+            textColor = "#ffffff",
+            url = GetEventUrl(e.Type, e.ReferenceId),
+            extendedProps = new
+            {
+                icon = e.IconPath,
+                type = e.Type.ToString()
+            }
+        });
+
+        await JSRuntime.InvokeVoidAsync("loadCalendar", jsEvents);
+    }
+
+    private string GetEventColor(RHEvent.EventType type)
+    {
+        return type switch
+        {
+            RHEvent.EventType.ENTREVISTA => "#0d6efd",
+            RHEvent.EventType.EXPEDIENTE_VENCIMIENTO => "#FF9500",
+            RHEvent.EventType.CUMPLEAÑOS => "#2986cc",
+            RHEvent.EventType.DIA_FESTIVO => "#6f42c1",
+            _ => "#6c757d"
+        };
+    }
+
+    private void OpenDialog() => isDialogVisible = true;
+
+    private async Task HandleDialogClose(RHEvent? newEvent)
+    {
+        isDialogVisible = false;
+        if (newEvent != null)
+        {
+            timelineEvents.Add(newEvent);
+            timelineEvents = timelineEvents.OrderBy(e => e.Date).ToList();
+
+            await JSRuntime.InvokeVoidAsync("addEventToCalendar", new
+            {
+                title = newEvent.Title,
+                start = newEvent.Date.ToString("yyyy-MM-dd"),
+                allDay = true
+            });
+
+            StateHasChanged();
+        }
+    }
+
+    private RHEvent.EventType ParseEventType(string typeStr)
+    {
+        if (Enum.TryParse<RHEvent.EventType>(typeStr, true, out var result))
+        {
+            return result;
+        }
+        return RHEvent.EventType.ENTREVISTA;
+    }
+
+    private string FormatDateDetail(DateTime date)
+    {
+        DateTime today = DateTime.Today;
+        if (date.Date == today) return "Hoy";
+        if (date.Date == today.AddDays(1)) return "Mañana";
+        return date.ToString("dd MMM", new CultureInfo("es-ES"));
+    }
+
+    private string GetTodayDateHeader()
+    {
+        var culture = new CultureInfo("es-ES");
+        var today = DateTime.Today;
+        string dayOfWeek = culture.TextInfo.ToTitleCase(today.ToString("dddd", culture));
+        string month = culture.TextInfo.ToTitleCase(today.ToString("MMMM", culture));
+        return $"Hoy es {dayOfWeek}, {today.Day} de {month} de {today.Year}";
+    }
+
+    private string GetEventUrl(RHEvent.EventType type, int id)
+    {
+        switch (type)
+        {
+            case RHEvent.EventType.ENTREVISTA:
+                return $"/reclutamiento?editar={id}";
+            case RHEvent.EventType.EXPEDIENTE_VENCIMIENTO:
+                return $"/empleados?openId={id}&tab=expedientes";
+            case RHEvent.EventType.CUMPLEAÑOS:
+            case RHEvent.EventType.DIA_FESTIVO:
+            default:
+                return "#";
+        }
+    }
+
+    private List<RHEvent> ObtenerDiasFestivos(int year)
+    {
+        var festivos = new List<RHEvent>();
+
+        void AddFestivo(DateTime fecha, string nombre)
+        {
+            festivos.Add(new RHEvent(
+                nombre, fecha, RHEvent.EventType.DIA_FESTIVO, "/images/time.png", 0
+            ));
+        }
+
+        AddFestivo(new DateTime(year, 1, 1), "Año Nuevo");
+        AddFestivo(ObtenerNthDia(year, 2, DayOfWeek.Monday, 1), "Día de la Constitución");
+        AddFestivo(ObtenerNthDia(year, 3, DayOfWeek.Monday, 3), "Natalicio de Benito Juárez");
+        AddFestivo(new DateTime(year, 5, 1), "Día del Trabajo");
+        AddFestivo(new DateTime(year, 9, 16), "Día de la Independencia");
+        AddFestivo(ObtenerNthDia(year, 11, DayOfWeek.Monday, 3), "Revolución Mexicana");
+        AddFestivo(new DateTime(year, 12, 25), "Navidad");
+
+        if (year == 2030)
+        {
+            AddFestivo(new DateTime(year, 10, 1), "Transmisión del Poder Ejecutivo");
+        }
+
+        return festivos;
+    }
+
+    private DateTime ObtenerNthDia(int year, int month, DayOfWeek dayOfWeek, int n)
+    {
+        var dt = new DateTime(year, month, 1);
+        while (dt.DayOfWeek != dayOfWeek)
+        {
+            dt = dt.AddDays(1);
+        }
+        return dt.AddDays((n - 1) * 7);
+    }
+}

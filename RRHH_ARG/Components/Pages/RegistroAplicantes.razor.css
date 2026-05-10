@@ -1,0 +1,22 @@
+﻿.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
+    overflow-y: auto;
+}
+
+.modal-dialog {
+    max-width: 800px;
+}
+
+.modal-header, .modal-body, .modal-footer {
+    border: none;
+}
+
+    .modal-body .form-control, .modal-body .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 8px 12px;
+    }

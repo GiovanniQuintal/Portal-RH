@@ -1,0 +1,142 @@
+﻿@page "/finanzas/hub"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, Admin")]
+
+<div class="hub-container p-4">
+    <div class="mb-5 text-center">
+        <h2 class="fw-bold text-dark" style="color: #253C60 !important;">Centro de Finanzas y Nómina</h2>
+        <p class="text-muted">Gestión de capital humano, proyecciones y pagos</p>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center max-w-1000 mx-auto">
+
+        <div class="col">
+            <a href="/nomina/dashboard" class="text-decoration-none">
+                <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <div class="icon-wrapper mb-3 text-gold">
+                            <i class="bi bi-cash-coin" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold text-dark">Pre-Nómina</h5>
+                        <hr class="hub-divider mx-auto my-3" />
+                        <p class="card-text text-muted small">Generación de recibos y cálculo de nómina quincenal.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        @* ======================================================== *@
+        @* NUEVA TARJETA: PROYECCIÓN ANUAL DE NÓMINA                *@
+        @* ======================================================== *@
+        <div class="col">
+            <a href="/finanzas/proyeccion-nomina" class="text-decoration-none">
+                <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <div class="icon-wrapper mb-3 text-gold">
+                            <i class="bi bi-graph-up-arrow" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold text-dark">Proyección de Nómina</h5>
+                        <hr class="hub-divider mx-auto my-3" />
+                        <p class="card-text text-muted small">Simulación financiera del gasto de nómina y beneficios hasta fin de año.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="/finanzas/vacaciones" class="text-decoration-none">
+                <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <div class="icon-wrapper mb-3 text-gold">
+                            <i class="bi bi-calendar-check" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold text-dark">Solicitud de Vacaciones</h5>
+                        <hr class="hub-divider mx-auto my-3" />
+                        <p class="card-text text-muted small">Captura de días netos y prima vacacional.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="/finanzas/kardex-vacaciones" class="text-decoration-none">
+                <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <div class="icon-wrapper mb-3 text-gold">
+                            <i class="bi bi-journal-bookmark-fill" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold text-dark">Kardex de Vacaciones</h5>
+                        <hr class="hub-divider mx-auto my-3" />
+                        <p class="card-text text-muted small">Control de saldos anuales y derechos por empleado.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="/finanzas/pasivo-laboral" class="text-decoration-none">
+                <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <div class="icon-wrapper mb-3 text-gold">
+                            <i class="bi bi-calculator-fill" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold text-dark">Calculadora de prestaciones laborales</h5>
+                        <hr class="hub-divider mx-auto my-3" />
+                        <p class="card-text text-muted small">Calculadora financiera de liquidaciones y finiquitos.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="/finanzas/proyeccion-pasivos" class="text-decoration-none">
+                <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <div class="icon-wrapper mb-3 text-gold">
+                            <i class="bi bi-calendar2-x" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold text-dark">Proyección Pasivo Laboral</h5>
+                        <hr class="hub-divider mx-auto my-3" />
+                        <p class="card-text text-muted small">Proyección financiera de liquidaciones y finiquitos.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .hub-container {
+        background-color: #f8f9fa;
+        min-height: 85vh;
+    }
+
+    .max-w-1000 {
+        max-width: 1100px;
+    }
+
+    .text-gold {
+        color: #b8974a;
+    }
+
+    .hub-card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        cursor: pointer;
+    }
+
+        .hub-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            border-bottom: 4px solid #253C60 !important;
+        }
+
+    .hub-divider {
+        width: 40px;
+        height: 2px;
+        background-color: #253C60;
+        border: none;
+        opacity: 1;
+    }
+</style>

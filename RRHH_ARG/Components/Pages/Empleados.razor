@@ -1,0 +1,418 @@
+﻿@page "/empleados"
+@using BlazorBootstrap
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using RRHH_ARG.Components.Pages
+@using RRHH_ARG.Components.Pages.Reports
+@using Microsoft.AspNetCore.WebUtilities
+@inject EmpleadoService EmpleadoService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, HSE")]
+
+@if (!isPrinting)
+{
+    <div class="employees-container">
+
+        <div class="top-panel">
+            <h1 class="title">Empleados</h1>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button class="btn btn-success btn-custom" @onclick="OpenCreateModal">
+                    <i class="bi bi-person-add"></i>
+                </button>
+
+                <button class="btn btn-danger btn-custom" @onclick="ImprimirReporte">
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="search-panel d-flex gap-3 my-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar por nombre o apellido..."
+                       @bind="SearchTerm" @bind:event="oninput" />
+            </div>
+
+            <div class="ms-auto" style="min-width: 250px;">
+                <select class="form-select" @bind="FilterArea">
+                    <option value="">Filtrar por Áreas</option>
+                    @foreach (var area in availableAreas)
+                    {
+                        <option value="@area">@area</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive mt-4">
+            <table class="table table-hover employee-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Área</th>
+                        <th>Teléfono</th>
+                        <th>Empleo</th>
+                        <th>Estatus / Tipo</th>
+                        <th class="text-center" title="¿Tiene supervisor asignado?">SV</th>
+                        <th>Expedientes</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var empleado in filteredEmpleados)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2 flex-shrink-0">
+                                        <img src="/api/Archivo/@empleado.Id/Foto"
+                                             class="rounded-circle shadow-sm"
+                                             style="width: 35px; height: 35px; object-fit: cover;"
+                                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=@empleado.Apellidos+@empleado.Nombre&background=random&color=fff';"
+                                             alt="Foto @empleado.Nombre" />
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold d-block">@empleado.Nombre @empleado.Apellidos</span>
+                                        
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@empleado.Area</td>
+                            <td>@empleado.Telefono</td>
+                            <td>@empleado.EmpleosCombinados</td>
+                            <td>
+                                <span class="badge @GetStatusClass(empleado.Status)">
+                                    @empleado.Status
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                @if (empleado.SupId != null && empleado.SupId > 0)
+                                {
+                                    <i class="bi bi-circle-fill text-success" title="Con Supervisor asignado"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-circle-fill text-danger" title="Sin Supervisor asignado"></i>
+                                }
+                            </td>
+                            <td>
+                                <div class="progress position-relative" style="height: 20px; background-color: #e9ecef; border: 1px solid #ced4da;">
+                                    <div class="progress-bar" role="progressbar"
+                                         style="width: @(empleado.ExpedientesPorcentaje)%; background-color: #17A2B8;"
+                                         aria-valuenow="@empleado.ExpedientesPorcentaje"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                    <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="color: black; font-weight: bold; font-size: 11px;">
+                                        @empleado.ExpedientesCompletos / @empleado.ExpedientesTotales
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-start">
+                                    <button class="btn btn-secondary btn-sm me-2" @onclick="() => OpenEditModal(empleado.Id, false)">Ver</button>
+                                    <button class="btn btn-primary btn-sm" @onclick="() => OpenEditModal(empleado.Id, true)">Editar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-2 text-muted small">
+            Total encontrados: @filteredEmpleados.Count
+        </div>
+
+        <EditarEmpleado @ref="editarModal" OnClose="ReloadEmpleados" />
+    </div>
+}
+else
+{
+    <div id="ReporteEmpleados-pdf">
+        <PlantillaReporte Titulo="Reporte de Empleados y Expedientes"
+                          EsHorizontal="false"
+                          Usuario="@ObtenerNombreParaReporte()">
+            <ContenidoSuperior>
+                @{
+                    var activosReporte = filteredEmpleados.Where(e => e.Status != "Inactivo").ToList();
+                    int totalActivos = activosReporte.Count;
+                    int completos = activosReporte.Count(e => e.ExpedientesPorcentaje == 100);
+                    int incompletos = totalActivos - completos;
+
+                    double pctCompletos = totalActivos == 0 ? 0 : Math.Round((double)completos / totalActivos * 100, 1);
+                    int pctCss = (int)Math.Round(pctCompletos);
+                }
+
+                <div style="background-color: #f8f9fa; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px;">
+                    <div class="d-flex justify-content-center align-items-center gap-5">
+                        <div style="text-align: right;">
+                            <h5 class="fw-bold text-dark mb-0">Expedientes</h5>
+                        </div>
+
+                        <div style="width: 90px; height: 90px; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.15); overflow: hidden; background-color: #dc3545;">
+                            <svg width="100%" height="100%" viewBox="0 0 32 32" style="transform: rotate(-90deg);">
+                                <circle r="15.915494309" cx="16" cy="16" fill="transparent" stroke="#17A2B8" stroke-width="32" stroke-dasharray="@pctCss @(100 - pctCss)" stroke-dashoffset="0"></circle>
+                            </svg>
+                        </div>
+
+                        <div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span style="display:inline-block; width: 14px; height: 14px; background-color: #17A2B8; margin-right: 8px; border-radius: 3px;"></span>
+                                <span class="small fw-bold text-dark">Completos: @completos empleados</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span style="display:inline-block; width: 14px; height: 14px; background-color: #dc3545; margin-right: 8px; border-radius: 3px;"></span>
+                                <span class="small fw-bold text-dark">Incompletos: @incompletos empleados</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ContenidoSuperior>
+
+            <CabecerasTabla>
+                <th>Nombre Completo</th>
+                <th>Área</th>
+                <th>Puesto / Empleo</th>
+                <th style="text-align:center">Estatus</th>
+                <th style="text-align:center; width: 120px;">Expedientes</th>
+                <th style="text-align:center">SV</th>
+            </CabecerasTabla>
+
+            <CuerpoTabla>
+                @foreach (var empleado in filteredEmpleados.Where(e => e.Status != "Inactivo"))
+                {
+                    <tr>
+                        <td>@empleado.Apellidos @empleado.Nombre</td>
+                        <td>@empleado.Area</td>
+                        <td>@empleado.EmpleosCombinados</td>
+                        <td style="text-align:center">
+                            <span class="badge @(empleado.Status == "Empleado" ? "verde" : "amarillo")">
+                                @empleado.Status
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress position-relative" style="height: 16px; background-color: #e9ecef; border: 1px solid #ced4da;">
+                                <div class="progress-bar" role="progressbar"
+                                     style="width: @(empleado.ExpedientesPorcentaje)%; background-color: #17A2B8;"
+                                     aria-valuenow="@empleado.ExpedientesPorcentaje"
+                                     aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                                <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="color: black; font-weight: bold; font-size: 10px;">
+                                    @empleado.ExpedientesCompletos / @empleado.ExpedientesTotales
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align:center">
+                            @(empleado.SupId != null && empleado.SupId > 0 ? "Sí" : "No")
+                        </td>
+                    </tr>
+                }
+            </CuerpoTabla>
+
+            <PieTabla>
+                <td colspan="5" style="text-align:right">Total de empleados activos listados:</td>
+                <td style="text-align:center">@filteredEmpleados.Count(e => e.Status != "Inactivo")</td>
+            </PieTabla>
+        </PlantillaReporte>
+    </div>
+}
+
+@code {
+    private EditarEmpleado editarModal;
+    private List<EmpleadoViewModel> allEmpleados = new();
+    private List<EmpleadoViewModel> filteredEmpleados = new();
+
+    private List<string> availableAreas = new();
+
+    private string _searchTerm = "";
+    private string SearchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            _searchTerm = value;
+            ApplyFilters();
+        }
+    }
+
+    private string _filterArea = "";
+    private string FilterArea
+    {
+        get => _filterArea;
+        set
+        {
+            _filterArea = value;
+            ApplyFilters();
+        }
+    }
+
+    private bool isPrinting = false;
+    private EmpleadoViewModel? empleadoActual;
+    private string nombreDeLogin = "Usuario";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            nombreDeLogin = user.Identity.Name ?? "Usuario";
+
+            try
+            {
+                var userId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    int empId = await EmpleadoService.GetEmpleadoIdByUserIdAsync(userId);
+                    if (empId > 0)
+                    {
+                        empleadoActual = await EmpleadoService.GetEmpleadoByIdAsync(empId);
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        allEmpleados = await EmpleadoService.GetEmpleadosViewModelAsync();
+
+        availableAreas = allEmpleados
+            .Where(e => !string.IsNullOrEmpty(e.Area))
+            .Select(e => e.Area)
+            .Distinct()
+            .OrderBy(a => a)
+            .ToList();
+
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        var query = allEmpleados.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
+        {
+            var term = SearchTerm.ToLower();
+            query = query.Where(e =>
+                (e.Nombre != null && e.Nombre.ToLower().Contains(term)) ||
+                (e.Apellidos != null && e.Apellidos.ToLower().Contains(term))
+            );
+        }
+
+        if (!string.IsNullOrWhiteSpace(FilterArea))
+        {
+            query = query.Where(e => e.Area == FilterArea);
+        }
+
+        filteredEmpleados = query
+        .OrderByDescending(e => e.StaId == 1)
+        .ThenBy(e => e.Apellidos)
+        .ThenBy(e => e.Nombre)
+        .ToList();
+    }
+
+    private async Task ReloadEmpleados()
+    {
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private async Task OpenCreateModal() => await editarModal.Open(0, true);
+    private async Task OpenEditModal(int id, bool editable) => await editarModal.Open(id, editable);
+
+    private string GetStatusClass(string status)
+    {
+        if (string.IsNullOrEmpty(status)) return "bg-primary";
+        return status switch
+        {
+            "Inactivo" => "bg-secondary",
+            "Empleado" => "bg-success",
+            "Becario" => "bg-info text-dark",
+            "Practicante" => "bg-primary",
+            _ => "bg-primary"
+        };
+    }
+
+    private async Task ImprimirReporte()
+    {
+        isPrinting = true;
+        StateHasChanged();
+
+        await Task.Delay(300);
+
+        await JSRuntime.InvokeVoidAsync("descargarPDF", "ReporteEmpleados-pdf", "ReporteEmpleados.pdf");
+        isPrinting = false;
+        StateHasChanged();
+    }
+
+    private string ObtenerNombreParaReporte()
+    {
+        if (empleadoActual != null && !string.IsNullOrWhiteSpace(empleadoActual.Nombre))
+        {
+            string primerNombre = empleadoActual.Nombre.Trim().Split(' ')[0];
+            return $"{primerNombre} {empleadoActual.ApellidoPaterno}";
+        }
+
+        return nombreDeLogin;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await Task.Delay(500);
+
+                var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+
+                if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("openId", out var idVal))
+                {
+                    if (int.TryParse(idVal, out int idParaAbrir))
+                    {
+                        string tabParaAbrir = "datos";
+                        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("tab", out var tabVal))
+                        {
+                            tabParaAbrir = tabVal;
+                        }
+
+                        if (editarModal != null)
+                        {
+                            await editarModal.Open(idParaAbrir, false, tabParaAbrir);
+                            StateHasChanged();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+}
+
+<style>
+    .btn {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .btn-custom {
+        padding: 0.5rem 1rem;
+        font-size: 1.0rem;
+    }
+</style>

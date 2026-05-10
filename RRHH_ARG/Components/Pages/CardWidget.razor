@@ -1,0 +1,69 @@
+﻿@using Blazor.Diagrams.Core.Geometry
+@using Blazor.Diagrams.Models
+@using RRHH_ARG.Models
+
+<g class="card-node">
+    <defs>
+        <filter id="shadow-@Node.Id" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-color="#ccc" />
+        </filter>
+    </defs>
+
+    @{
+        // --- CÁLCULO INTELIGENTE DE ALTURA ---
+
+        // 1. Estimar líneas del título (aprox 14 caracteres por línea para ancho 80px)
+        int longitudTitulo = Node.Puesto.Length;
+        int lineasTitulo = 1;
+        if (longitudTitulo > 14) lineasTitulo = 2; // Si es largo, 2 líneas
+        if (longitudTitulo > 28) lineasTitulo = 3; // Si es muy largo, 3 líneas
+
+        // 2. Definir altura del área del Header
+        double alturaHeader = (lineasTitulo * 10) + 6;
+
+        // 3. Altura Total = Header + Nombres + Padding
+        double alturaTotal = alturaHeader + (Node.Nombres.Count * 9) + 5;
+        if (alturaTotal < 32) alturaTotal = 32;
+    }
+
+    <rect class="body"
+          width="80"
+          height="@alturaTotal"
+          rx="2"
+          ry="2"
+          fill="white"
+          stroke="#999"
+          stroke-width="0.5"
+          filter="url(#shadow-@Node.Id)" />
+
+    <foreignObject x="0" y="0" width="80" height="@alturaHeader">
+        <div xmlns="http://www.w3.org/1999/xhtml"
+             style="width:80px; height:@(alturaHeader)px; display:flex; align-items:center; justify-content:center; padding:1px; text-align:center;">
+            <span style="font-family:Arial; font-weight:bold; font-size:7px; color:black; line-height:1.1; word-wrap:break-word;">
+                @Node.Puesto.ToUpper()
+            </span>
+        </div>
+    </foreignObject>
+
+    @for (int i = 0; i < Node.Nombres.Count; i++)
+    {
+        // Los nombres empiezan JUSTO debajo del área del header
+        double yPos = alturaHeader + (i * 9) + 7;
+
+        <g>
+            <text x="40"
+                  y="@yPos"
+                  text-anchor="middle"
+                  font-family="Arial"
+                  font-size="6"
+                  fill="#555"
+                  style="pointer-events: none;">
+                @Node.Nombres[i]
+            </text>
+        </g>
+    }
+</g>
+
+@code {
+    [Parameter] public CardNode Node { get; set; } = null!;
+}

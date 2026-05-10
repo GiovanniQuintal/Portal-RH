@@ -1,0 +1,315 @@
+﻿@page "/finanzas/pasivo-laboral"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Services
+@using RRHH_ARG.Data
+@inject PasivoLaboralService PasivoLaboralService
+@inject EmpleadoService EmpleadoService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="p-3">
+    @* BARRA SUPERIOR *@
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <h3 class="title text-dark fw-bold m-0" style="font-family: 'Segoe UI', Tahoma, sans-serif;">
+            Calculadora de Finiquitos y Liquidaciones
+        </h3>
+        <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick='() => Nav.NavigateTo("/finanzas/hub")'>
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+    </div>
+
+    <div class="d-flex gap-3">
+        @* PANEL IZQUIERDO: FORMULARIO DE CAPTURA *@
+        <div class="classic-window" style="flex: 1; max-width: 350px;">
+            
+            <div class="mb-3">
+                <label class="classic-label fw-bold"><u>E</u>mpleado:</label>
+                <select class="classic-input w-100" @onchange="OnEmpleadoSeleccionado">
+                    <option value="0">-- Seleccione --</option>
+                    @foreach (var emp in listaEmpleados)
+                    {
+                        <option value="@emp.Id">@emp.Nombre @emp.ApellidoPaterno</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="classic-label fw-bold"><u>T</u>ipo de Salida:</label>
+                <select class="classic-input w-100" @bind="tipoSalida">
+                    
+                    <option value="Renuncia">Renuncia Voluntaria (Solo Finiquito)</option>
+                    <option value="Despido">Despido Injustificado (Liquidación)</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="classic-label fw-bold"><u>F</u>echa de Baja:</label>
+                <input type="date" class="classic-input w-100" value="@fechaBaja.ToString("yyyy-MM-dd")" @onchange="OnFechaBajaChanged" />
+            </div>
+
+            <div class="mb-3">
+                <label class="classic-label fw-bold">Días de sueldo pendiente:</label>
+                <InputNumber @bind-Value="diasPendientes" class="classic-input w-100 text-end bg-light" />
+                <div class="classic-label text-muted" style="font-size: 0.7rem;">* Calculados automáticamente por quincena</div>
+            </div>
+
+            @if (tipoSalida == "Despido")
+            {
+                <div class="mb-3 p-2 bg-light border">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="check20dias" @bind="incluir20Dias">
+                        <label class="form-check-label classic-label" for="check20dias">
+                            Incluir indemnización de 20 días por año
+                        </label>
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4 text-center">
+                <button class="classic-btn-large fw-bold w-100" @onclick="EjecutarCalculo" disabled="@(empleadoId == 0)">
+                    <i class="bi bi-calculator"></i> Calcular Pasivo
+                </button>
+            </div>
+        </div>
+
+        @* PANEL DERECHO: RESULTADOS DEL CÁLCULO *@
+        <div class="classic-window" style="flex: 2;">
+            @if (isBusy)
+            {
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-2 classic-label">Calculando proyecciones...</div>
+                </div>
+            }
+            else if (resultado != null)
+            {
+                <div class="d-flex justify-content-between border-bottom pb-2 mb-3">
+                    <div>
+                        <div class="classic-label text-muted">Ingreso: @resultado.FechaIngreso.ToShortDateString() | Baja: @resultado.FechaBaja.ToShortDateString()</div>
+                        <div class="classic-label text-muted">Antigüedad: @resultado.AniosCompletosTrabajados años completos</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="classic-label">SD: <strong>@resultado.SalarioDiario.ToString("C2")</strong></div>
+                        <div class="classic-label">SDI: <strong>@resultado.SalarioDiarioIntegrado.ToString("C2")</strong></div>
+                    </div>
+                </div>
+
+                <table class="table table-sm table-bordered classic-table">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width: 50%;">Concepto</th>
+                            <th class="text-end">Días / Proporción</th>
+                            <th class="text-end">Importe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @* SECCIÓN: FINIQUITO *@
+                        <tr class="table-secondary"><td colspan="3" class="fw-bold">Derechos Irrenunciables (Finiquito)</td></tr>
+                        
+                        @if(resultado.MontoSueldoPendiente > 0)
+                        {
+                            <tr>
+                                <td>Sueldo pendiente de pago</td>
+                                <td class="text-end">@resultado.DiasSueldoPendiente.ToString("0.00")</td>
+                                <td class="text-end">@resultado.MontoSueldoPendiente.ToString("C2")</td>
+                            </tr>
+                        }
+                        <tr>
+                            <td>Aguinaldo Proporcional</td>
+                            <td class="text-end">@resultado.DiasAguinaldoProporcional.ToString("0.00")</td>
+                            <td class="text-end">@resultado.MontoAguinaldo.ToString("C2")</td>
+                        </tr>
+                        <tr>
+                            <td>Vacaciones Pendientes</td>
+                            <td class="text-end">@resultado.DiasVacacionesPendientes.ToString("0.00")</td>
+                            <td class="text-end">@resultado.MontoVacaciones.ToString("C2")</td>
+                        </tr>
+                        <tr>
+                            <td>Prima Vacacional</td>
+                            <td class="text-end">-</td>
+                            <td class="text-end">@resultado.MontoPrimaVacacional.ToString("C2")</td>
+                        </tr>
+                        <tr class="fw-bold bg-light">
+                            <td colspan="2" class="text-end">Subtotal Finiquito:</td>
+                            <td class="text-end text-primary">@resultado.TotalFiniquito.ToString("C2")</td>
+                        </tr>
+
+                        @* SECCIÓN: LIQUIDACIÓN (Solo si aplica) *@
+                        @if (resultado.TotalLiquidacion > 0)
+                        {
+                            <tr class="table-secondary"><td colspan="3" class="fw-bold mt-2">Indemnizaciones (Liquidación)</td></tr>
+                            
+                            @if(resultado.MontoPrimaAntiguedad > 0)
+                            {
+                                <tr>
+                                    <td>Prima de Antigüedad (Art. 162 LFT)</td>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end">@resultado.MontoPrimaAntiguedad.ToString("C2")</td>
+                                </tr>
+                            }
+                            @if(resultado.MontoIndemnizacion90Dias > 0)
+                            {
+                                <tr>
+                                    <td>Indemnización Constitucional (90 días)</td>
+                                    <td class="text-end">90.00</td>
+                                    <td class="text-end">@resultado.MontoIndemnizacion90Dias.ToString("C2")</td>
+                                </tr>
+                            }
+                            @if(resultado.MontoIndemnizacion20Dias > 0)
+                            {
+                                <tr>
+                                    <td>Indemnización 20 días por año</td>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end">@resultado.MontoIndemnizacion20Dias.ToString("C2")</td>
+                                </tr>
+                            }
+                            <tr class="fw-bold bg-light">
+                                <td colspan="2" class="text-end">Subtotal Liquidación:</td>
+                                <td class="text-end text-danger">@resultado.TotalLiquidacion.ToString("C2")</td>
+                            </tr>
+                        }
+
+                        @* GRAN TOTAL *@
+                        <tr class="table-dark text-white fw-bold" style="font-size: 1.1rem;">
+                            <td colspan="2" class="text-end">GRAN TOTAL A PAGAR (Antes de ISR):</td>
+                            <td class="text-end">@resultado.GranTotal.ToString("C2")</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="classic-label text-muted mt-2 text-end">
+                    <small>*El cálculo de impuestos (ISR) se realizará al consolidar la nómina extraordinaria.</small>
+                </div>
+            }
+            else
+            {
+                <div class="h-100 d-flex align-items-center justify-content-center text-muted classic-label">
+                    Seleccione un empleado y presione "Calcular Pasivo" para visualizar el desglose.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<EmpleadoViewModel> listaEmpleados = new();
+
+    private int empleadoId = 0;
+    private string tipoSalida = "Renuncia";
+    private DateTime fechaBaja = DateTime.Today;
+    private int diasPendientes = 0; // Se inicializa en 0, pero se autocompleta
+    private bool incluir20Dias = false;
+
+    private bool isBusy = false;
+    private CalculoPasivoDTO? resultado = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaEmpleados = await EmpleadoService.GetAllEmpleadosAsync();
+    }
+
+    // DISPARADOR 1: Cuando seleccionas al empleado
+    private void OnEmpleadoSeleccionado(ChangeEventArgs e)
+    {
+        empleadoId = int.Parse(e.Value?.ToString() ?? "0");
+        if (empleadoId > 0)
+        {
+            // Solo sugerimos los días pendientes, pero NO calculamos el dinero aún.
+            RecalcularDiasSugeridos();
+        }
+        else
+        {
+            resultado = null;
+        }
+    }
+
+    // DISPARADOR 2: Cuando cambias la fecha
+    private void OnFechaBajaChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out DateTime nuevaFecha))
+        {
+            fechaBaja = nuevaFecha;
+
+            // Re-sugerimos los días basados en la nueva fecha, pero NO calculamos.
+            RecalcularDiasSugeridos();
+        }
+    }
+
+    // El motorcito que sabe en qué día de la quincena estamos
+    private void RecalcularDiasSugeridos()
+    {
+        if (fechaBaja.Day <= 15)
+            diasPendientes = fechaBaja.Day;
+        else
+            diasPendientes = fechaBaja.Day - 15;
+    }
+
+    private async Task EjecutarCalculo()
+    {
+        if (empleadoId == 0) return;
+
+        isBusy = true;
+        StateHasChanged();
+
+        try
+        {
+            bool esLiquidacion = tipoSalida == "Despido";
+            resultado = await PasivoLaboralService.CalcularFiniquitoAsync(
+                empleadoId,
+                fechaBaja,
+                esLiquidacion,
+                diasPendientes, // Ahora sí viaja el número correcto (ej. 8 días)
+                incluir20Dias
+            );
+        }
+        finally
+        {
+            isBusy = false;
+            StateHasChanged();
+        }
+    }
+}
+
+<style>
+    .classic-window {
+        background-color: #f0f0f0;
+        border: 1px solid #999;
+        padding: 15px;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .classic-input {
+        border: 1px solid #7a9eb1;
+        padding: 2px 5px;
+        font-size: 0.85rem;
+        height: 26px;
+        outline: none;
+    }
+    .classic-input:focus { border-color: #0078d7; }
+
+    .classic-label {
+        font-size: 0.80rem;
+        color: #333;
+        margin-bottom: 2px;
+        display: block;
+    }
+
+    .classic-btn-large {
+        border: 1px solid #999;
+        background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+        padding: 5px 15px;
+        font-size: 0.9rem;
+        color: #000;
+        cursor: pointer;
+    }
+    .classic-btn-large:hover:not(:disabled) {
+        background: linear-gradient(to bottom, #fff, #e8e8e8);
+        border-color: #0078d7;
+    }
+    .classic-btn-large:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .classic-table { font-size: 0.85rem; background: white; }
+    .classic-table th { background: linear-gradient(to bottom, #fcfcfc, #e6e6e6); border-bottom: 2px solid #ccc; font-weight: normal; }
+    .classic-table td { vertical-align: middle; }
+</style>

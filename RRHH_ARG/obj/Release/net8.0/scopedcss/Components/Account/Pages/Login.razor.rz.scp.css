@@ -1,0 +1,226 @@
+
+/* --- CSS RESPONSIVE --- */
+html[b-qprah335yh], body[b-qprah335yh] {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #033750 !important; /* Mover el color al body evita espacios blancos en rebotes de scroll */
+}
+
+/* Contenedor Principal */
+.login-page-container[b-qprah335yh] {
+    background-color: #033750;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px; /* Importante: espacio en bordes para móviles */
+    overflow-x: hidden; /* Evita scroll horizontal por la imagen absoluta */
+}
+
+/* Caja Blanca */
+.login-box[b-qprah335yh] {
+    position: relative;
+    background-color: white;
+    padding: 20px;
+    border: 10px solid white;
+    width: 100%;
+    max-width: 475px; /* Ancho máximo para escritorio */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    /* En móviles quitamos overflow visible para que nada se salga, 
+           en escritorio lo activamos vía media query */
+    overflow: hidden;
+}
+
+/* Logo Texto Argos */
+.argos-text-logo[b-qprah335yh] {
+    display: block;
+    width: 100%;
+    max-width: 300px; /* Evita que se vea gigante en tablets */
+    height: auto;
+    margin: 10px auto 20px auto;
+}
+
+/* Contenedor de Campos */
+.fields-container[b-qprah335yh] {
+    padding: 15px; /* Reducido un poco para móviles */
+    border: 1px solid #ccc;
+    margin: 20px auto;
+}
+
+/* Inputs y Labels */
+.login-label[b-qprah335yh] {
+    display: block;
+    text-align: left;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.login-input[b-qprah335yh] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ababab;
+    border-radius: 3px;
+}
+
+/* Botón Login */
+.login-btn[b-qprah335yh] {
+    background-color: black !important;
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    padding: 10px; /* Un poco más alto para dedos táctiles */
+    width: 100%;
+    margin-top: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    .login-btn:hover[b-qprah335yh] {
+        background-color: #333 !important;
+    }
+
+/* --- RESPONSIVE LOGIC (MEDIA QUERIES) --- */
+
+/* Reglas para Escritorio (Pantallas mayores a 992px) */
+@media (min-width: 992px) {
+    .login-box[b-qprah335yh] {
+        overflow: visible; /* Permitimos que la imagen decorativa se salga de la caja */
+        padding: 30px;
+    }
+
+    .fields-container[b-qprah335yh] {
+        padding: 30px;
+    }
+
+    /* La imagen decorativa solo existe en escritorio */
+    .large-decoration-logo[b-qprah335yh] {
+        display: block; /* Aseguramos que se vea */
+        position: absolute;
+        top: -210px;
+        right: -360px;
+        width: 550px;
+        height: auto;
+        z-index: 5;
+        pointer-events: none; /* Evita que la imagen bloquee clics si se superpone */
+    }
+}
+
+/* Reglas para Móviles y Tablets (Menores a 992px) */
+@media (max-width: 991px) {
+    .large-decoration-logo[b-qprah335yh] {
+        display: none; /* Ocultamos la imagen decorativa lateral */
+    }
+
+    .login-page-container[b-qprah335yh] {
+        align-items: center; /* Centrado vertical */
+    }
+}
+
+
+/* --- TUS ESTILOS CSS ORIGINALES --- */
+html[b-qprah335yh], body[b-qprah335yh] {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: transparent !important;
+}
+
+/* Contenedor Azul */
+.login-page-container[b-qprah335yh] {
+    background-color: #033750;
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    /* overflow: hidden; */
+}
+
+/* Caja Blanca */
+.login-box[b-qprah335yh] {
+    position: relative;
+    background-color: white;
+    padding: 20px;
+    border: 10px solid white;
+    width: 100%;
+    max-width: 475px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    overflow: visible;
+}
+
+/* Logo Grande Decorativo */
+.large-decoration-logo[b-qprah335yh] {
+    position: absolute;
+    top: -210px;
+    right: -360px;
+    width: 550px;
+    height: auto;
+    z-index: 5;
+}
+
+/* Logo Texto Argos */
+.argos-text-logo[b-qprah335yh] {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 10px auto 20px auto;
+}
+
+/* Contenedor de Campos */
+.fields-container[b-qprah335yh] {
+    padding: 30px;
+    border: 1px solid #ccc;
+    margin: 20px auto;
+}
+
+/* Botón 'Iniciar' */
+.login-btn[b-qprah335yh] {
+    background-color: black !important;
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    padding: 8px;
+    width: 100%;
+    margin-top: 30px;
+    cursor: pointer;
+}
+
+    .login-btn:hover[b-qprah335yh] {
+        background-color: #333 !important;
+    }
+
+/* Estilos de inputs y labels */
+.login-label[b-qprah335yh] {
+    display: block;
+    text-align: left;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.login-input[b-qprah335yh] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ababab;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+
+

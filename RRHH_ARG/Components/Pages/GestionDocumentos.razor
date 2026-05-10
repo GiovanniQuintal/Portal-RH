@@ -1,0 +1,145 @@
+﻿@page "/gestion-documentos"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@inject EmpleadoService EmpleadoService
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, HSE")]
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary fw-bold"><i class="bi bi-folder2-open"></i> Gestión de Documentos</h2>
+        </div>
+        <button class="btn btn-success" @onclick="() => AbrirModal(new DetalleExpediente())">
+            <i class="bi bi-plus-lg"></i> Agregar Nuevo
+        </button>
+    </div>
+
+    @if (documentos == null)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Nombre</th>
+                            <th>Nomenclatura</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var doc in documentos)
+                        {
+                            <tr class="@(doc.DexId > 19 ? "table-success bg-opacity-10" : "")">
+                                <td class="ps-4 fw-bold text-muted">@doc.DexId</td>
+                                <td class="fw-bold">
+                                    @doc.DexNombre
+                                    @if (doc.DexId > 19)
+                                    {
+                                        <span class="badge bg-success ms-2" style="font-size: 0.65rem;">NUEVO</span>
+                                    }
+                                </td>
+                                <td><span class="badge bg-light text-dark border">@doc.DexNomenclatura</span></td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModal(doc)">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@* MODAL *@
+@if (mostrarModal)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(docEnEdicion.DexId == 0 ? "Nuevo Documento" : "Editar Documento")</h5>
+                    <button type="button" class="btn-close" @onclick="() => mostrarModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger small">@errorMessage</div>
+                    }
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input class="form-control" @bind="docEnEdicion.DexNombre" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nomenclatura <span class="text-danger">*</span></label>
+                        <input class="form-control" @bind="docEnEdicion.DexNomenclatura" />
+                    </div>
+
+                    @if (docEnEdicion.DexId == 0)
+                    {
+                        <div class="alert alert-info small">
+                            <i class="bi bi-clock-history"></i> Se registrará con fecha de <strong>HOY (@DateTime.Now.ToShortDateString())</strong>. Solo los empleados contratados a partir de hoy verán este requisito.
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => mostrarModal = false">Cancelar</button>
+                    <button class="btn btn-primary" @onclick="Guardar">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<DetalleExpediente> documentos;
+    private bool mostrarModal = false;
+    private string errorMessage = "";
+    private DetalleExpediente docEnEdicion = new();
+
+    protected override async Task OnInitializedAsync() => await CargarDatos();
+    private async Task CargarDatos() => documentos = await EmpleadoService.GetCatalogoDocumentosAsync();
+
+    private void AbrirModal(DetalleExpediente doc)
+    {
+        errorMessage = "";
+        docEnEdicion = new DetalleExpediente
+        {
+            DexId = doc.DexId,
+            DexNombre = doc.DexNombre,
+            DexNomenclatura = doc.DexNomenclatura
+        };
+        mostrarModal = true;
+    }
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(docEnEdicion.DexNombre))
+        {
+            errorMessage = "El nombre es obligatorio";
+            return;
+        }
+
+        try
+        {
+            await EmpleadoService.SaveTipoDocumentoAsync(docEnEdicion);
+            await CargarDatos();
+            mostrarModal = false;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+    }
+}

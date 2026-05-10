@@ -1,0 +1,140 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    @* EL SIDEBAR (Contenedor del Menú) *@
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    @* EL CONTENIDO PRINCIPAL (Donde sale tu tabla) *@
+    <main>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@* --- PANTALLA DE CARGA (Tu código) --- *@
+@if (IsLoading)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.8); z-index: 2147483647; display: flex; align-items: center; justify-content: center;">
+        <div style="text-align: center; color: white;">
+            <h2 style="color: white;">Cargando...</h2>
+        </div>
+    </div>
+}
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    private bool IsLoading = false;
+}
+
+@* --- AQUÍ LA SOLUCIÓN DEFINITIVA: CSS INCRUSTADO --- *@
+<style>
+    /* 1. CONFIGURACIÓN BASE (MÓVIL/TABLET POR DEFECTO) */
+    html, body {
+        height: 100%;
+        margin: 0;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    .page {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+    }
+
+    /* --- SIDEBAR EN MÓVIL/TABLET: INVISIBLE --- */
+    /* Usamos position absolute para sacarlo del flujo y que no empuje el contenido */
+    .sidebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        /* Dimensiones 0 y sin fondo para ser "fantasma" */
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+        background-image: none !important;
+        /* Visible para que el botón (lengüeta) pueda salir del contenedor */
+        overflow: visible !important;
+    }
+
+    /* --- CONTENIDO PRINCIPAL --- */
+    main {
+        flex: 1;
+        width: 100%; /* Ocupa todo el ancho en móvil */
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .top-row {
+        background-color: #f7f7f7;
+        border-bottom: 1px solid #d6d5d5;
+        height: 3.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    /* =========================================================
+           2. ESTRUCTURA ESCRITORIO (SOLO PANTALLAS GRANDES > 992px)
+           ========================================================= */
+    /* Subimos a 992px para que el iPad Mini use la versión móvil */
+    @@media (min-width: 992px) {
+
+        .page {
+            flex-direction: row; /* Lado a lado */
+        }
+        /* --- SIDEBAR EN PC: VISIBLE Y AZUL --- */
+        .sidebar {
+            position: sticky;
+            top: 0;
+            width: 250px !important; /* Ancho real */
+            height: 100vh !important;
+            /* SOLO AQUÍ PINTAMOS EL FONDO AZUL */
+            background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%) !important;
+            background-color: #253C60 !important;
+            overflow: hidden !important;
+        }
+        /* Ajustamos el contenido para que no choque con el sidebar */
+        main {
+            flex: 1;
+            padding-top: 0;
+            max-width: calc(100vw - 250px);
+        }
+
+        .top-row {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+    }
+
+    /* Error UI */
+    #blazor-error-ui {
+        background: lightyellow;
+        bottom: 0;
+        display: none;
+        left: 0;
+        padding: 0.6rem;
+        position: fixed;
+        width: 100%;
+        z-index: 1000;
+    }
+
+        #blazor-error-ui .dismiss {
+            cursor: pointer;
+            position: absolute;
+            right: 0.75rem;
+            top: 0.5rem;
+        }
+</style>

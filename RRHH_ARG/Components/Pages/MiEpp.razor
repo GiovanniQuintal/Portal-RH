@@ -1,0 +1,114 @@
+﻿@page "/mi-epp"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject EmpleadoService Service
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, Empleado, HSE, FA, Supervisor")]
+
+
+<div class="container-fluid">
+    <h3>Mi Historial de EPP</h3>
+    <p class="text-muted">Listado de Equipos de Protección Personal que se te han entregado.</p>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped table-hover mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha Entrega</th>
+                    <th>EPPs Entregados</th>
+                    <th class="text-center">Cantidades Totales</th>
+                    <th class="text-center">Evidencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (misEntregas == null || !misEntregas.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center">No tienes registros de entregas de EPP.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in misEntregas)
+                    {
+                        <tr>
+                            <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @foreach (var epp in item.ListaEpps.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <span class="badge bg-secondary text-white me-1">@epp.Trim()</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary fs-6">@item.ListaCantidades</span>
+                            </td>
+                            <td class="text-center">
+                                @if (item.TieneEvidencia)
+                                {
+                                    <a href="api/Archivo/EntregaEpp/@item.EntId" target="_blank"
+                                       class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-file-earmark-pdf"></i> Ver PDF
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Sin archivo</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<EntregaEppViewModel> misEntregas = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 1. Obtener el usuario logueado actual
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity != null && user.Identity.IsAuthenticated)
+            {
+                // 2. Obtener el ID de Identity (AspNetUserId)
+                var userId = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    // 3. Llamar al servicio filtrado
+                    misEntregas = await Service.GetEntregasEppPorUsuarioAsync(userId);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

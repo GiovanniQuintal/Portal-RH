@@ -1,0 +1,252 @@
+﻿@page "/mi-expediente"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject EmpleadoService EmpleadoService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<MiExpediente> Logger
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, Empleado, HSE, FA, Supervisor")]
+
+<div class="container-fluid mt-4">
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center mt-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (empleado == null)
+    {
+        <div class="alert alert-danger text-center shadow-sm">
+            <h4><i class="bi bi-exclamation-circle"></i> Perfil no encontrado</h4>
+            <p>Tu usuario de sistema no está vinculado a una ficha de empleado activa.</p>
+            <p>Por favor, contacta a Recursos Humanos.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                <i class="bi bi-person-fill text-secondary" style="font-size: 3rem;"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">@empleado.Nombre @empleado.ApellidoPaterno</h5>
+                        <p class="text-muted mb-1">@empleado.Empleo</p>
+                        <span class="badge bg-primary mb-3">@empleado.Area</span>
+
+                        <hr />
+
+                        <div class="text-start small">
+                            
+                                <p class="mb-0 text-muted">
+                                    <i class="bi bi-person-workspace me-2"></i>
+                                    Supervisor Directo:
+                                </p>
+                                <p class="fw-bold ms-4">
+                                    @if (!string.IsNullOrEmpty(empleado.SupervisorNombre) && empleado.SupervisorNombre != "No Asignado")
+                                    {
+                                        <span class="text-primary">
+                                            <i class="bi bi-person-check-fill me-1"></i>
+                                            @empleado.SupervisorNombre
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic small">Sin supervisor asignado</span>
+                                    }
+                                </p>
+                             <div class="border-top pt-2 mt-2">
+                                <p class="mb-2">
+                                    <i class="bi bi-person-badge me-2 text-primary"></i>
+                                    <strong>ID: @(string.IsNullOrEmpty(empleado.CodigoEmpleado) ? "S/N" : empleado.CodigoEmpleado)</strong>
+                                </p>
+                                <p class="mb-1"><i class="bi bi-envelope me-2"></i> @empleado.Email</p>
+                                <p class="mb-1"><i class="bi bi-telephone me-2"></i> @empleado.Telefono</p>
+                                <p class="mb-0"><i class="bi bi-building me-2"></i> @empleado.Subsidiaria</p>
+                             </div>
+                            <div class="border-top pt-3 mt-3">
+                                <h6 class="text-danger fw-bold small mb-2">
+                                    <i class="bi bi-heart-pulse-fill me-1"></i> EN CASO DE EMERGENCIA
+                                </h6>
+
+                                @if (empleado.ContactosEmergencia != null && empleado.ContactosEmergencia.Any(c => !string.IsNullOrEmpty(c.CemNombreCompleto)))
+                                {
+                                    <ul class="list-unstyled mb-0">
+                                        @foreach (var c in empleado.ContactosEmergencia)
+                                        {
+                                            if (!string.IsNullOrEmpty(c.CemParentesco))
+                                            {
+                                                <li class="mb-2 bg-light p-2 rounded">
+                                                    <div class="d-flex justify-content-between">
+                                                        <strong class="text-dark">@c.CemParentesco</strong>
+                                                    </div>
+                                                    <a href="tel:@c.CemTelefono1" class="text-decoration-none text-muted d-block mt-1">
+                                                        <i class="bi bi-telephone-forward me-1 text-danger"></i> @c.CemTelefono1
+                                                    </a>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <small class="text-muted fst-italic">No hay contactos registrados.</small>
+                                }
+                            </div>
+                        
+                            <div class="border-top pt-2 mt-2">
+                                <p class="mb-0 text-muted">
+                                    <i class="bi bi-calendar-event me-2"></i>
+                                    Fecha de Ingreso:
+                                </p>
+                                <p class="fw-bold ms-4">
+                                    @(empleado.FechaContratacion?.ToShortDateString() ?? "No registrada")
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-folder2-open me-2"></i>Mi Expediente Digital</h5>
+
+                        <div class="d-flex align-items-center" style="width: 200px;">
+                            <span class="small me-2 text-muted">Completado:</span>
+                            <div class="progress flex-grow-1" style="height: 10px;">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                     style="width: @(empleado.ExpedientesPorcentaje)%;"
+                                     aria-valuenow="@empleado.ExpedientesPorcentaje"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"></div>
+                            </div>
+                            <span class="small ms-2 fw-bold">@empleado.ExpedientesPorcentaje%</span>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Documento</th>
+                                        <th>Estado</th>
+                                        <th>Vencimiento</th>
+                                        <th class="text-end pe-4">Visualizar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var exp in expedientes)
+                                    {
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-bold text-dark">@exp.Nombre</div>
+                                                <small class="text-muted">@exp.Nomenclatura</small>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(exp.NombreArchivo))
+                                                {
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">
+                                                        <i class="bi bi-check-circle-fill me-1"></i> Disponible
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1">
+                                                        <i class="bi bi-hourglass-split me-1"></i> Pendiente
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (exp.FechaCaducidad.HasValue)
+                                                {
+                                                    <span class="@(exp.FechaCaducidad.Value < DateTime.Now ? "text-danger fw-bold" : "")">
+                                                        @exp.FechaCaducidad.Value.ToShortDateString()
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                @if (!string.IsNullOrEmpty(exp.NombreArchivo) && exp.ExpId > 0)
+                                                {
+                                                    <a href="/api/Archivo/@exp.ExpId" target="_blank" class="btn btn-sm btn-outline-primary" title="Ver Documento">
+                                                        <i class="bi bi-eye"></i> Ver Archivo
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted small fst-italic">No cargado</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private EmpleadoViewModel? empleado;
+    private List<ExpedienteViewModel> expedientes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatosUsuario();
+    }
+
+    private async Task CargarDatosUsuario()
+    {
+        isLoading = true;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity != null && user.Identity.IsAuthenticated)
+            {
+                // Obtenemos el ID de Identity (Guid)
+                var userId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    // 1. Buscamos el empleado vinculado a este usuario
+                    empleado = await EmpleadoService.GetPerfilEmpleadoLogueadoAsync(userId);
+
+                    if (empleado != null)
+                    {
+                        // 2. Si existe, cargamos sus expedientes
+                        expedientes = await EmpleadoService.GetExpedientesByEmpleadoIdAsync(empleado.Id);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al cargar Mi Expediente");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

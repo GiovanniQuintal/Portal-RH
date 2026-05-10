@@ -1,0 +1,48 @@
+﻿.edit-employee-container {
+    padding: 20px;
+}
+
+.title {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Contenedor principal que centra el formulario */
+.form-section {
+    max-width: 1000px; /* Mantenemos este ancho para dar espacio */
+    margin: 0 auto; /* Centra el bloque del formulario */
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    background-color: #f8f9fa;
+}
+
+/* Usamos las clases row y col-md-6 de Bootstrap para el layout, 
+   pero re-estilizamos el form-group para el espaciado. */
+.employee-form-grid {
+    --bs-gutter-x: 1.5rem; /* Espaciado entre columnas (g-3) */
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.table-responsive {
+    margin-top: 30px;
+}
+
+/* Ya no necesitamos la regla 'td:last-child' aquí */
+
+.button-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    max-width: 1000px; /* Asegura que los botones se alineen con el formulario */
+    margin-left: auto;
+    margin-right: auto;
+}
+

@@ -1,0 +1,808 @@
+@import '_content/Blazor.Bootstrap/Blazor.Bootstrap.olwso25aue.bundle.scp.css';
+@import '_content/BlazorFluentUI.CoreComponents/BlazorFluentUI.CoreComponents.bundle.scp.css';
+@import '_content/BlazorFluentUI.ListComponents/BlazorFluentUI.ListComponents.bundle.scp.css';
+@import '_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.wuc5ioiakb.bundle.scp.css';
+@import '_content/Z.Blazor.Diagrams/Z.Blazor.Diagrams.ezdqu7jd9f.bundle.scp.css';
+
+/* /Components/Account/Pages/Login.razor.rz.scp.css */
+
+/* --- CSS RESPONSIVE --- */
+html[b-qprah335yh], body[b-qprah335yh] {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #033750 !important; /* Mover el color al body evita espacios blancos en rebotes de scroll */
+}
+
+/* Contenedor Principal */
+.login-page-container[b-qprah335yh] {
+    background-color: #033750;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px; /* Importante: espacio en bordes para móviles */
+    overflow-x: hidden; /* Evita scroll horizontal por la imagen absoluta */
+}
+
+/* Caja Blanca */
+.login-box[b-qprah335yh] {
+    position: relative;
+    background-color: white;
+    padding: 20px;
+    border: 10px solid white;
+    width: 100%;
+    max-width: 475px; /* Ancho máximo para escritorio */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    /* En móviles quitamos overflow visible para que nada se salga, 
+           en escritorio lo activamos vía media query */
+    overflow: hidden;
+}
+
+/* Logo Texto Argos */
+.argos-text-logo[b-qprah335yh] {
+    display: block;
+    width: 100%;
+    max-width: 300px; /* Evita que se vea gigante en tablets */
+    height: auto;
+    margin: 10px auto 20px auto;
+}
+
+/* Contenedor de Campos */
+.fields-container[b-qprah335yh] {
+    padding: 15px; /* Reducido un poco para móviles */
+    border: 1px solid #ccc;
+    margin: 20px auto;
+}
+
+/* Inputs y Labels */
+.login-label[b-qprah335yh] {
+    display: block;
+    text-align: left;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.login-input[b-qprah335yh] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ababab;
+    border-radius: 3px;
+}
+
+/* Botón Login */
+.login-btn[b-qprah335yh] {
+    background-color: black !important;
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    padding: 10px; /* Un poco más alto para dedos táctiles */
+    width: 100%;
+    margin-top: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    .login-btn:hover[b-qprah335yh] {
+        background-color: #333 !important;
+    }
+
+/* --- RESPONSIVE LOGIC (MEDIA QUERIES) --- */
+
+/* Reglas para Escritorio (Pantallas mayores a 992px) */
+@media (min-width: 992px) {
+    .login-box[b-qprah335yh] {
+        overflow: visible; /* Permitimos que la imagen decorativa se salga de la caja */
+        padding: 30px;
+    }
+
+    .fields-container[b-qprah335yh] {
+        padding: 30px;
+    }
+
+    /* La imagen decorativa solo existe en escritorio */
+    .large-decoration-logo[b-qprah335yh] {
+        display: block; /* Aseguramos que se vea */
+        position: absolute;
+        top: -210px;
+        right: -360px;
+        width: 550px;
+        height: auto;
+        z-index: 5;
+        pointer-events: none; /* Evita que la imagen bloquee clics si se superpone */
+    }
+}
+
+/* Reglas para Móviles y Tablets (Menores a 992px) */
+@media (max-width: 991px) {
+    .large-decoration-logo[b-qprah335yh] {
+        display: none; /* Ocultamos la imagen decorativa lateral */
+    }
+
+    .login-page-container[b-qprah335yh] {
+        align-items: center; /* Centrado vertical */
+    }
+}
+
+
+/* --- TUS ESTILOS CSS ORIGINALES --- */
+html[b-qprah335yh], body[b-qprah335yh] {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: transparent !important;
+}
+
+/* Contenedor Azul */
+.login-page-container[b-qprah335yh] {
+    background-color: #033750;
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    /* overflow: hidden; */
+}
+
+/* Caja Blanca */
+.login-box[b-qprah335yh] {
+    position: relative;
+    background-color: white;
+    padding: 20px;
+    border: 10px solid white;
+    width: 100%;
+    max-width: 475px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    overflow: visible;
+}
+
+/* Logo Grande Decorativo */
+.large-decoration-logo[b-qprah335yh] {
+    position: absolute;
+    top: -210px;
+    right: -360px;
+    width: 550px;
+    height: auto;
+    z-index: 5;
+}
+
+/* Logo Texto Argos */
+.argos-text-logo[b-qprah335yh] {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 10px auto 20px auto;
+}
+
+/* Contenedor de Campos */
+.fields-container[b-qprah335yh] {
+    padding: 30px;
+    border: 1px solid #ccc;
+    margin: 20px auto;
+}
+
+/* Botón 'Iniciar' */
+.login-btn[b-qprah335yh] {
+    background-color: black !important;
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    padding: 8px;
+    width: 100%;
+    margin-top: 30px;
+    cursor: pointer;
+}
+
+    .login-btn:hover[b-qprah335yh] {
+        background-color: #333 !important;
+    }
+
+/* Estilos de inputs y labels */
+.login-label[b-qprah335yh] {
+    display: block;
+    text-align: left;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.login-input[b-qprah335yh] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ababab;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+
+
+/* /Components/Layout/MainLayout.razor.rz.scp.css */
+/*.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+
+.sidebar {
+    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background-color: #253C60;
+    background-image: none;
+    z-index: 100 !important;
+}
+
+
+
+
+.top-row {
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #d6d5d5;
+    justify-content: flex-end;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+}
+
+    .top-row ::deep a, .top-row ::deep .btn-link {
+        white-space: nowrap;
+        margin-left: 1.5rem;
+        text-decoration: none;
+    }
+
+        .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        .top-row ::deep a:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+@media (max-width: 640.98px) {
+    .top-row {
+        justify-content: space-between;
+    }
+
+        .top-row ::deep a, .top-row ::deep .btn-link {
+            margin-left: 0;
+        }
+}
+
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: 250px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    .top-row {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+        .top-row.auth ::deep a:first-child {
+            flex: 1;
+            text-align: right;
+            width: 0;
+        }
+
+    .top-row, article {
+        padding-left: 2rem !important;
+        padding-right: 1.5rem !important;
+    }
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+    */
+
+/* /Components/Layout/NavMenu.razor.rz.scp.css */
+/* /Components/Pages/CardWidget.razor.rz.scp.css */
+.card-node .body[b-6sixeee0xp] {
+    fill: #ffffff;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+.card-node .title[b-6sixeee0xp] {
+    font-family: sans-serif;
+    font-size: 16px;
+    fill: #333;
+    font-weight: bold;
+    pointer-events: none; /* Para que el click pase a través del texto */
+}
+
+/* Estilo de los puertos (círculos) */
+.card-node .port[b-6sixeee0xp] {
+    fill: #007bff; /* Azul */
+    cursor: crosshair;
+}
+
+.card-node .port:hover[b-6sixeee0xp] {
+    fill: #0056b3; /* Azul oscuro al pasar mouse */
+    stroke: white;
+    stroke-width: 2px;
+}
+/* /Components/Pages/EditarEmpleado.razor.rz.scp.css */
+.edit-employee-container[b-bkf01bzkt1] {
+    padding: 20px;
+}
+
+.title[b-bkf01bzkt1] {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Contenedor principal que centra el formulario */
+.form-section[b-bkf01bzkt1] {
+    max-width: 1000px; /* Mantenemos este ancho para dar espacio */
+    margin: 0 auto; /* Centra el bloque del formulario */
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    background-color: #f8f9fa;
+}
+
+/* Usamos las clases row y col-md-6 de Bootstrap para el layout, 
+   pero re-estilizamos el form-group para el espaciado. */
+.employee-form-grid[b-bkf01bzkt1] {
+    --bs-gutter-x: 1.5rem; /* Espaciado entre columnas (g-3) */
+}
+
+.form-group label[b-bkf01bzkt1] {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.table-responsive[b-bkf01bzkt1] {
+    margin-top: 30px;
+}
+
+/* Ya no necesitamos la regla 'td:last-child' aquí */
+
+.button-row[b-bkf01bzkt1] {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    max-width: 1000px; /* Asegura que los botones se alineen con el formulario */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* /Components/Pages/Empleados.razor.rz.scp.css */
+.employees-container[b-9w6nqow5fk] {
+    padding: 20px;
+    width: 100%;
+}
+
+.top-panel[b-9w6nqow5fk] {
+    width: 100%;
+    max-width: 1000px; /* Tamaño grande del contenedor principal */
+    margin: 0 auto;
+}
+
+.title[b-9w6nqow5fk] {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* --- SOLUCIÓN DE LAYOUT --- */
+.search-panel[b-9w6nqow5fk] {
+    display: flex; /* Asegura la alineación en una fila */
+    justify-content: space-between; /* Separa los dos grupos (búsqueda y filtro) */
+    align-items: center;
+    gap: 25px; /* Aumenta el espacio entre los dos grupos */
+    margin-top: 20px;
+}
+
+.search-input-group[b-9w6nqow5fk] {
+    /* Permitimos que ocupe más espacio pero limitamos su crecimiento */
+    max-width: 600px;
+    flex-grow: 1;
+}
+
+.filter-select-group[b-9w6nqow5fk] {
+    /* Impedimos que el grupo de filtro se expanda, dejando espacio para la búsqueda */
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-shrink: 0; /* Asegura que este grupo no se encoja */
+    /* Nota: Si quieres que el filtro esté fijo a la derecha sin importar el tamaño del grupo de búsqueda,
+       las clases de Bootstrap ya lo manejan si el contenedor principal es 'd-flex justify-content-between'. */
+}
+/* --- FIN SOLUCIÓN DE LAYOUT --- */
+
+.search-btn[b-9w6nqow5fk] {
+    background-color: #253C60;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    margin-left: -1px;
+}
+
+    .search-btn img[b-9w6nqow5fk] {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+
+.filter-select[b-9w6nqow5fk] {
+    width: 150px; /* Mantenemos el ancho compacto para el select */
+    min-width: 150px;
+}
+
+.filter-btn[b-9w6nqow5fk] {
+    background-color: lightgray;
+    color: #253C60;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+}
+
+    .filter-btn img[b-9w6nqow5fk] {
+        width: 24px;
+        height: 24px;
+    }
+
+.table-container[b-9w6nqow5fk] {
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+/* ... (resto de estilos de tabla y status) ... */
+.employee-table th[b-9w6nqow5fk] {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.status-badge[b-9w6nqow5fk] {
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+}
+
+.status-empleado[b-9w6nqow5fk] {
+    background-color: #28a745;
+}
+
+.status-practicante[b-9w6nqow5fk] {
+    background-color: #007bff;
+}
+
+.status-inactivo[b-9w6nqow5fk] {
+    background-color: #dc3545;
+}
+
+.progress-container[b-9w6nqow5fk] {
+    width: 100px;
+    margin: 5px 0;
+}
+
+.progress-label[b-9w6nqow5fk] {
+    font-size: 12px;
+    margin-bottom: 3px;
+    color: #6c757d;
+}
+
+.progress-bar[b-9w6nqow5fk] {
+    background-color: #17a2b8;
+}
+
+.action-btn[b-9w6nqow5fk] {
+    font-size: 12px;
+    padding: 5px 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #007bff;
+    font-weight: bold;
+}
+/* /Components/Pages/Incidencias.razor.rz.scp.css */
+/* Puedes copiar y pegar el contenido exacto de Empleados.razor.css */
+/* o simplemente renombrar la clase principal */
+
+.incidencias-container[b-df7cc06e04] {
+    padding: 20px;
+    width: 100%;
+}
+
+.top-panel[b-df7cc06e04] {
+    width: 100%;
+    max-width: 1000px; /* Tamaño grande del contenedor principal */
+    margin: 0 auto;
+}
+
+.title[b-df7cc06e04] {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Estilos de Búsqueda y Filtro (Copiados de Empleados.razor.css) */
+.search-panel[b-df7cc06e04] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.search-input-group[b-df7cc06e04] {
+    max-width: 600px;
+    flex-grow: 1;
+}
+
+.search-btn[b-df7cc06e04] {
+    background-color: #253C60;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    margin-left: -1px;
+}
+
+    .search-btn img[b-df7cc06e04] {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+
+.table-container[b-df7cc06e04] {
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+.employee-table th[b-df7cc06e04] {
+    font-weight: bold;
+    font-size: 14px;
+}
+/* /Components/Pages/Reclutamiento.razor.rz.scp.css */
+/* --- 1. CONTENEDOR PRINCIPAL (ESTO LAS PONE HORIZONTALES) --- */
+.cards-wrapper[b-p3vi8h6xk3] {
+    display: flex; /* Obligatorio para alineación horizontal */
+    flex-direction: row; /* Asegura que vayan en fila */
+    justify-content: center; /* Las centra en la pantalla */
+    align-items: center;
+    gap: 25px; /* Espacio entre tarjetas */
+    margin-top: 30px;
+    flex-wrap: wrap; /* Si la pantalla es muy chica, permite que bajen */
+    width: 100%;
+}
+
+/* --- 2. DISEÑO DE LA TARJETA (LA CAJA) --- */
+.stat-card[b-p3vi8h6xk3] {
+    width: 250px;
+    height: 150px;
+    border: none; /* Quitamos bordes de Bootstrap */
+    border-radius: 15px;
+    padding: 15px;
+    color: white;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    /* Centrado interno */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- 3. DISEÑO INTERNO (NUMERO AL LADO DEL ICONO) --- */
+.stat-row[b-p3vi8h6xk3] {
+    display: flex; /* Fila interna */
+    align-items: center; /* Centrado vertical */
+    justify-content: center; /* Centrado horizontal */
+    gap: 15px; /* Espacio entre número e icono */
+    margin-bottom: 5px;
+    width: 100%;
+}
+
+/* --- 4. TIPOGRAFÍA E ICONOS --- */
+.stat-number[b-p3vi8h6xk3] {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.stat-icon[b-p3vi8h6xk3] {
+    font-size: 2.8rem;
+    line-height: 1;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.stat-label[b-p3vi8h6xk3] {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.stat-label-large[b-p3vi8h6xk3] {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+/* --- 5. COLORES Y CURSORES --- */
+.card-candidato[b-p3vi8h6xk3] {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    cursor: default; /* Sin manita */
+}
+
+.card-rechazado[b-p3vi8h6xk3] {
+    background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);
+    cursor: default; /* Sin manita */
+}
+
+.card-agregar[b-p3vi8h6xk3] {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    cursor: pointer; /* Con manita */
+}
+
+    .card-agregar:hover[b-p3vi8h6xk3] {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+    }
+
+/* --- 6. TUS ESTILOS GENERALES (CONSERVADOS) --- */
+.reclutamiento-container[b-p3vi8h6xk3] {
+    padding: 20px;
+}
+
+.title[b-p3vi8h6xk3] {
+    font-size: 36px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.year-filter-wrapper[b-p3vi8h6xk3] {
+    max-width: 180px;
+    margin-left: auto;
+    margin-right: 50px;
+    margin-top: 10px;
+}
+/* /Components/Pages/RegistroAplicantes.razor.rz.scp.css */
+.modal-backdrop[b-1njpz5gid4] {
+    z-index: 1040;
+}
+
+.modal[b-1njpz5gid4] {
+    z-index: 1050;
+    overflow-y: auto;
+}
+
+.modal-dialog[b-1njpz5gid4] {
+    max-width: 800px;
+}
+
+.modal-header[b-1njpz5gid4], .modal-body[b-1njpz5gid4], .modal-footer[b-1njpz5gid4] {
+    border: none;
+}
+
+    .modal-body .form-control[b-1njpz5gid4], .modal-body .form-select[b-1njpz5gid4] {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 8px 12px;
+    }
+/* /Components/Pages/Shared/InputArchivo.razor.rz.scp.css */
+.input-archivo-container[b-29eq7xa79q] {
+    margin-bottom: 15px;
+}
+
+.file-info-badge[b-29eq7xa79q] {
+    background-color: #e2e3e5; /* Gris claro de Bootstrap */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-clear[b-29eq7xa79q] {
+    background: none;
+    border: none;
+    font-weight: bold;
+    color: #dc3545; /* Rojo */
+    font-size: 1.2em;
+    line-height: 1;
+    padding: 0 5px;
+}
+/* /Components/Pages/Shared/RegistroIncidenciaModal.razor.rz.scp.css */
+/* Target the label text next to the step indicator */
+[b-n9kttmjm7h] .fluent-wizard-step .label {
+    font-weight: 1000; /* Lo mantenemos semi-bold */
+    /* --- INICIO DE LOS CAMBIOS --- */
+    /* 1. Hacer la letra un poco más grande */
+    font-size: 10.05em; /* Ajusta este valor (ej. 1.1em, 16px) si quieres más/menos */
+    /* 2. Moverlo ligeramente hacia abajo */
+    position: relative; /* Necesario para usar 'top' */
+    top: 1px; /* Ajusta este valor (ej. 1px, 3px) para moverlo más/menos */
+    /* --- FIN DE LOS CAMBIOS --- */
+}
+
+/* --- (Asegúrate de mantener la regla anterior para los números, si la tenías) --- */
+[b-n9kttmjm7h] .fluent-wizard-step .fluent-wizard-icon-number {
+    /* ... (Los estilos para centrar el número) ... */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: inherit;
+    line-height: 1;
+    text-align: center;
+    user-select: none;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}

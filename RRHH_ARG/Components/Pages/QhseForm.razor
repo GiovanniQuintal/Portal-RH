@@ -1,0 +1,852 @@
+﻿@* @page "/qhse-card"*@
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@inject EmpleadoService Service
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavManager
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, Empleado, HSE, FA, Supervisor")]
+
+@* IMPORTANTE: Recuerda que esto va dentro de tu @page y tus @using, justo donde empieza tu HTML *@
+
+<EditForm Model="Model" OnValidSubmit="GuardarTarjeta" class="qhse-container">
+    <DataAnnotationsValidator />
+
+    <div class="qhse-card-wrapper">
+
+        <div class="header-box top-box">
+            <div class="col-logo-title">
+                <div class="logo-img">
+                    <img src="images/logo-negative.png" alt="ARGOS ENERGY" />
+                </div>
+                <div class="main-title">
+                    <h2>TARJETA DE REPORTE QHSE</h2>
+                </div>
+            </div>
+            <div class="col-stop">
+                <img src="images/stop.png" alt="STOP" />
+            </div>
+            <div class="col-code">
+                <div><strong>CÓDIGO</strong></div>
+                <div>R-HSE-001</div>
+                <div><strong>REVISIÓN 6</strong></div>
+            </div>
+        </div>
+
+        <div class="header-box middle-box">
+            <span class="red-letter">S</span>eguridad en el&nbsp;
+            <span class="red-letter">T</span>rabajo por la&nbsp;
+            <span class="red-letter">O</span>bservacion&nbsp;
+            <span class="red-letter">P</span>reventiva
+        </div>
+
+        <div class="header-box bottom-box actions-bar">
+            <span>DECIDA</span>
+            <span>DETENGASE</span>
+            <span>OBSERVE</span>
+            <span>ACTUE</span>
+            <span>y</span>
+            <span>REPORTE</span>
+        </div>
+
+        <div class="content-frame">
+
+
+            <div class="input-line-group">
+                <div class="line-row">
+                    <label>Nombre del Observador</label>
+                    <InputText class="input-line" @bind-Value="Model.Observador" disabled="@IsReadOnly" />
+
+                    <label>Fecha</label>
+                    <InputDate class="input-line short" @bind-Value="Model.Fecha" disabled="@IsReadOnly" />
+                </div>
+                <ValidationMessage For="@(() => Model.Observador)" class="text-danger small" />
+
+                <div class="line-row mt-2">
+                    <label>Lugar donde ocurrio el evento</label>
+                    <InputText class="input-line" @bind-Value="Model.Lugar" disabled="@IsReadOnly" />
+                </div>
+                <ValidationMessage For="@(() => Model.Lugar)" class="text-danger small" />
+            </div>
+
+            <div class="main-check-row mt-2">
+                <div class="check-box-left">
+                    <div class="check-content">
+                        <InputCheckbox class="big-check" @bind-Value="Model.EsInseguro" disabled="@IsReadOnly" />
+                        <strong>Marque lo Inseguro</strong>
+                    </div>
+                </div>
+                <div class="check-box-right">
+                    <div class="check-content justify-end">
+                        <strong>Marque si todo esta Seguro</strong>
+                        <InputCheckbox class="big-check" @bind-Value="Model.TodoSeguro" disabled="@IsReadOnly" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title-bar mt-2">LISTA DE CONTROL DE OBSERVACIONES</div>
+
+            <div class="checklist-main-box">
+                <div class="col-half">
+                    <div class="category-box">
+                        <div class="category-header">
+                            <span>POSICIONES DE LAS PERSONAS</span>
+                            <input type="checkbox"
+                                   checked="@IsAllChecked(Model.Posiciones)"
+                                   @onchange="@(e => ToggleGroup("Posiciones", e))"
+                                   disabled="@IsReadOnly" />
+                        </div>
+                        <div class="category-items">
+                            @foreach (var item in Model.Posiciones.Keys.ToList())
+                            {
+                                <label class="check-item">
+                                    <input type="checkbox" @bind="Model.Posiciones[item]" disabled="@IsReadOnly" />
+                                    <span>@item</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="category-box border-top-green">
+                        <div class="category-header">
+                            <span>PROCEDIMIENTOS DE ORDEN Y LIMPIEZA</span>
+                            <input type="checkbox"
+                                   checked="@IsAllChecked(Model.Procedimientos)"
+                                   @onchange="@(e => ToggleGroup("Procedimientos", e))"
+                                   disabled="@IsReadOnly" />
+                        </div>
+                        <div class="category-items">
+                            @foreach (var item in Model.Procedimientos.Keys.ToList())
+                            {
+                                <label class="check-item">
+                                    <input type="checkbox" @bind="Model.Procedimientos[item]" disabled="@IsReadOnly" />
+                                    <span>@item</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-half border-left-thick">
+                    <div class="category-box">
+                        <div class="category-header">
+                            <span>EQUIPO PROTECCION PERSONAL</span>
+                            <input type="checkbox"
+                                   checked="@IsAllChecked(Model.Epp)"
+                                   @onchange="@(e => ToggleGroup("Epp", e))"
+                                   disabled="@IsReadOnly" />
+                        </div>
+                        <div class="category-items">
+                            @foreach (var item in Model.Epp.Keys.ToList())
+                            {
+                                <label class="check-item">
+                                    <input type="checkbox" @bind="Model.Epp[item]" disabled="@IsReadOnly" />
+                                    <span>@item</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="category-box border-top-green">
+                        <div class="category-header">
+                            <span>HERRAMIENTAS Y EQUIPO</span>
+                            <input type="checkbox"
+                                   checked="@IsAllChecked(Model.Herramientas)"
+                                   @onchange="@(e => ToggleGroup("Herramientas", e))"
+                                   disabled="@IsReadOnly" />
+                        </div>
+                        <div class="category-items">
+                            @foreach (var item in Model.Herramientas.Keys.ToList())
+                            {
+                                <label class="check-item">
+                                    <input type="checkbox" @bind="Model.Herramientas[item]" disabled="@IsReadOnly" />
+                                    <span>@item</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="qhse-card-wrapper mt-3 mt-xl-0">
+        <div class="header-box top-box">
+            <div class="col-logo-title">
+                <div class="logo-img">
+                    <img src="images/logo-negative.png" alt="ARGOS ENERGY" />
+                </div>
+                <div class="main-title">
+                    <h2>TARJETA DE REPORTE QHSE</h2>
+                </div>
+            </div>
+            <div class="col-stop">
+                <img src="images/stop.png" alt="STOP" />
+            </div>
+            <div class="col-code">
+                <div><strong>CÓDIGO</strong></div>
+                <div>R-HSE-001</div>
+                <div><strong>REVISIÓN 6</strong></div>
+            </div>
+        </div>
+
+        <div class="independent-section">
+            <div class="section-title-inner">REPORTE DE OBSERVACION</div>
+
+            <div class="cyan-options-box">
+                <div>o Acto seguro</div>
+                <div>o Accion tomada para promover un desempeño seguro continuo</div>
+            </div>
+
+            <div class="textarea-container">
+                <InputTextArea class="lined-textarea" rows="5" @bind-Value="Model.DescripcionObservacion" disabled="@IsReadOnly"></InputTextArea>
+            </div>
+            <ValidationMessage For="@(() => Model.DescripcionObservacion)" class="text-danger small px-2" />
+        </div>
+
+        <div class="header-box cyan-header-box mb-0 mt-2">
+            <div class="d-flex justify-content-between">
+                <span>REPORTE DE EVENTO NO DESEADO</span>
+            </div>
+            <div class="d-flex justify-content-around sub-header-white">
+                <small>Acto inseguros</small>
+                <small>Condiciones inseguras</small>
+            </div>
+        </div>
+
+        <div class="independent-section mt-1">
+            <label class="blue-label-title">Descripcion de la causa</label>
+            <div class="textarea-container">
+                <InputTextArea class="lined-textarea" rows="4" @bind-Value="Model.DescripcionCausa" disabled="@IsReadOnly"></InputTextArea>
+            </div>
+            <ValidationMessage For="@(() => Model.DescripcionCausa)" class="text-danger small px-2" />
+        </div>
+
+        <div class="independent-section mt-1">
+            <label class="blue-label-title">Acciones correctivas Inmediatas</label>
+            <div class="textarea-container">
+                <InputTextArea class="lined-textarea" rows="4" @bind-Value="Model.AccionCorrectiva" disabled="@IsReadOnly"></InputTextArea>
+            </div>
+            <ValidationMessage For="@(() => Model.AccionCorrectiva)" class="text-danger small px-2" />
+        </div>
+
+        <div class="independent-section mt-1 p-2">
+            <div class="line-row">
+                <label class="blue-label-title inline">Responsable de solucionar el reporte de evento no deseado:</label>
+                <InputText class="input-line" @bind-Value="Model.Responsable" disabled="@IsReadOnly" />
+            </div>
+            <ValidationMessage For="@(() => Model.Responsable)" class="text-danger small px-2" />
+        </div>
+
+        <div class="independent-section mt-1 p-2">
+            <div class="line-row">
+                <label class="blue-label-title inline">Fecha estimada de cierre del evento:</label>
+                <InputDate class="input-line short" @bind-Value="Model.FechaCompromiso" disabled="@IsReadOnly" />
+            </div>
+        </div>
+
+        @if (!IsReadOnly)
+        {
+            <div class="d-flex justify-content-center mt-4 mb-4">
+                <button type="submit" class="btn btn-success btn-lg px-5" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span>Guardando...</span>
+                    }
+                    else
+                    {
+                        <span>GUARDAR TARJETA</span>
+                    }
+                </button>
+            </div>
+        }
+
+    </div>
+</EditForm>
+
+@if (ShowModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0, 0, 0, 0.5);" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background-color: var(--argos-green);">
+                    <h5 class="modal-title fw-bold">Registro Exitoso</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="var(--argos-green)" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                        </svg>
+                    </div>
+                    <h4 class="mb-3">¡Tarjeta STOP guardada!</h4>
+                    <p class="text-muted">La tarjeta ha sido asociada correctamente al empleado y guardada en la base de datos.</p>
+                </div>
+
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn text-white px-5" style="background-color: var(--argos-green);" @onclick="CerrarModal">
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public bool IsReadOnly { get; set; } = false; // Por defecto es falso (modo creación)
+
+    [Parameter]
+    public QhseFormModel? ModelParameter { get; set; }
+
+    QhseFormModel Model = new();
+    private bool isSubmitting = false;
+
+    // 1. VARIABLE PARA CONTROLAR EL MODAL
+    private bool ShowModal = false;
+
+    protected override void OnParametersSet()
+    {
+        // Cada vez que el padre nos manda un nuevo modelo, actualizamos el interno
+        if (ModelParameter != null)
+        {
+            Model = ModelParameter;
+        }
+    }
+
+    // 1. AGREGA ESTE NUEVO PARÁMETRO
+    [Parameter]
+    public EventCallback OnSaved { get; set; }
+
+    // ... (el resto de tus variables quedan igual) ...
+
+    // 2. ACTUALIZA ESTE MÉTODO
+    private async Task CerrarModal()
+    {
+        ShowModal = false;
+        Model = new QhseFormModel();
+
+        // Avisamos al componente padre que ya terminamos
+        if (OnSaved.HasDelegate)
+        {
+            await OnSaved.InvokeAsync();
+        }
+    }
+
+    private async Task GuardarTarjeta()
+    {
+        if (isSubmitting) return;
+        isSubmitting = true;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity == null || !user.Identity.IsAuthenticated)
+            {
+                // Aquí podrías poner un mensaje de error o redirigir
+                Console.WriteLine("Usuario no autenticado");
+                return;
+            }
+
+            var userId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId)) return;
+
+            // Busca el ID del empleado (asegúrate de tener este método en tu Service)
+            var empleadoId = await Service.GetEmpleadoIdByUserIdAsync(userId);
+
+            if (empleadoId == 0)
+            {
+                Console.WriteLine("Usuario no vinculado a un Empleado");
+                return;
+            }
+
+            // Guardamos en BD
+            await Service.SaveQhseCardAsync(empleadoId, Model);
+            Console.WriteLine("Tarjeta guarda con exito");
+
+            // 3. MOSTRAMOS EL MODAL AL FINALIZAR
+            ShowModal = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error al guardar: " + ex.Message);
+            // Opcional: Podrías tener otro modal para errores
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private bool IsAllChecked(Dictionary<string, bool> dict)
+    {
+        if (dict == null || dict.Count == 0) return false;
+        return dict.Values.All(x => x);
+    }
+
+    private void ToggleGroup(string dictionaryName, ChangeEventArgs e)
+    {
+        bool isChecked = (bool?)e.Value ?? false;
+        Dictionary<string, bool> targetDict = null;
+
+        switch (dictionaryName)
+        {
+            case "Posiciones": targetDict = Model.Posiciones; break;
+            case "Epp": targetDict = Model.Epp; break;
+            case "Procedimientos": targetDict = Model.Procedimientos; break;
+            case "Herramientas": targetDict = Model.Herramientas; break;
+        }
+
+        if (targetDict != null)
+        {
+            var keys = targetDict.Keys.ToList();
+            foreach (var key in keys)
+            {
+                targetDict[key] = isChecked;
+            }
+            // Forzamos actualización visual
+            // StateHasChanged(); // En InteractiveServer a veces es redundante pero útil si falla el refresh
+        }
+    }
+}
+
+<style>
+    :root {
+        --argos-green: #009B3A;
+        --argos-blue: #3D9AAD;
+        --argos-cyan: #009ee3;
+        --argos-red: #E30613;
+        --border-thick: 4px;
+    }
+
+    .qhse-container {
+        font-family: Arial, Helvetica, sans-serif;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+        padding-bottom: 50px;
+        box-sizing: border-box;
+    }
+
+    .qhse-card-wrapper {
+        flex: 1 1 500px;
+        max-width: 700px;
+        min-width: 350px;
+        background: white;
+    }
+
+    /* === SOLUCIÓN AQUÍ: Usamos @@media === */
+    @@media (max-width: 1200px) {
+        .qhse-container {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .qhse-card-wrapper {
+            width: 100%;
+            max-width: 600px;
+        }
+    }
+
+    /* HEADER */
+    .header-box {
+        border: var(--border-thick) solid var(--argos-green);
+        margin-bottom: 5px;
+        background: white;
+    }
+
+    .top-box {
+        display: grid;
+        grid-template-columns: 50% 20% 30%;
+        padding: 5px;
+        align-items: stretch;
+    }
+
+    .col-logo-title {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding-right: 10px;
+    }
+
+    .logo-img img {
+        max-height: 70px;
+        width: auto;
+        margin-bottom: 5px;
+    }
+
+    .main-title h2 {
+        color: var(--argos-blue);
+        margin: 0;
+        font-weight: 900;
+        font-size: 1.6rem;
+        line-height: 1.1;
+    }
+
+    /* === SOLUCIÓN AQUÍ: Usamos @@media === */
+    @@media (max-width: 400px) {
+        .main-title h2 {
+            font-size: 1.2rem;
+        }
+
+        .logo-img img {
+            max-height: 50px;
+        }
+    }
+
+    .col-stop {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+        .col-stop img {
+            max-height: 90px;
+            width: auto;
+            max-width: 100%;
+        }
+
+    .col-code {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-end;
+        padding-right: 10px;
+        font-size: 0.9rem;
+        color: black;
+    }
+
+    /* S.T.O.P. Header */
+    .middle-box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        white-space: nowrap;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--argos-blue);
+        padding: 8px 5px;
+        overflow: hidden;
+    }
+
+    /* === SOLUCIÓN AQUÍ: Usamos @@media === */
+    @@media (max-width: 500px) {
+        .middle-box {
+            font-size: 0.9rem;
+        }
+    }
+
+    .red-letter {
+        color: var(--argos-red);
+        font-weight: bold;
+    }
+
+    .actions-bar {
+        display: flex;
+        justify-content: space-around;
+        color: var(--argos-red);
+        font-weight: bold;
+        font-size: 1.1rem;
+        padding: 8px 20px;
+        margin-bottom: 0;
+        flex-wrap: wrap;
+    }
+
+    /* CONTENT FRONTAL */
+    .content-frame {
+        border: var(--border-thick) solid var(--argos-green);
+        border-top: none;
+        padding: 5px;
+    }
+
+    .input-line-group {
+        padding: 5px;
+    }
+
+    .line-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+        .line-row label {
+            white-space: nowrap;
+            margin-right: 2px;
+        }
+
+    .input-line {
+        border: none;
+        border-bottom: 1px solid black;
+        flex-grow: 1;
+        min-width: 100px;
+        padding: 0 5px;
+        outline: none;
+        background: transparent;
+        font-size: 1rem;
+    }
+
+        .input-line.short {
+            flex-grow: 0;
+            width: 140px;
+        }
+
+    .main-check-row {
+        display: flex;
+        border: var(--border-thick) solid var(--argos-green);
+        margin-bottom: 5px;
+        min-height: 45px;
+        flex-wrap: wrap;
+    }
+
+    .check-box-left {
+        flex: 1;
+        border-right: var(--border-thick) solid var(--argos-green);
+        display: flex;
+        align-items: center;
+        padding: 5px 10px;
+        min-width: 150px;
+    }
+
+    .check-box-right {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 5px 10px;
+        min-width: 150px;
+    }
+
+    /* === SOLUCIÓN AQUÍ: Usamos @@media === */
+    @@media (max-width: 450px) {
+        .check-box-left {
+            border-right: none;
+            border-bottom: var(--border-thick) solid var(--argos-green);
+        }
+    }
+
+    .check-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+        .check-content.justify-end {
+            justify-content: flex-end;
+        }
+
+    .big-check {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .section-title-bar {
+        text-align: center;
+        font-weight: bold;
+        border: var(--border-thick) solid var(--argos-green);
+        border-bottom: none;
+        padding: 4px;
+        text-transform: uppercase;
+        font-size: 1rem;
+        background: white;
+    }
+
+    .checklist-main-box {
+        display: flex;
+        border: var(--border-thick) solid var(--argos-green);
+        flex-wrap: wrap;
+    }
+
+    .col-half {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+    }
+
+    .border-left-thick {
+        border-left: var(--border-thick) solid var(--argos-green);
+    }
+
+    /* === SOLUCIÓN AQUÍ: Usamos @@media === */
+    @@media (max-width: 500px) {
+        .checklist-main-box {
+            flex-direction: column;
+        }
+
+        .border-left-thick {
+            border-left: none;
+            border-top: var(--border-thick) solid var(--argos-green);
+        }
+    }
+
+    .border-top-green {
+        border-top: var(--border-thick) solid var(--argos-green);
+    }
+
+    .category-box {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .category-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f0fdf4;
+        border-bottom: 2px solid var(--argos-green);
+        padding: 5px 10px;
+        color: var(--argos-blue);
+        font-weight: bold;
+        font-size: 0.85rem;
+    }
+
+    .category-items {
+        padding: 5px 10px;
+        background: white;
+        flex-grow: 1;
+    }
+
+    .check-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .check-item input {
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+    /* === ESTILOS CARA TRASERA === */
+    .independent-section {
+        border: var(--border-thick) solid var(--argos-green);
+        background: white;
+        margin-bottom: 5px;
+        overflow: hidden;
+    }
+
+    .section-title-inner {
+        text-align: center;
+        font-weight: bold;
+        padding: 4px;
+        text-transform: uppercase;
+        font-size: 1rem;
+        background: white;
+        color: black;
+        border-bottom: 2px solid var(--argos-green);
+    }
+
+    .cyan-options-box {
+        background-color: var(--argos-cyan);
+        color: white;
+        padding: 5px 10px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        border-bottom: 2px solid var(--argos-green);
+    }
+
+    .cyan-header-box {
+        background-color: var(--argos-cyan);
+        border: var(--border-thick) solid var(--argos-cyan);
+        color: white;
+        padding: 5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    .textarea-container {
+        padding: 0;
+        width: 100%;
+    }
+
+    .lined-textarea {
+        width: 100%;
+        border: none;
+        background-attachment: local;
+        background-image: linear-gradient(transparent 1.85rem, var(--argos-cyan) 1.85rem, var(--argos-cyan) 1.9rem, transparent 1.9rem);
+        background-size: 100% 2rem;
+        line-height: 2rem;
+        padding: 0 5px;
+        padding-top: 0;
+        resize: none;
+        outline: none;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1rem;
+        display: block;
+        min-height: 4rem;
+        overflow: hidden;
+    }
+
+    .mt-1 {
+        margin-top: 5px;
+    }
+
+    .mb-0 {
+        margin-bottom: 0;
+    }
+
+    .p-2 {
+        padding: 10px;
+    }
+
+    .sub-header-white {
+        color: white;
+        font-size: 0.8rem;
+        margin-top: 2px;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+    }
+
+    .blue-label-title {
+        display: block;
+        background: white;
+        color: var(--argos-blue);
+        font-weight: bold;
+        padding: 5px 10px;
+        font-size: 0.95rem;
+        border-bottom: 1px solid #ccc;
+    }
+
+        .blue-label-title.inline {
+            display: inline-block;
+            padding: 0;
+            border: none;
+        }
+
+    /* Estilos para cuando la validación falla */
+    .input-line.invalid {
+        border-bottom: 2px solid var(--argos-red);
+        background-color: rgba(227, 6, 19, 0.05); /* Un fondito rojo muy tenue */
+    }
+
+    .lined-textarea.invalid {
+        border: 2px solid var(--argos-red);
+        background-color: rgba(227, 6, 19, 0.05);
+    }
+</style>

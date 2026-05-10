@@ -1,0 +1,391 @@
+﻿@page "/organigrama"
+@using Blazor.Diagrams
+@using Blazor.Diagrams.Core.Geometry
+@using Blazor.Diagrams.Models
+@using Blazor.Diagrams.Core.Models
+@using Blazor.Diagrams.Components
+@using RRHH_ARG.Data
+@using RRHH_ARG.Models
+@using Microsoft.EntityFrameworkCore
+@using System.Globalization
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject ApplicationDbContext Context
+
+<style>
+    /* CONTENEDOR PRINCIPAL */
+    .contenedor-scroll {
+        width: 100%;
+        height: 85vh;
+        overflow: auto;
+        background-color: #e9ecef;
+        border: 1px solid #ccc;
+        position: relative;
+        display: block;
+        /* Habilita el "scroll con inercia" suave en iPhones y celulares */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* LIENZO DINÁMICO */
+    .lienzo-dinamico {
+        position: relative;
+        background-color: #f9f9f9;
+        background-image: linear-gradient(#e5e5e5 1px, transparent 1px), linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+        background-size: 20px 20px;
+        display: block;
+        transform-origin: 0 0;
+        transition: transform 0.2s ease-out;
+    }
+
+    /* BARRA DE HERRAMIENTAS - DISEÑO PC */
+    .toolbar-zoom {
+        position: fixed;
+        bottom: 35px;
+        right: 50px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 5px 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        z-index: 1000;
+        display: flex;
+        gap: 5px;
+        border: 1px solid #ccc;
+        align-items: center;
+        font-size: 0.8rem;
+    }
+
+    /* LIMPIEZA LIBRERÍA */
+    ::deep .diagram-canvas {
+        width: 100% !important;
+        height: 100% !important;
+        overflow: visible !important;
+        outline: none;
+        pointer-events: none !important;
+        touch-action: pan-x pan-y !important;
+    }
+
+    ::deep .diagram-link, ::deep .link-vertex, ::deep g.link, ::deep .diagram-link-marker, ::deep .port, ::deep .link-label {
+        display: none !important;
+    }
+
+    ::deep .card-node {
+        pointer-events: none !important;
+    }
+
+    /* LÍNEAS */
+    .lineas-organigrama {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+        .lineas-organigrama path {
+            stroke: #666;
+            stroke-width: 1px;
+            fill: none;
+        }
+
+    ::deep svg.diagram {
+        z-index: 2;
+        position: relative;
+        overflow: visible !important;
+    }
+
+    /* ========================================= */
+    /*  REGLAS RESPONSIVE PARA CELULARES     */
+    /* ========================================= */
+    @@media (max-width: 768px) {
+        /* 1. Ajustar el encabezado para que no se aplaste */
+        .header-organigrama {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 10px;
+            padding: 10px !important;
+        }
+            /* 2. El botón recargar ocupa el 100% del ancho en móvil */
+            .header-organigrama button {
+                width: 100%;
+            }
+        /* 3. Ajustar altura del contenedor para dar espacio */
+        .contenedor-scroll {
+            height: 75vh;
+        }
+        /* 4. Mover la barra de zoom al centro y hacerla táctil */
+        .toolbar-zoom {
+            position: fixed; /*  También fixed en celulares  */
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 25px;
+            padding: 8px 5px;
+            gap: 10px;
+            border-radius: 10px;
+        }
+            /* 5. Botones de zoom más grandes para "dedos gordos" */
+            .toolbar-zoom button {
+                padding: 8px 15px !important;
+                font-size: 1.1rem;
+            }
+    }
+</style>
+
+<div class="container-fluid p-0 d-flex flex-column h-100">
+    <div class="header-organigrama p-3 bg-white border-bottom shadow-sm d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="m-0 text-dark" style="font-size: 1.1rem;"><i class="bi bi-diagram-3"></i> Organigrama</h4>
+            <small class="text-muted" style="font-size: 0.75rem;">Zoom: @(Math.Round(Escala * 100))%</small>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" @onclick="ForzarRefresco" style="font-size: 0.8rem;">
+            <i class="bi bi-arrow-clockwise"></i> Recargar
+        </button>
+    </div>
+
+    <div class="contenedor-scroll">
+        <div class="lienzo-dinamico"
+             style="width: @((int)anchoTotal)px; height: @((int)altoTotal)px; transform: scale(@Escala);">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;"></div>
+             <svg class="lineas-organigrama">
+                @foreach (var linea in lineas)
+                {
+                    <path d="@linea" />
+                }
+            </svg>
+            <CascadingValue Value="Diagram">
+                <DiagramCanvas></DiagramCanvas>
+            </CascadingValue>
+        </div>
+        <div class="toolbar-zoom">
+            <button class="btn btn-sm btn-light border py-0 px-2" @onclick="() => CambiarZoom(-0.1)">-</button>
+            <span style="min-width: 35px; text-align: center; font-weight: bold;">@((int)(Escala * 100))%</span>
+            <button class="btn btn-sm btn-light border py-0 px-2" @onclick="() => CambiarZoom(0.1)">+</button>
+            <div class="vr mx-1"></div>
+            <button class="btn btn-sm btn-light border py-0 px-2 text-danger" @onclick="ResetZoom">100%</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private BlazorDiagram Diagram { get; set; } = null!;
+    private double Escala = 1.0;
+    private double anchoTotal = 100; private double altoTotal = 100;
+    private List<string> lineas = new();
+    private Dictionary<int, CardNode> nodosMap = new();
+
+    private class NodoDatos { public int Id { get; set; } public int? JefeId { get; set; } public string Nombre { get; set; } = ""; public string Puesto { get; set; } = ""; }
+    private List<NodoDatos> datosBD = new();
+
+    private const int ANCHO_NODO = 80;
+    private const int GAP_X = 12;
+    private const int GAP_Y = 24;
+    private const int MARGEN_IZQUIERDO_INICIAL = 20;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Diagram = new BlazorDiagram();
+        Diagram.Options.Zoom.Enabled = false;
+        Diagram.Options.AllowPanning = false;
+        Diagram.Options.Constraints.ShouldDeleteNode = _ => ValueTask.FromResult(false);
+        Diagram.RegisterComponent<CardNode, CardWidget>();
+        await CargarYConstruir();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) { await Task.Delay(300); foreach (var n in Diagram.Nodes) n.Locked = true; StateHasChanged(); }
+    }
+
+    private void CambiarZoom(double delta) { Escala += delta; if (Escala < 0.1) Escala = 0.1; if (Escala > 3.0) Escala = 3.0; }
+    private void ResetZoom() { Escala = 1.0; }
+    private void ForzarRefresco() { Diagram.Refresh(); StateHasChanged(); }
+
+    /*private async Task CargarYConstruir()
+    {
+        try
+        {
+            var raw = await Context.Empleados.AsNoTracking().Include(e => e.Per).ThenInclude(p => p.Pep).Where(e => e.StaId == 1).ToListAsync();
+            datosBD = raw.Select(e => new NodoDatos
+            {
+                Id = e.EmpId,
+                JefeId = (e.SupId == 0) ? null : e.SupId,
+                Nombre = e.Per != null ? $"{e.Per.PerNombre} {e.Per.PerApellidoPaterno}" : "Vacante",
+                Puesto = e.Per?.Pep?.PepNombre ?? "S/P"
+            }).ToList();
+
+            Diagram.Nodes.Clear(); nodosMap.Clear(); lineas.Clear(); anchoTotal = 0; altoTotal = 0;
+
+            var ids = datosBD.Select(x => x.Id).ToHashSet();
+            var jefesRaiz = datosBD.Where(x => x.JefeId == null || !ids.Contains(x.JefeId.Value)).ToList();
+            var gruposRaiz = jefesRaiz.GroupBy(x => x.Puesto).ToList();
+
+            double cursorX = MARGEN_IZQUIERDO_INICIAL;
+            foreach (var grupo in gruposRaiz)
+            {
+                var lista = grupo.ToList();
+                int columnas = CalcularAnchoColumnasGrupo(lista);
+                double anchoPx = columnas * (ANCHO_NODO + GAP_X);
+                double centro = cursorX + (anchoPx / 2) - (ANCHO_NODO / 2);
+
+                CrearRamaAgrupada(lista, centro, 50);
+                cursorX += anchoPx + GAP_X;
+            }
+
+            CrearLineasSVG();
+            anchoTotal += 100; altoTotal += 100;
+        }
+        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+    }*/
+
+    private async Task CargarYConstruir()
+    {
+        try
+        {
+            var raw = await Context.Empleados.AsNoTracking().Include(e => e.Per).ThenInclude(p => p.Pep).Where(e => e.StaId == 1).ToListAsync();
+            datosBD = raw.Select(e => new NodoDatos
+            {
+                Id = e.EmpId,
+                JefeId = (e.SupId == 0) ? null : e.SupId,
+                Nombre = e.Per != null ? $"{e.Per.PerNombre} {e.Per.PerApellidoPaterno}" : "Vacante",
+                Puesto = e.Per?.Pep?.PepNombre ?? "S/P"
+            }).ToList();
+
+            // ==========================================================
+            // NUEVO: FILTRO PARA ELIMINAR NODOS AISLADOS (SIN ASCENDIENTES NI DESCENDIENTES)
+            // ==========================================================
+
+            // 1. Obtenemos todos los IDs válidos que trajimos de la BD
+            var todosLosIds = datosBD.Select(x => x.Id).ToHashSet();
+
+            // 2. Obtenemos los IDs de los empleados que son jefes de alguien (relación descendiente)
+            var idsJefes = datosBD.Where(x => x.JefeId.HasValue && todosLosIds.Contains(x.JefeId.Value))
+                                  .Select(x => x.JefeId.Value)
+                                  .ToHashSet();
+
+            // 3. Filtramos la lista: te quedas si tienes jefe válido O si eres jefe de alguien
+            datosBD = datosBD.Where(e =>
+                (e.JefeId.HasValue && todosLosIds.Contains(e.JefeId.Value)) || // Tiene un jefe válido
+                idsJefes.Contains(e.Id)                                        // Es jefe de alguien
+            ).ToList();
+
+            // ==========================================================
+
+            Diagram.Nodes.Clear(); nodosMap.Clear(); lineas.Clear(); anchoTotal = 0; altoTotal = 0;
+
+            // Al actualizar datosBD, volvemos a sacar la lista de IDs actualizada
+            var ids = datosBD.Select(x => x.Id).ToHashSet();
+
+            // Y de aquí en adelante, tu código original sigue igual...
+            var jefesRaiz = datosBD.Where(x => x.JefeId == null || !ids.Contains(x.JefeId.Value)).ToList();
+            var gruposRaiz = jefesRaiz.GroupBy(x => x.Puesto).ToList();
+
+            double cursorX = MARGEN_IZQUIERDO_INICIAL;
+            foreach (var grupo in gruposRaiz)
+            {
+                var lista = grupo.ToList();
+                int columnas = CalcularAnchoColumnasGrupo(lista);
+                double anchoPx = columnas * (ANCHO_NODO + GAP_X);
+                double centro = cursorX + (anchoPx / 2) - (ANCHO_NODO / 2);
+
+                CrearRamaAgrupada(lista, centro, 50);
+                cursorX += anchoPx + GAP_X;
+            }
+
+            CrearLineasSVG();
+            anchoTotal += 100; altoTotal += 100;
+        }
+        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+    }
+
+    private CardNode CrearRamaAgrupada(List<NodoDatos> grupo, double x, double y)
+    {
+        string puesto = grupo.First().Puesto;
+        List<string> nombres = grupo.Select(e => e.Nombre).ToList();
+
+        // --- CÁLCULO DE ALTURA SINCRONIZADO CON CARDWIDGET ---
+        // 1. Estimar líneas del título (Misma lógica que el widget)
+        int len = puesto.Length;
+        int lineasTitulo = 1;
+        if (len > 14) lineasTitulo = 2;
+        if (len > 28) lineasTitulo = 3;
+        double hHeader = (lineasTitulo * 10) + 6;
+
+        // 2. Altura Total
+        double altura = hHeader + (nombres.Count * 9) + 5;
+        if (altura < 32) altura = 32;
+        // -----------------------------------------------------
+
+        if ((x + ANCHO_NODO) > anchoTotal) anchoTotal = x + ANCHO_NODO;
+        if ((y + altura) > altoTotal) altoTotal = y + altura;
+
+        var nodo = new CardNode(puesto, nombres, new Point(x, y));
+        nodo.Size = new Size(ANCHO_NODO, altura);
+        nodo.Locked = true;
+        Diagram.Nodes.Add(nodo);
+
+        foreach (var emp in grupo) { if (!nodosMap.ContainsKey(emp.Id)) nodosMap[emp.Id] = nodo; }
+
+        var idsGrupo = grupo.Select(e => e.Id).ToHashSet();
+        var hijos = datosBD.Where(e => e.JefeId.HasValue && idsGrupo.Contains(e.JefeId.Value)).ToList();
+
+        if (hijos.Any())
+        {
+            var gruposHijos = hijos.GroupBy(h => h.Puesto).ToList();
+            double anchoTotalHijos = gruposHijos.Sum(g => CalcularAnchoColumnasGrupo(g.ToList())) * (ANCHO_NODO + GAP_X);
+            double inicioX = x - (anchoTotalHijos / 2) + (ANCHO_NODO / 2) + (GAP_X / 2);
+            if (gruposHijos.Count == 1) inicioX = x;
+
+            // La siguiente fila empieza debajo de ESTE nodo calculado
+            double nextY = y + altura + GAP_Y;
+            double currentX = inicioX;
+
+            foreach (var gHijo in gruposHijos)
+            {
+                var listaHijo = gHijo.ToList();
+                double anchoHijo = CalcularAnchoColumnasGrupo(listaHijo) * (ANCHO_NODO + GAP_X);
+                double centroHijo = (gruposHijos.Count == 1) ? x : (currentX + (anchoHijo / 2) - (ANCHO_NODO / 2) - (GAP_X / 2));
+
+                CrearRamaAgrupada(listaHijo, centroHijo, nextY);
+                currentX += anchoHijo;
+            }
+        }
+        return nodo;
+    }
+
+    private void CrearLineasSVG()
+    {
+        HashSet<string> lineasDibujadas = new();
+        foreach (var dato in datosBD)
+        {
+            if (dato.JefeId.HasValue && nodosMap.ContainsKey(dato.JefeId.Value) && nodosMap.ContainsKey(dato.Id))
+            {
+                var padre = nodosMap[dato.JefeId.Value];
+                var hijo = nodosMap[dato.Id];
+                if (padre == hijo) continue;
+
+                string key = $"{padre.Id}-{hijo.Id}";
+                if (lineasDibujadas.Contains(key)) continue;
+                lineasDibujadas.Add(key);
+
+                double px = padre.Position.X + (ANCHO_NODO / 2);
+                double py = padre.Position.Y + padre.Size.Height;
+                double hx = hijo.Position.X + (ANCHO_NODO / 2);
+                double hy = hijo.Position.Y;
+                double my = py + ((hy - py) / 2);
+
+                string d = string.Format(CultureInfo.InvariantCulture, "M {0},{1} L {0},{2} L {3},{2} L {3},{4}", px, py, my, hx, hy);
+                lineas.Add(d);
+            }
+        }
+    }
+
+    private int CalcularAnchoColumnasGrupo(List<NodoDatos> grupo)
+    {
+        var ids = grupo.Select(e => e.Id).ToHashSet();
+        var hijos = datosBD.Where(e => e.JefeId.HasValue && ids.Contains(e.JefeId.Value)).ToList();
+        if (!hijos.Any()) return 1;
+        var gruposHijos = hijos.GroupBy(h => h.Puesto).ToList();
+        return gruposHijos.Sum(g => CalcularAnchoColumnasGrupo(g.ToList()));
+    }
+}

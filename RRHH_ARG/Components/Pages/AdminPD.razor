@@ -1,0 +1,771 @@
+﻿@page "/admin-pd"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Services
+@inject PdService PdService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, HSE")]
+
+<style>
+    /* UTILITIES COMPACTAS */
+    .fs-7 {
+        font-size: 0.8rem !important;
+    }
+
+    .fs-8 {
+        font-size: 0.75rem !important;
+    }
+
+    /* ESTILOS KANBAN BOARD */
+    .kanban-board {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        align-items: flex-start;
+        gap: 1.25rem;
+        padding-bottom: 1.5rem;
+        min-height: 50vh;
+    }
+
+        /* Scrollbar horizontal estilizado */
+        .kanban-board::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .kanban-board::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .kanban-board::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+    /* COLUMNAS (Objetivos) */
+    .kanban-column {
+        min-width: 280px;
+        max-width: 280px;
+        background-color: #f4f5f7; /* Gris claro de fondo de columna */
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        flex-shrink: 0;
+    }
+
+    .kanban-header {
+        padding: 0.8rem 1rem;
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 0.9rem;
+        text-align: center;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+        .kanban-header:hover {
+            opacity: 0.9;
+        }
+
+    /* CONTENEDOR DE TARJETAS */
+    .kanban-cards {
+        padding: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        overflow-y: auto;
+        max-height: 55vh;
+    }
+
+    /* TARJETAS (Indicadores) */
+    .kanban-card {
+        background-color: #ffffff;
+        border-radius: 4px;
+        padding: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+        word-wrap: break-word;
+    }
+
+        .kanban-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+    /* BOTÓN AGREGAR ITEM */
+    .kanban-add {
+        padding: 0.5rem 1rem 0.75rem 1rem;
+        color: #6b778c;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: color 0.2s, background-color 0.2s;
+        margin-top: auto;
+    }
+
+        .kanban-add:hover {
+            background-color: rgba(9, 30, 66, 0.08);
+            color: #172b4d;
+        }
+
+    .kanban-inline-form {
+        background: #fff;
+        padding: 0.5rem;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .transition {
+        transition: all 0.2s ease-in-out;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-0"><i class="bi bi-sliders me-2"></i> Gestión del Desempeño</h3>
+            <small class="text-muted small">Configuración de ciclos y objetivos estratégicos</small>
+        </div>
+    </div>
+
+    @* NOTIFICACIÓN DE ÉXITO *@
+    @if (showSuccessMessage)
+    {
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 2000">
+            <div class="toast show align-items-center text-white bg-success border-0 shadow-lg" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body small">
+                        <i class="bi bi-check-circle-fill me-2"></i> Cambios guardados correctamente.
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick="() => showSuccessMessage = false"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* NOTIFICACIÓN DE ERROR *@
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="position-fixed top-0 end-0 p-4" style="z-index: 2060;">
+            <div class="toast show align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
+                <div class="d-flex p-2">
+                    <div class="toast-body small">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick='() => errorMessage = ""'></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-3">
+        @* CONFIGURACIÓN DEL CICLO FISCAL - COMPACTO *@
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary text-white rounded p-1 fs-7">
+                                <i class="bi bi-calendar-range"></i>
+                            </div>
+                            <div>
+                                <label class="form-label fs-8 text-muted mb-0 fw-bold text-uppercase">Ciclo Fiscal</label>
+                                <select class="form-select form-select-sm fw-bold border-0 p-0 text-dark"
+                                        style="font-size: 1rem; cursor:pointer; background-position: right center;"
+                                        value="@yearToLoad"
+                                        @onchange="OnYearChanged">
+                                    @foreach (var y in availableYears)
+                                    {
+                                        <option value="@y">@y </option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-none d-md-block text-end fs-7">
+                            @if (currentConfig != null)
+                            {
+                                <span class="badge fs-8 @(currentConfig.IsActive ? "bg-success" : "bg-secondary") me-1">
+                                    @(currentConfig.IsActive ? "ACTIVO" : "INACTIVO")
+                                </span>
+                                <small class="text-muted small">@currentConfig.RevisionCount revisiones</small>
+                            }
+                            else
+                            {
+                                <span class="badge fs-8 bg-warning text-dark">No Configurado</span>
+                            }
+                        </div>
+
+                        <button class="btn btn-sm btn-light border rounded-circle ms-2" @onclick="ToggleConfig" title="Ver/Ocultar Calendario" style="padding: 0.1rem 0.3rem;">
+                            <i class="bi bi-chevron-@(showConfig ? "up" : "down") small"></i>
+                        </button>
+                    </div>
+                </div>
+
+                @if (showConfig)
+                {
+                    <div class="card-body bg-light border-top animation-fade-in p-3 fs-7">
+                        @if (currentConfig == null)
+                        {
+                            <div class="text-center py-3">
+                                <i class="bi bi-calendar-plus display-6 text-muted opacity-50"></i>
+                                <h6 class="mt-2">El ciclo @yearToLoad no ha sido inicializado.</h6>
+                                <p class="text-muted fs-8 mb-2">Selecciona el esquema de trabajo.</p>
+
+                                <div class="d-inline-flex gap-2 align-items-center">
+                                    <select class="form-select form-select-sm" @bind="newRevisionCount" style="width: auto;">
+                                        <option value="1">1 Revisión (Anual)</option>
+                                        <option value="2">2 Revisiones (Semestral)</option>
+                                        <option value="3">3 Revisiones (Cuatrimestral)</option>
+                                        <option value="4">4 Revisiones (Trimestral)</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary fs-7" @onclick="CreateYearConfig">
+                                        <i class="bi bi-plus-lg me-1"></i> Inicializar @yearToLoad
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row g-2">
+                                <div class="col-md-12">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0 fs-7">Calendario</h6>
+
+                                        <div class="form-check form-switch fs-8">
+                                            <input class="form-check-input" type="checkbox" @bind="currentConfig.IsActive" id="activeSwitch">
+                                            <label class="form-check-label" for="activeSwitch">Visible Empleados</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive bg-white rounded border shadow-sm">
+                                        <table class="table table-sm table-hover mb-0 align-middle fs-8">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="ps-3 py-1">Etapa</th>
+                                                    <th style="width: 30%">Inicio</th>
+                                                    <th style="width: 30%">Fin</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var rev in currentConfig.RevisionDates.OrderBy(r => r.RevisionNumber))
+                                                {
+                                                    <tr>
+                                                        <td class="ps-3 py-1">
+                                                            <span class="fw-bold text-primary">R@(rev.RevisionNumber)</span>
+                                                        </td>
+                                                        <td>
+                                                            <input type="date" class="form-control form-control-sm fs-8 p-1" @bind="rev.StartDate" />
+                                                        </td>
+                                                        <td>
+                                                            <input type="date" class="form-control form-control-sm fs-8 p-1" @bind="rev.EndDate" />
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="mt-2 text-end">
+                                        <button class="btn btn-sm btn-success fs-7 px-3 py-1" @onclick="SaveConfig">
+                                            <i class="bi bi-save me-1"></i> Guardar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* SECCIÓN KANBAN DE OBJETIVOS GLOBALES E INDICADORES *@
+        <div class="col-12 mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-info text-white rounded p-1 fs-7"><i class="bi bi-kanban"></i></div>
+                    <div>
+                        <h6 class="mb-0 fw-bold fs-7">Tablero de Objetivos @yearToLoad</h6>
+                        <small class="text-muted fs-8">Doble clic en tarjetas o cabeceras para gestionar.</small>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-primary fs-7 shadow-sm px-3" @onclick="NewGoal">
+                    <i class="bi bi-plus-lg me-1"></i> Nuevo Objetivo
+                </button>
+            </div>
+
+            <!-- CONTENEDOR KANBAN BOARD -->
+            <div class="kanban-board">
+                @for (int i = 0; i < globalGoals.Count; i++)
+                {
+                    var g = globalGoals[i];
+                    var colColor = colorPalette[i % colorPalette.Length];
+                    var indCount = indicatorsMap.ContainsKey(g.Id) ? indicatorsMap[g.Id].Count : 0;
+
+                    <!-- COLUMNA KANBAN (Borde lateral y fondo gris) -->
+                    <div class="kanban-column" style="border-left: 4px solid @colColor;">
+
+                        <!-- CABECERA DE COLUMNA (Objetivo) -->
+                        <div class="kanban-header" style="background-color: @colColor;" @ondblclick="() => ShowGoalDetails(g)" title="Doble clic para editar objetivo">
+                            <span class="text-truncate d-block w-100">@g.Title / @indCount</span>
+                        </div>
+
+                        <!-- LISTA DE TARJETAS (Indicadores) -->
+                        <div class="kanban-cards">
+                            @if (indicatorsMap.ContainsKey(g.Id))
+                            {
+                                @foreach (var ind in indicatorsMap[g.Id])
+                                {
+                                    <!-- TARJETA (Indicador) -->
+                                    <div class="kanban-card" @ondblclick="() => ShowIndicatorDetails(ind, g.Id)" title="Doble clic para editar indicador">
+                                        @ind.Title
+                                    </div>
+                                }
+                            }
+
+                            <!-- FORMULARIO INLINE PARA AÑADIR -->
+                            @if (addingIndicatorGoalId == g.Id)
+                            {
+                                <div class="kanban-inline-form transition">
+                                    <input type="text" class="form-control form-control-sm mb-1 fs-8 p-1 border-0 bg-light" placeholder="Título..." @bind="newIndicatorTitle" />
+                                    <textarea class="form-control form-control-sm mb-1 fs-8 p-1 border-0 bg-light" placeholder="Descripción..." @bind="newIndicatorDescription" rows="2"></textarea>
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <button class="btn btn-xs btn-success fw-bold fs-8" style="padding: 2px 6px;" @onclick="() => SaveInlineIndicator(g.Id)">Guardar</button>
+                                        <button class="btn btn-xs btn-light border fs-8" style="padding: 2px 6px;" @onclick="CancelInlineIndicator"><i class="bi bi-x"></i></button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- BOTÓN "+ Añadir item" (ESTILO KANBAN) -->
+                        @if (addingIndicatorGoalId != g.Id)
+                        {
+                            <div class="kanban-add" @onclick="() => StartAddingIndicator(g.Id)">
+                                + Añadir item
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (!globalGoals.Any())
+                {
+                    <div class="w-100 d-flex flex-column justify-content-center align-items-center py-5 bg-white rounded border border-dashed text-muted" style="min-height: 250px;">
+                        <i class="bi bi-kanban display-4 opacity-25"></i>
+                        <p class="mt-3 mb-0 fs-7">No hay objetivos definidos en el tablero para @yearToLoad.</p>
+                        <button class="btn btn-sm btn-link mt-1" @onclick="NewGoal">Crear el primer objetivo</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* MODAL DE ACCIONES PARA OBJETIVO GLOBAL (VER/EDITAR/ELIMINAR) *@
+@if (showGoalModal)
+{
+    <div class="modal d-block fs-7" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(1px);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-white border-bottom pb-2 p-3">
+                    <h6 class="modal-title fw-bold text-primary fs-7">
+                        <i class="bi bi-bullseye me-1"></i> @(isEditingGoal ? (viewingGoal.Id == 0 ? "Nuevo" : "Editar") : "Detalle") Objetivo
+                    </h6>
+                    <button class="btn-close fs-8" @onclick="() => showGoalModal = false"></button>
+                </div>
+                <div class="modal-body p-3 pt-2 fs-7">
+                    @if (isEditingGoal)
+                    {
+                        <div class="mb-2">
+                            <label class="form-label fw-bold fs-8 text-muted mb-1">Título</label>
+                            <input type="text" class="form-control form-control-sm fs-7" @bind="viewingGoal.Title" placeholder="Ej: Reducir rotación" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold fs-8 text-muted mb-1">Descripción</label>
+                            <textarea class="form-control form-control-sm fs-7" @bind="viewingGoal.Description" placeholder="..." rows="3"></textarea>
+                        </div>
+                    }
+                    else
+                    {
+                        <h6 class="fw-bold mb-2 text-dark fs-7">@viewingGoal.Title</h6>
+                        <p class="text-muted small mb-0" style="white-space: pre-wrap; font-size: 0.78rem;">
+                            @(string.IsNullOrWhiteSpace(viewingGoal.Description) ? "Sin descripción registrada." : viewingGoal.Description)
+                        </p>
+                    }
+                </div>
+                <div class="modal-footer border-top bg-light flex-nowrap p-2 pt-1 pb-1">
+                    @if (isEditingGoal)
+                    {
+                        <button class="btn btn-sm btn-light border fs-7 w-50 py-1" @onclick="CancelEditGoal">Cancelar</button>
+                        <button class="btn btn-sm btn-primary fs-7 w-50 fw-bold py-1" @onclick="SaveEditedGoal">Guardar</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-sm btn-outline-danger fs-7 w-50 py-1" @onclick="() => ConfirmDeleteGoal(viewingGoal.Id)">
+                            <i class="bi bi-trash me-1"></i> Eliminar
+                        </button>
+                        <button class="btn btn-sm btn-primary fs-7 w-50 py-1" @onclick="() => isEditingGoal = true">
+                            <i class="bi bi-pencil me-1"></i> Editar
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* MODAL DE ACCIONES PARA EL INDICADOR (VER/EDITAR/ELIMINAR) *@
+@if (showIndicatorModal)
+{
+    <div class="modal d-block fs-7" style="background: rgba(0,0,0,0.3); backdrop-filter: blur(1px);">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light border-0 pb-1 p-3">
+                    <h6 class="modal-title fw-bold text-primary mb-0 fs-7"><i class="bi bi-card-checklist me-1"></i>Gestionar Indicador</h6>
+                    <button class="btn-close fs-8" @onclick="() => showIndicatorModal = false"></button>
+                </div>
+
+                <div class="modal-body p-3 pt-2 pb-2 fs-7">
+                    @if (isEditingIndicator)
+                    {
+                        <div class="mb-1">
+                            <label class="fs-8 fw-bold text-muted mb-0">Título</label>
+                            <input type="text" class="form-control form-control-sm fs-7 p-1" @bind="viewingIndicator.Title" />
+                        </div>
+                        <div class="mb-1">
+                            <label class="fs-8 fw-bold text-muted mb-0">Descripción</label>
+                            <textarea class="form-control form-control-sm fs-7 p-1" @bind="viewingIndicator.Description" rows="3"></textarea>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="fw-bold mb-1 fs-7">@viewingIndicator.Title</p>
+                        <p class="text-muted small mb-0" style="white-space: pre-wrap; font-size: 0.78rem;">
+                            @(string.IsNullOrWhiteSpace(viewingIndicator.Description) ? "Sin descripción registrada." : viewingIndicator.Description)
+                        </p>
+                    }
+                </div>
+
+                <div class="modal-footer border-top bg-light flex-nowrap p-2 pt-1 pb-1">
+                    @if (isEditingIndicator)
+                    {
+                        <button class="btn btn-xs btn-light border fs-7 w-50 py-1" @onclick="() => isEditingIndicator = false">Cancelar</button>
+                        <button class="btn btn-xs btn-primary fs-7 w-50 fw-bold py-1" @onclick="SaveEditedIndicator">Guardar</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-xs btn-outline-danger fs-7 w-50 py-1" @onclick="() => ConfirmDeleteIndicator(viewingIndicator.Id)">
+                            <i class="bi bi-trash fs-8"></i> Eliminar
+                        </button>
+                        <button class="btn btn-xs btn-primary fs-7 w-50 py-1" @onclick="() => isEditingIndicator = true">
+                            <i class="bi bi-pencil fs-8"></i> Editar
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    // --- ESTADO GENERAL ---
+    private int yearToLoad = DateTime.Now.Year;
+    private PdYearConfig? currentConfig;
+    private List<PdGlobalGoal> globalGoals = new();
+
+    // --- ESTADO PARA LA MATRIZ ---
+    private Dictionary<int, List<PdIndicator>> indicatorsMap = new();
+
+    // Paleta de colores solicitada para los badges de indicadores (se aplica por fila cíclicamente)
+    private readonly string[] colorPalette = new[]
+    {
+        "#024A86", // Azul
+        "#02AC66", // Verde
+        "#23BAC4", // Turquesa
+        "#E36B2C", // Naranja
+        "#C82A54", // Guinda/Rosa oscuro
+        "#8C4966"  // Morado tenue/Marrón
+    };
+
+    // --- UI CONTROL ---
+    private bool showConfig = false;
+    private bool showSuccessMessage = false;
+    private string errorMessage = "";
+
+    // UI Objetivo Global
+    private bool showGoalModal = false;
+    private bool isEditingGoal = false;
+    private PdGlobalGoal viewingGoal = new();
+
+    // UI Indicador
+    private int? addingIndicatorGoalId = null;
+    private bool showIndicatorModal = false;
+    private bool isEditingIndicator = false;
+    private PdIndicator viewingIndicator = new();
+    private int viewingIndicatorGoalId;
+
+    // --- DATOS AUXILIARES ---
+    private List<int> availableYears = new();
+    private int newRevisionCount = 2;
+
+    // Inputs para indicador inline
+    private string newIndicatorTitle = "";
+    private string newIndicatorDescription = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentYear = DateTime.Now.Year;
+        for (int i = -1; i <= 3; i++)
+        {
+            availableYears.Add(currentYear + i);
+        }
+
+        await LoadYearConfig();
+    }
+
+    private void ToggleConfig() => showConfig = !showConfig;
+
+    private async Task OnYearChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int selectedYear))
+        {
+            yearToLoad = selectedYear;
+            await LoadYearConfig();
+        }
+    }
+
+    private async Task LoadYearConfig()
+    {
+        currentConfig = await PdService.GetCurrentYearConfigAsync(yearToLoad);
+
+        // CORRECCIÓN: Ordenar por Id de forma ascendente para mostrar los más antiguos primero
+        var rawGoals = await PdService.GetAllGlobalGoalsAsync(yearToLoad);
+        globalGoals = rawGoals.OrderBy(g => g.Id).ToList();
+
+        // Limpiar y recargar el mapa de indicadores para la matriz
+        indicatorsMap.Clear();
+        foreach (var goal in globalGoals)
+        {
+            indicatorsMap[goal.Id] = await PdService.GetIndicatorsByGoalAsync(goal.Id);
+        }
+
+        if (currentConfig == null) showConfig = true;
+    }
+
+    private async Task CreateYearConfig()
+    {
+        var newConfig = new PdYearConfig
+        {
+            Year = yearToLoad,
+            RevisionCount = newRevisionCount,
+            IsActive = true,
+            RevisionDates = new List<PdRevisionDate>()
+        };
+
+        for (int i = 1; i <= newRevisionCount; i++)
+        {
+            newConfig.RevisionDates.Add(new PdRevisionDate
+            {
+                RevisionNumber = i,
+                StartDate = DateTime.Today,
+                EndDate = DateTime.Today.AddDays(30),
+                IsLockedByRH = false
+            });
+        }
+
+        await PdService.SaveYearConfigAsync(newConfig);
+        await LoadYearConfig();
+        ShowSuccess();
+    }
+
+    private async Task SaveConfig()
+    {
+        if (currentConfig != null)
+        {
+            await PdService.SaveYearConfigAsync(currentConfig);
+            ShowSuccess();
+            showConfig = false;
+        }
+    }
+
+    private void ShowSuccess()
+    {
+        showSuccessMessage = true;
+        Task.Delay(3000).ContinueWith(_ => InvokeAsync(() => { showSuccessMessage = false; StateHasChanged(); }));
+    }
+
+    private void ShowError(string message)
+    {
+        errorMessage = message;
+        Task.Delay(5000).ContinueWith(_ => InvokeAsync(() => { errorMessage = ""; StateHasChanged(); }));
+    }
+
+    // --- LÓGICA DEL MODAL DE OBJETIVO GLOBAL ---
+    private void NewGoal()
+    {
+        errorMessage = "";
+        viewingGoal = new PdGlobalGoal { Year = yearToLoad, IsActive = true };
+        isEditingGoal = true; // Salta directo al formulario
+        showGoalModal = true;
+    }
+
+    private void ShowGoalDetails(PdGlobalGoal g)
+    {
+        // Clonamos para evitar ediciones directas sin guardar
+        viewingGoal = new PdGlobalGoal
+        {
+            Id = g.Id,
+            Title = g.Title,
+            Description = g.Description,
+            Year = g.Year,
+            IsActive = g.IsActive
+        };
+        isEditingGoal = false; // Muestra la vista de solo lectura primero
+        showGoalModal = true;
+    }
+
+    private void CancelEditGoal()
+    {
+        if (viewingGoal.Id == 0)
+        {
+            // Era uno nuevo, cerramos el modal
+            showGoalModal = false;
+        }
+        else
+        {
+            // Era uno existente, volvemos a la vista de lectura
+            isEditingGoal = false;
+        }
+    }
+
+    private async Task SaveEditedGoal()
+    {
+        if (string.IsNullOrWhiteSpace(viewingGoal.Title))
+        {
+            ShowError("El título del objetivo es obligatorio.");
+            return;
+        }
+
+        await PdService.SaveGlobalGoalAsync(viewingGoal);
+        showGoalModal = false;
+        await LoadYearConfig(); // Recarga la lista ordenada por Id
+        ShowSuccess();
+    }
+
+    private async Task ConfirmDeleteGoal(int goalId)
+    {
+        // Alerta de confirmación nativa de JS
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "¿Estás seguro de que deseas eliminar este Objetivo Principal de forma permanente?");
+        if (!confirmed) return;
+
+        try
+        {
+            await PdService.DeleteGlobalGoalAsync(goalId);
+            showGoalModal = false;
+            await LoadYearConfig();
+            ShowSuccess();
+        }
+        catch (Exception)
+        {
+            showGoalModal = false;
+            ShowError("No se pudo eliminar el objetivo. Es posible que esté siendo usado.");
+        }
+    }
+
+    // --- LÓGICA DE INDICADORES INLINE ---
+    private void StartAddingIndicator(int goalId)
+    {
+        addingIndicatorGoalId = goalId;
+        newIndicatorTitle = "";
+        newIndicatorDescription = "";
+    }
+
+    private void CancelInlineIndicator()
+    {
+        addingIndicatorGoalId = null;
+    }
+
+    private async Task SaveInlineIndicator(int goalId)
+    {
+        if (string.IsNullOrWhiteSpace(newIndicatorTitle))
+        {
+            ShowError("El título del indicador es obligatorio.");
+            return;
+        }
+
+        var indicator = new PdIndicator
+        {
+            GlobalGoalId = goalId,
+            Title = newIndicatorTitle,
+            Description = newIndicatorDescription,
+            IsActive = true
+        };
+
+        await PdService.SaveIndicatorAsync(indicator);
+        // Recargar solo los indicadores de este objetivo específico en el diccionario
+        indicatorsMap[goalId] = await PdService.GetIndicatorsByGoalAsync(goalId);
+
+        addingIndicatorGoalId = null;
+        newIndicatorTitle = "";
+        newIndicatorDescription = "";
+    }
+
+    // --- LÓGICA DEL MODAL DE INDICADOR (DOBLE CLIC) ---
+    private void ShowIndicatorDetails(PdIndicator indicator, int goalId)
+    {
+        // Clonamos para evitar editar la lista principal en tiempo real sin guardar
+        viewingIndicator = new PdIndicator
+        {
+            Id = indicator.Id,
+            Title = indicator.Title,
+            Description = indicator.Description,
+            GlobalGoalId = indicator.GlobalGoalId,
+            IsActive = indicator.IsActive
+        };
+        viewingIndicatorGoalId = goalId;
+        isEditingIndicator = false;
+        showIndicatorModal = true;
+    }
+
+    private async Task SaveEditedIndicator()
+    {
+        if (string.IsNullOrWhiteSpace(viewingIndicator.Title))
+        {
+            ShowError("El título no puede estar vacío.");
+            return;
+        }
+
+        await PdService.SaveIndicatorAsync(viewingIndicator);
+        // Actualizar solo esta columna en el diccionario
+        indicatorsMap[viewingIndicatorGoalId] = await PdService.GetIndicatorsByGoalAsync(viewingIndicatorGoalId);
+        showIndicatorModal = false;
+        ShowSuccess();
+    }
+
+    private async Task ConfirmDeleteIndicator(int indicatorId)
+    {
+        // Alerta de confirmación
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "¿Estás seguro de eliminar este indicador?");
+        if (!confirmed) return;
+
+        try
+        {
+            await PdService.DeleteIndicatorAsync(indicatorId);
+            // Actualizar solo esta columna en el diccionario
+            indicatorsMap[viewingIndicatorGoalId] = await PdService.GetIndicatorsByGoalAsync(viewingIndicatorGoalId);
+            showIndicatorModal = false;
+            ShowSuccess();
+        }
+        catch (Exception)
+        {
+            showIndicatorModal = false;
+            ShowError("No se pudo eliminar el indicador. Es posible que esté asignado.");
+        }
+    }
+}

@@ -1,0 +1,259 @@
+﻿@page "/finanzas/vacaciones"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Services
+@using RRHH_ARG.Data
+@inject VacacionService VacacionService
+@inject EmpleadoService EmpleadoService
+@inject NavigationManager Nav
+@rendermode InteractiveServer 
+
+<div class="p-3">
+    @* BARRA SUPERIOR: SELECTOR Y BOTÓN HUB *@
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2" style="max-width: 600px;">
+            <label class="fw-bold small">Empleado a capturar:</label>
+            <select class="form-select form-select-sm shadow-sm" @onchange="OnEmpleadoChanged">
+                <option value="0">-- Seleccione --</option>
+                @foreach (var emp in listaEmpleados)
+                {
+                    <option value="@emp.Id">@emp.Nombre @emp.ApellidoPaterno</option>
+                }
+            </select>
+        </div>
+        
+        @* NUEVO: Botón para regresar al Hub *@
+        <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick='() => Nav.NavigateTo("/finanzas/hub")'>
+            <i class="bi bi-arrow-left"></i> Volver al Hub
+        </button>
+    </div>
+
+    @* VENTANA ESTILO CLÁSICO (Como tu imagen) *@
+    <div class="classic-window">
+        <EditForm Model="solicitud" OnValidSubmit="GuardarSolicitud">
+
+            @* FILA 1: Tipo de Captura (BLOQUEADO) *@
+            <div class="mb-3">
+                <select class="classic-input w-100" disabled>
+                    <option selected>Vacaciones y prima vacacional</option>
+                </select>
+                <div class="classic-label"><u>T</u>ipo de captura (Fijo)</div>
+            </div>
+
+            @* FILA 2: Fechas *@
+            <div class="d-flex gap-3 mb-3">
+                <div class="flex-fill">
+                    <div class="d-flex align-items-center">
+                        <InputDate @bind-Value="solicitud.FechaInicial" @bind-Value:after="RecalcularDias" class="classic-input flex-fill" />
+                    </div>
+                    <div class="classic-label"><u>F</u>echa inicial</div>
+                </div>
+                <div class="flex-fill">
+                    <div class="d-flex align-items-center">
+                        <InputDate @bind-Value="solicitud.FechaFinal" @bind-Value:after="RecalcularDias" class="classic-input flex-fill" />
+                    </div>
+                    <div class="classic-label">Fec<u>h</u>a final</div>
+                </div>
+                <div class="flex-fill">
+                    <div class="d-flex align-items-center">
+                        <InputDate @bind-Value="solicitud.FechaPago" class="classic-input flex-fill bg-light border-primary" title="La quincena que abarque esta fecha pagará la prima" />
+                    </div>
+                    <div class="classic-label fw-bold text-primary">Fecha de pa<u>g</u>o (Nómina)</div>
+                </div>
+            </div>
+
+            @* FILA 3: Días de descanso *@
+            <div class="mb-3">
+                <div class="d-flex">
+                    <InputNumber @bind-Value="solicitud.DiasDescanso" @bind-Value:after="RecalcularDias" class="classic-input flex-fill" />
+                    <button type="button" class="classic-btn-small">...</button>
+                </div>
+                <div class="classic-label"><u>N</u>úmero de días de descanso y/o séptimos</div>
+            </div>
+
+            @* FILA 4: Vacaciones y Prima (Cálculo Automático) *@
+            <div class="d-flex gap-4 mb-4">
+                <div class="w-50">
+                    <div class="d-flex">
+                        <InputNumber @bind-Value="solicitud.DiasVacaciones" class="classic-input flex-fill text-end" disabled />
+                        <button type="button" class="classic-btn-small">...</button>
+                    </div>
+                    <div class="classic-label"><u>D</u>ías de vacaciones</div>
+                </div>
+
+                <div class="w-50">
+                    @* Formateado visualmente como moneda si lo prefieres, pero numérico para cálculos *@
+                    <InputNumber @bind-Value="solicitud.PrimaVacacionalEstimada" class="classic-input w-100 text-end text-success fw-bold" disabled />
+                    <div class="classic-label"><u>P</u>rima vac. de Días de vac. (Cálculo SDI)</div>
+                </div>
+            </div>
+
+            @* BOTONES INFERIORES *@
+            <div class="d-flex justify-content-center gap-5 mt-5">
+                <button type="button" class="classic-btn-large" @onclick='() => Nav.NavigateTo("/finanzas/kardex-vacaciones")'>
+                    Kardex de vacaciones
+                </button>
+
+                <div class="d-flex flex-column align-items-center">
+                    <button type="submit" class="classic-btn-large fw-bold" disabled="@(solicitud.EmpleadoId == 0 || solicitud.DiasVacaciones > solicitud.SaldoDisponible || solicitud.DiasVacaciones <= 0)">
+                        Guardar Captura
+                    </button>
+
+                    
+                </div>
+
+                
+            </div>
+
+            @* MENSAJES DE ADVERTENCIA DINÁMICOS *@
+            @if (solicitud.EmpleadoId > 0)
+            {
+                if (solicitud.SaldoDisponible <= 0)
+                {
+                    <span class="text-danger small mt-2 fw-bold">
+                        * Este usuario tiene saldo 0 en vacaciones.
+                    </span>
+                }
+                else if (solicitud.DiasVacaciones > solicitud.SaldoDisponible)
+                {
+                    <span class="text-danger small mt-2 fw-bold">
+                        * Los días solicitados superan el saldo disponible (@solicitud.SaldoDisponible días).
+                    </span>
+                }
+            }
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private VacacionSolicitudDTO solicitud = new();
+    private List<EmpleadoViewModel> listaEmpleados = new();
+    private EmpleadoViewModel? empleadoActivo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaEmpleados = await EmpleadoService.GetAllEmpleadosAsync();
+    }
+
+    private async Task OnEmpleadoChanged(ChangeEventArgs e)
+    {
+        int id = int.Parse(e.Value?.ToString() ?? "0");
+        solicitud.EmpleadoId = id;
+        empleadoActivo = listaEmpleados.FirstOrDefault(x => x.Id == id);
+
+        if (id > 0)
+        {
+            solicitud.SaldoDisponible = await VacacionService.GetSaldoDisponibleAsync(id);
+            RecalcularDias();
+        }
+        else
+        {
+            solicitud.PrimaVacacionalEstimada = 0;
+            solicitud.DiasVacaciones = 0;
+            solicitud.SaldoDisponible = 0;
+        }
+
+        // Forzamos a Blazor a repintar la pantalla con los nuevos cálculos
+        StateHasChanged();
+        Console.WriteLine($"SDI cargado en ViewModel: {empleadoActivo?.SaeSdi}");
+    }
+
+    private void RecalcularDias()
+    {
+        // 1. Calculamos los días
+        var diff = (solicitud.FechaFinal - solicitud.FechaInicial).Days + 1;
+        solicitud.DiasVacaciones = Math.Max(0, diff - solicitud.DiasDescanso);
+
+        // 2. Ajustamos inteligentemente la Fecha de Pago para que empate con la Fecha Inicial por defecto
+        if (solicitud.FechaPago == default || solicitud.FechaPago < solicitud.FechaInicial)
+        {
+            solicitud.FechaPago = solicitud.FechaInicial;
+        }
+
+        // 3. Calculamos la prima monetaria usando el SDI del empleado
+        if (empleadoActivo != null)
+        {
+            decimal sdi = empleadoActivo.SaeSdi ?? 0m;
+
+            // TIP DE DEBUG: Esto imprimirá el salario en la consola de Visual Studio para que veas si viene en cero.
+            Console.WriteLine($"Calculando Prima: {solicitud.DiasVacaciones} días * {sdi} (SDI) * 25%");
+
+            solicitud.PrimaVacacionalEstimada = Math.Round(solicitud.DiasVacaciones * sdi * 0.25m, 2);
+        }
+
+        // Avisar a la interfaz que los números cambiaron (especialmente útil para las fechas)
+        StateHasChanged();
+    }
+
+    private async Task GuardarSolicitud()
+    {
+        if (solicitud.EmpleadoId > 0 && solicitud.DiasVacaciones <= solicitud.SaldoDisponible)
+        {
+            await VacacionService.RegistrarVacacionesAsync(solicitud);
+            Nav.NavigateTo("/finanzas/kardex-vacaciones");
+        }
+    }
+}
+
+<style>
+    /* CSS PARA IMITAR EL LOOK DE WINDOWS/ASPEL */
+    .classic-window {
+        background-color: #Fdfdee;
+        border: 1px solid #a0a0a0;
+        padding: 20px;
+        max-width: 600px;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .classic-input {
+        border: 1px solid #7a9eb1;
+        padding: 2px 5px;
+        font-size: 0.85rem;
+        height: 24px;
+        outline: none;
+    }
+
+    .classic-input:focus {
+        border-color: #0078d7;
+    }
+
+    .classic-input:disabled {
+        background-color: #f0f0f0;
+        color: #555;
+    }
+
+    .classic-label {
+        font-size: 0.75rem;
+        color: #333;
+        margin-top: 1px;
+    }
+
+    .classic-btn-small {
+        border: 1px solid #7a9eb1;
+        background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);
+        height: 24px;
+        width: 28px;
+        line-height: 10px;
+        cursor: pointer;
+    }
+
+    .classic-btn-large {
+        border: 1px solid #999;
+        background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+        padding: 6px 20px;
+        font-size: 0.85rem;
+        color: #000;
+        cursor: pointer;
+        min-width: 160px;
+    }
+
+    .classic-btn-large:hover {
+        background: linear-gradient(to bottom, #fff, #e8e8e8);
+        border-color: #0078d7;
+    }
+
+    .classic-btn-large:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>

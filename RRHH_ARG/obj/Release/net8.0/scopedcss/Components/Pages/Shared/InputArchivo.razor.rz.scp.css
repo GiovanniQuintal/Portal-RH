@@ -1,0 +1,25 @@
+.input-archivo-container[b-29eq7xa79q] {
+    margin-bottom: 15px;
+}
+
+.file-info-badge[b-29eq7xa79q] {
+    background-color: #e2e3e5; /* Gris claro de Bootstrap */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-clear[b-29eq7xa79q] {
+    background: none;
+    border: none;
+    font-weight: bold;
+    color: #dc3545; /* Rojo */
+    font-size: 1.2em;
+    line-height: 1;
+    padding: 0 5px;
+}

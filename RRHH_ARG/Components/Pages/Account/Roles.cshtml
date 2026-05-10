@@ -1,0 +1,41 @@
+﻿@page
+@using RRHH_ARG.Data;
+@using Microsoft.AspNetCore.Identity
+@model RRHH_ARG.Components.Pages.Account.RolesModel
+@{
+    List<IdentityRole> MyRoles = ViewData["roles"] as List<IdentityRole>;
+}
+
+<div>
+    <table>
+        @if (MyRoles == null || MyRoles.Count==0)
+        {
+             <tr>
+                    <td>
+            <h3>No hay roles</h3>
+            </td>
+            </tr>
+        } else
+        {
+            @foreach (var item in MyRoles)
+            {
+                <tr>
+                    <td>
+                        <strong>@item.Name </strong>
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+
+    <form method="post">
+        <div>
+            <label>Nuevo Rol</label>
+            <input asp-for="Rol.Name" />
+        </div>
+
+        <button type="submit"> Registrar</button>
+
+    </form>  
+
+</div>

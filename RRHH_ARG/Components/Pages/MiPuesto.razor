@@ -1,0 +1,154 @@
+﻿@page "/mi-puesto"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using RRHH_ARG.Data
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject EmpleadoService EmpleadoService
+
+@attribute [Authorize(Roles = "RH, Empleado, HSE, FA, Supervisor")]
+
+@if (isLoading)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(255, 255, 255, 0.85); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div class="spinner-border text-primary" role="status" style="width: 5rem; height: 5rem; border-width: 0.5rem;">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <h3 class="mt-4 text-primary fw-bold">Preparando tus documentos...</h3>
+        <p class="text-muted fs-5">Por favor, espera un momento.</p>
+    </div>
+}
+
+<div class="container-fluid p-3">
+
+    <div class="mb-3">
+        <h1 class="text-primary fw-bold mb-0">
+            <i class="bi bi-file-earmark-person-fill me-2"></i>Descripción de Puestos
+        </h1>
+        <small class="text-muted fw-bold">Funciones dentro de la empresa</small>
+    </div>
+
+    @if (!isLoading)
+    {
+        <div class="row g-3" style="height: calc(100vh - 120px);">
+
+            <div class="@(tieneSegundoPuesto ? "col-lg-6" : "col-12") h-100">
+                <div class="card shadow border-0 h-100">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-primary">Principal: @datosPuestos.NombrePuesto1</span>
+                        @if (!string.IsNullOrEmpty(pdfPrincipalBase64))
+                        {
+                            <a href="data:application/pdf;base64,@pdfPrincipalBase64" download="Perfil_Puesto_Principal.pdf" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-download"></i> Descargar
+                            </a>
+                        }
+                    </div>
+                    <div class="card-body p-0 h-100 bg-secondary bg-opacity-10 d-flex justify-content-center align-items-center">
+                        @if (string.IsNullOrEmpty(pdfPrincipalBase64))
+                        {
+                            <div class="text-center text-muted opacity-50">
+                                <i class="bi bi-file-earmark-x display-4"></i>
+                                <p class="mt-2">Sin documento cargado</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <object data="data:application/pdf;base64,@pdfPrincipalBase64" type="application/pdf" class="w-100 h-100" style="display: block;">
+                                <div class="text-center p-4">
+                                    <p>Tu navegador no visualiza PDFs directamente.</p>
+                                </div>
+                            </object>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (tieneSegundoPuesto)
+            {
+                <div class="col-lg-6 h-100">
+                    <div class="card shadow border-0 h-100">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-secondary">Secundario: @datosPuestos.NombrePuesto2</span>
+                            @if (!string.IsNullOrEmpty(pdfSecundarioBase64))
+                            {
+                                <a href="data:application/pdf;base64,@pdfSecundarioBase64" download="Perfil_Puesto_Secundario.pdf" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-download"></i> Descargar
+                                </a>
+                            }
+                        </div>
+                        <div class="card-body p-0 h-100 bg-secondary bg-opacity-10 d-flex justify-content-center align-items-center">
+                            @if (string.IsNullOrEmpty(pdfSecundarioBase64))
+                            {
+                                <div class="text-center text-muted opacity-50">
+                                    <i class="bi bi-file-earmark-x display-4"></i>
+                                    <p class="mt-2">Sin documento cargado</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <object data="data:application/pdf;base64,@pdfSecundarioBase64" type="application/pdf" class="w-100 h-100" style="display: block;">
+                                    <div class="text-center p-4">
+                                        <p>Tu navegador no visualiza PDFs directamente.</p>
+                                    </div>
+                                </object>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private PuestosUsuarioDTO datosPuestos = new();
+
+    private string? pdfPrincipalBase64;
+    private string? pdfSecundarioBase64;
+
+    private bool isLoading = true;
+    private bool tieneSegundoPuesto = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 1. Obligamos al navegador a dibujar la pantalla de "Cargando" inmediatamente
+        // dándole un pequeño respiro antes de empezar el trabajo pesado.
+        await Task.Delay(50);
+
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity != null && user.Identity.IsAuthenticated)
+            {
+                var userId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    // 2. Aquí arranca el trabajo lento (BD y conversión) mientras el usuario ve el spinner
+                    datosPuestos = await EmpleadoService.GetInfoPuestosPorUsuarioAsync(userId);
+                    tieneSegundoPuesto = !string.IsNullOrEmpty(datosPuestos.NombrePuesto2);
+
+                    if (datosPuestos.PdfPuesto1 != null)
+                    {
+                        pdfPrincipalBase64 = Convert.ToBase64String(datosPuestos.PdfPuesto1);
+                    }
+
+                    if (datosPuestos.PdfPuesto2 != null)
+                    {
+                        pdfSecundarioBase64 = Convert.ToBase64String(datosPuestos.PdfPuesto2);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar: {ex.Message}");
+        }
+        finally
+        {
+            // 3. Ocultamos la pantalla de carga para mostrar los PDFs
+            isLoading = false;
+        }
+    }
+}

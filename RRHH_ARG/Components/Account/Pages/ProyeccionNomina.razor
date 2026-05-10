@@ -1,0 +1,142 @@
+﻿@page "/finanzas/proyeccion-nomina"
+@using RRHH_ARG.Data
+@using RRHH_ARG.Models
+@inject PayrollService PayrollService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="projection-container p-4">
+    <div class="top-panel mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="title text-dark fw-bold m-0"><i class="bi bi-graph-up-arrow text-primary"></i> Proyección Financiera de Nómina</h3>
+            <p class="text-muted small m-0">Análisis mixto: Datos históricos reales + Simulación a futuro</p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick='() => Nav.NavigateTo("/finanzas/hub")'>
+            <i class="bi bi-arrow-left"></i> Volver al Hub
+        </button>
+    </div>
+
+    @* CONTROLES *@
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+        <div class="card-body py-3 d-flex align-items-center gap-3">
+            <label class="fw-bold m-0">Año Fiscal a Proyectar:</label>
+            <select class="form-select form-select-sm w-auto fw-bold" @bind="selectedAnio" @bind:after="CargarProyeccion">
+                @for (int i = DateTime.Now.Year - 1; i <= DateTime.Now.Year + 2; i++)
+                {
+                    <option value="@i">@i</option>
+                }
+            </select>
+            @if (isBusy)
+            {
+                <span class="spinner-border spinner-border-sm text-primary"></span>
+            }
+        </div>
+    </div>
+
+    @if (proyeccion != null)
+    {
+        @* TARJETAS DE RESUMEN EJECUTIVO *@
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-success text-white h-100" style="background: linear-gradient(135deg, #198754 0%, #146c43 100%);">
+                    <div class="card-body p-4 text-center">
+                        <h6 class="fw-bold mb-1 opacity-75">Gasto Real Ejecutado (YTD)</h6>
+                        <h3 class="fw-bold m-0">@proyeccion.TotalPagadoReal.ToString("C2")</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-warning text-dark h-100" style="background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);">
+                    <div class="card-body p-4 text-center">
+                        <h6 class="fw-bold mb-1 opacity-75">Gasto Proyectado (Resto del año)</h6>
+                        <h3 class="fw-bold m-0">@proyeccion.TotalProyectado.ToString("C2")</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-primary text-white h-100" style="background: linear-gradient(135deg, #253C60 0%, #1a2a44 100%);">
+                    <div class="card-body p-4 text-center">
+                        <h6 class="fw-bold mb-1 opacity-75">Gran Total Anual Estimado</h6>
+                        <h3 class="fw-bold m-0">@proyeccion.GranTotalAnual.ToString("C2")</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* TABLA DESGLOSADA *@
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="m-0 fw-bold text-dark">Desglose de las 24 Quincenas</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                        <thead style="background-color: #f8f9fa;">
+                            <tr>
+                                <th class="px-4 py-3">Periodo</th>
+                                
+                                <th class="text-end text-success">Suma de Percepciones</th>
+                                <th class="text-end text-danger">Suma de Deducciones</th>
+                                <th class="text-end pe-4 fw-bold">Total Quincena</th>
+                                <th class="text-center">Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var q in proyeccion.Quincenas)
+                            {
+                                <tr class="@(q.EsProyeccion ? "table-warning bg-opacity-10" : "")">
+                                    <td class="px-4 fw-bold text-secondary">@q.NombrePeriodo</td>
+                                    
+                                    <td class="text-end text-success">@(q.TotalPercepciones > 0 ? q.TotalPercepciones.ToString("C2") : "-")</td>
+                                    <td class="text-end text-danger">@(q.TotalDeducciones > 0 ? q.TotalDeducciones.ToString("C2") : "-")</td>
+                                    <td class="text-end fw-bold text-dark pe-4">@q.GranTotal.ToString("C2")</td>
+                                    <td class="text-center">
+                                        @if (q.EsProyeccion)
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-magic"></i> Proyectado</span>
+                                        }
+                                        else if (q.GranTotal > 0)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Real / Cerrado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary opacity-50">Sin Datos</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private int selectedAnio;
+    private bool isBusy = false;
+    private ProyeccionAnualDTO proyeccion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        selectedAnio = DateTime.Now.Year;
+        await CargarProyeccion();
+    }
+
+    private async Task CargarProyeccion()
+    {
+        isBusy = true;
+        try
+        {
+            // Pequeña pausa para que se vea el efecto de carga en el UI si es muy rápido
+            await Task.Delay(300);
+            proyeccion = await PayrollService.GetProyeccionFinancieraAsync(selectedAnio);
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

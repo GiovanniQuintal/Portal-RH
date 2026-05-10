@@ -1,0 +1,25 @@
+﻿.card-node .body {
+    fill: #ffffff;
+    stroke: #333;
+    stroke-width: 2px;
+}
+
+.card-node .title {
+    font-family: sans-serif;
+    font-size: 16px;
+    fill: #333;
+    font-weight: bold;
+    pointer-events: none; /* Para que el click pase a través del texto */
+}
+
+/* Estilo de los puertos (círculos) */
+.card-node .port {
+    fill: #007bff; /* Azul */
+    cursor: crosshair;
+}
+
+.card-node .port:hover {
+    fill: #0056b3; /* Azul oscuro al pasar mouse */
+    stroke: white;
+    stroke-width: 2px;
+}

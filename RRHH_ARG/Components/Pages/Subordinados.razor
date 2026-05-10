@@ -1,0 +1,2173 @@
+﻿@page "/subordinados"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Services
+@using RRHH_ARG.Data
+@using RRHH_ARG.Components.Pages.Reports
+@inject EmpleadoService EmpleadoService
+@inject PdService PdService
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+@if (!isPrinting)
+{
+    <div class="container-fluid vh-100 d-flex flex-column overflow-hidden" style="padding-top: 10px;">
+        <div class="row flex-grow-1 overflow-hidden">
+
+            <div class="col-md-4 col-lg-3 border-end bg-white d-flex flex-column h-100 overflow-auto p-0 shadow-sm">
+                <div class="p-3 border-bottom bg-light sticky-top">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-dark"></i> Mi Equipo (@subordinados.Count)</h6>
+                </div>
+
+                @if (isLoadingList)
+                {
+                    <div class="text-center p-3"><div class="spinner-border text-primary spinner-border-sm"></div></div>
+                }
+                else if (!subordinados.Any())
+                {
+                    <div class="p-3 text-muted small">No tienes subordinados asignados.</div>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var emp in subordinados)
+                        {
+                            <button class="list-group-item list-group-item-action py-3 border-bottom @(selectedEmpId == emp.Id ? "active border-start border-4 border-primary bg-light" : "")"
+                                    @onclick="() => SelectEmpleado(emp.Id)">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3 flex-shrink-0">
+                                        <img src="/api/Archivo/@emp.Id/Foto"
+                                             class="rounded-circle border shadow-sm"
+                                             style="width: 50px; height: 50px; object-fit: cover;"
+                                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=@emp.ApellidoPaterno+@emp.Nombre&background=random&color=fff';"
+                                             alt="@emp.Nombre" />
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <h6 class="mb-0 text-truncate fw-bold text-dark">@emp.ApellidoPaterno @emp.Nombre</h6>
+                                        <small class="text-muted d-block text-truncate">@emp.Empleo</small>
+                                    </div>
+                                </div>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-8 col-lg-9 h-100 overflow-auto bg-light p-0 position-relative">
+                @if (selectedEmpId == 0)
+                {
+                    <div class="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
+                        <i class="bi bi-arrow-left-circle display-4 mb-3 opacity-25"></i>
+                        <h4>Selecciona un integrante del equipo</h4>
+                        <p>Gestiona sus prioridades y revisiones desde el menú lateral.</p>
+                    </div>
+                }
+                else if (selectedEmpleado == null)
+                {
+                    <div class="text-center p-5"><div class="spinner-border text-primary"></div></div>
+                }
+                else
+                {
+                    <div class="sticky-top bg-white border-bottom shadow-sm px-5 py-4 z-index-1000">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative me-4">
+                                    <img src="@UrlFotoPerfil"
+                                         class="rounded-circle border border-3 border-light shadow"
+                                         style="width: 100px; height: 100px; object-fit: cover;"
+                                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=@selectedEmpleado.ApellidoPaterno+@selectedEmpleado.Nombre&background=random&color=fff';" />
+                                </div>
+                                <div>
+                                    <h2 class="mb-1 fw-bold text-dark">@selectedEmpleado.Nombre @selectedEmpleado.ApellidoPaterno</h2>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <span class="badge bg-primary fs-6 me-2 px-3 py-2">@selectedEmpleado.Empleo</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="btn-group shadow-sm" role="group">
+                                <button type="button" class="btn @(activeTab == "priorities" ? "btn-primary" : "btn-outline-secondary bg-white")" @onclick='() => activeTab = "priorities"' title="Prioridades">
+                                    <i class="bi bi-list-check"></i> <span class="d-none d-md-inline ms-2">Tareas</span>
+                                </button>
+                                <button type="button" class="btn @(activeTab == "touchpoints" ? "btn-primary" : "btn-outline-secondary bg-white")" @onclick='() => activeTab = "touchpoints"' title="Touchpoints">
+                                    <i class="bi bi-chat-dots"></i> <span class="d-none d-md-inline ms-2">Touchpoints</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-5">
+
+                        @if (activeTab == "priorities")
+                        {
+                            <div class="mb-4">
+                                <div class="mb-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="fw-bold text-dark mb-0">Tareas @DateTime.Now.Year</h5>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-danger btn-custom" @onclick="ImprimirReporte">
+                                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                                        </button>
+                                        <button class="btn btn-success shadow-sm" @onclick="NewPriority">
+                                            <i class="bi bi-plus-lg me-1"></i> Agregar Tarea
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (!prioritiesList.Any())
+                            {
+                                <div class="text-center py-5 bg-white rounded border border-dashed text-muted shadow-sm">
+                                    <i class="bi bi-list-check display-4 opacity-25"></i>
+                                    <p class="mt-3 mb-0">No hay prioridades asignadas para este colaborador.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                var unassignedPriorities = prioritiesList.Where(p => p.Indicator == null || p.Indicator.GlobalGoalId == 0).ToList();
+
+                                @for (int i = 0; i < globalGoalsList.Count; i++)
+                                {
+                                    var goal = globalGoalsList[i];
+                                    var goalPriorities = prioritiesList.Where(p => p.Indicator != null && p.Indicator.GlobalGoalId == goal.Id).ToList();
+
+                                    if (goalPriorities.Any())
+                                    {
+                                        string colColor = colorPalette[i % colorPalette.Length];
+
+                                        <div class="mb-4 shadow-sm rounded border overflow-hidden bg-white">
+                                            <div class="p-3 text-white d-flex justify-content-between align-items-center" style="background-color: @colColor;">
+                                                <h6 class="mb-0 fw-bold"><i class="bi bi-bullseye me-2"></i>@goal.Title</h6>
+                                                <span class="badge bg-white text-dark rounded-pill shadow-sm">@goalPriorities.Count tareas</span>
+                                            </div>
+
+                                            <div class="p-0 bg-white">
+                                                @{
+                                                    var indicatorsGroup = goalPriorities.GroupBy(p => p.Indicator).ToList();
+                                                }
+                                                @foreach (var indGroup in indicatorsGroup)
+                                                {
+                                                    int indicatorId = indGroup.Key?.Id ?? -1;
+                                                    bool isExpanded = expandedIndicators.Contains(indicatorId);
+
+                                                    <div class="border-bottom">
+                                                        <div class="p-3 bg-light d-flex justify-content-between align-items-center cursor-pointer indicator-header hover-bg-gray" @onclick="() => ToggleIndicator(indicatorId)">
+                                                            <div class="d-flex align-items-center fw-bold text-dark w-100">
+                                                                <button class="btn btn-sm btn-light border rounded-circle p-0 me-3 d-flex justify-content-center align-items-center" style="width: 24px; height: 24px; transition: all 0.2s ease;">
+                                                                    <i class="bi @(isExpanded ? "bi-chevron-up text-primary" : "bi-chevron-down text-secondary")" style="font-size: 0.8rem;"></i>
+                                                                </button>
+                                                                <span class="fs-6">@(indGroup.Key?.Title ?? "Sin Indicador asignado")</span>
+                                                                <span class="badge bg-white text-secondary border ms-auto fw-normal shadow-sm">@indGroup.Count() tareas</span>
+                                                            </div>
+                                                        </div>
+
+                                                        @if (isExpanded)
+                                                        {
+                                                            <div class="table-responsive p-3 bg-white">
+                                                                <table class="table align-middle table-hover mb-0 border shadow-sm rounded">
+                                                                    <thead class="table-light">
+                                                                        <tr>
+                                                                            <th style="width: 30%;" class="ps-3 border-end">Tarea / Prioridad</th>
+                                                                            <th style="width: 15%;" class="border-end text-center">Meta</th>
+                                                                            <th style="width: 15%;" class="border-end text-center">Actual</th>
+                                                                            <th style="width: 15%;" class="border-end text-center">Progreso</th>
+                                                                            <th style="width: 10%; text-align:center;" class="border-end">Resultado</th>
+                                                                            <th style="width: 15%;" class="text-center pe-3">Acciones</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @foreach (var p in indGroup)
+                                                                        {
+                                                                            <tr>
+                                                                                <td class="ps-3 border-end">
+                                                                                    <div class="fw-bold text-dark">@p.Title</div>
+                                                                                    <span class="badge bg-light text-secondary border mt-1">@p.Category</span>
+                                                                                </td>
+                                                                                <td class="text-center border-end">
+                                                                                    <span class="fw-bold">@p.TargetValue</span>
+                                                                                    <small class="text-muted d-block">@p.UnitOfMeasure</small>
+                                                                                    <i class="bi @(p.TrackingType == "MHB" ? "bi-graph-up-arrow text-success" : "bi-graph-down-arrow text-danger") ms-1" title="@(p.TrackingType == "MHB" ? "Más es Mejor" : "Menos es Mejor")"></i>
+                                                                                </td>
+                                                                                <td class="text-center border-end">
+                                                                                    <span class="text-primary fw-bold">@p.ActualValue</span>
+                                                                                </td>
+                                                                                <td class="border-end">
+                                                                                    @{
+                                                                                        int porcentaje = p.ProgressPercentage;
+                                                                                        string colorBarra = porcentaje >= 100 ? "bg-success" : (p.TrackingType == "MAB" ? "bg-danger" : (porcentaje >= 50 ? "bg-info" : "bg-warning"));
+                                                                                    }
+                                                                                    <div class="d-flex flex-column align-items-center w-100 px-2">
+                                                                                        <div class="progress w-100" style="height: 6px;">
+                                                                                            <div class="progress-bar @colorBarra" role="progressbar" style="width: @Math.Min(porcentaje, 100)%"></div>
+                                                                                        </div>
+                                                                                        <small class="text-muted mt-1" style="font-size: 0.7rem;">@porcentaje%</small>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td class="text-center border-end">
+                                                                                    @if (p.FinalStatus == "Cumplió")
+                                                                                    {
+                                                                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Cumplió</span>
+                                                                                    }
+                                                                                    else if (p.FinalStatus == "No Cumplió")
+                                                                                    {
+                                                                                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> No Cumplió</span>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <span class="badge bg-light text-muted border">Pendiente</span>
+                                                                                    }
+                                                                                </td>
+                                                                                <td class="text-center pe-3">
+                                                                                    <div class="d-flex justify-content-center align-items-center gap-2">
+                                                                                        <!--
+                                                                                        arroba if parentesis p.IsApproved parentesis
+                                                                                        corchetes
+                                                                                            <span class="badge bg-success" title="Aprobada"><i class="bi bi-check-circle-fill"></i></span>
+                                                                                        corchetes
+                                                                                        else if parentesis p.IsSubmitted parentesis
+                                                                                        corchetes
+                                                                                            <div class="d-flex flex-column align-items-center">
+                                                                                                <span class="badge bg-warning text-dark mb-1">En Revisión</span>
+                                                                                                <button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size: 0.7rem;"  arroba onclick="() => ApprovePriority(p.Id)"><i class="bi bi-check-lg"></i> Aprobar</button>
+                                                                                            </div>
+                                                                                        corchetes
+                                                                                        else
+                                                                                        corchetes
+                                                                                            <span class="badge bg-secondary">Borrador</span>
+                                                                                        corchetes
+                                                                                        -->
+
+                                                                                        <button class="btn btn-sm btn-link text-primary p-0 ms-1" @onclick="() => EditPriority(p)" title="Editar"><i class="bi bi-pencil-square fs-5"></i></button>
+                                                                                        <button class="btn btn-sm btn-link text-danger p-0 ms-1" @onclick="() => ConfirmarEliminarPrioridad(p.Id)" title="Eliminar"><i class="bi bi-trash fs-5"></i></button>
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+
+                                @if (unassignedPriorities.Any())
+                                {
+                                    <div class="mb-4 shadow-sm rounded border overflow-hidden bg-white">
+                                        <div class="p-3 text-white d-flex justify-content-between align-items-center bg-secondary">
+                                            <h6 class="mb-0 fw-bold"><i class="bi bi-question-circle me-2"></i>Sin Objetivo Asignado</h6>
+                                            <span class="badge bg-white text-dark rounded-pill shadow-sm">@unassignedPriorities.Count tareas</span>
+                                        </div>
+                                        <div class="p-0 bg-white">
+                                            @{
+                                                var orphanIndicatorsGroup = unassignedPriorities.GroupBy(p => p.Indicator).ToList();
+                                            }
+                                            @foreach (var indGroup in orphanIndicatorsGroup)
+                                            {
+                                                int indicatorId = indGroup.Key?.Id ?? -2; // -2 para diferenciar de los huerfanos normales si los hubiera
+                                                bool isExpanded = expandedIndicators.Contains(indicatorId);
+
+                                                <div class="border-bottom">
+                                                    <div class="p-3 bg-light d-flex justify-content-between align-items-center cursor-pointer indicator-header hover-bg-gray" @onclick="() => ToggleIndicator(indicatorId)">
+                                                        <div class="d-flex align-items-center fw-bold text-dark w-100">
+                                                            <button class="btn btn-sm btn-light border rounded-circle p-0 me-3 d-flex justify-content-center align-items-center" style="width: 24px; height: 24px; transition: all 0.2s ease;">
+                                                                <i class="bi @(isExpanded ? "bi-chevron-up text-primary" : "bi-chevron-down text-secondary")" style="font-size: 0.8rem;"></i>
+                                                            </button>
+                                                            <span class="fs-6 text-muted">@(indGroup.Key?.Title ?? "Tareas Generales")</span>
+                                                            <span class="badge bg-white text-secondary border ms-auto fw-normal shadow-sm">@indGroup.Count() tareas</span>
+                                                        </div>
+                                                    </div>
+
+                                                    @if (isExpanded)
+                                                    {
+                                                        <div class="table-responsive p-3 bg-white">
+                                                            <table class="table align-middle table-hover mb-0 border shadow-sm rounded">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th style="width: 30%;" class="ps-3 border-end">Tarea / Prioridad</th>
+                                                                        <th style="width: 15%;" class="border-end text-center">Meta</th>
+                                                                        <th style="width: 15%;" class="border-end text-center">Actual</th>
+                                                                        <th style="width: 15%;" class="border-end text-center">Progreso</th>
+                                                                        <th style="width: 10%; text-align:center;" class="border-end">Resultado</th>
+                                                                        <th style="width: 15%;" class="text-center pe-3">Acciones</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var p in indGroup)
+                                                                    {
+                                                                        <tr>
+                                                                            <td class="ps-3 border-end">
+                                                                                <div class="fw-bold text-dark">@p.Title</div>
+                                                                                <span class="badge bg-light text-secondary border mt-1">@p.Category</span>
+                                                                            </td>
+                                                                            <td class="text-center border-end">
+                                                                                <span class="fw-bold">@p.TargetValue</span>
+                                                                                <small class="text-muted d-block">@p.UnitOfMeasure</small>
+                                                                                <i class="bi @(p.TrackingType == "MHB" ? "bi-graph-up-arrow text-success" : "bi-graph-down-arrow text-danger") ms-1" title="@(p.TrackingType == "MHB" ? "Más es Mejor" : "Menos es Mejor")"></i>
+                                                                            </td>
+                                                                            <td class="text-center border-end">
+                                                                                <span class="text-primary fw-bold">@p.ActualValue</span>
+                                                                            </td>
+                                                                            <td class="border-end">
+                                                                                @{
+                                                                                    int porcentaje = p.ProgressPercentage;
+                                                                                    string colorBarra = porcentaje >= 100 ? "bg-success" : (p.TrackingType == "MAB" ? "bg-danger" : (porcentaje >= 50 ? "bg-info" : "bg-warning"));
+                                                                                }
+                                                                                <div class="d-flex flex-column align-items-center w-100 px-2">
+                                                                                    <div class="progress w-100" style="height: 6px;">
+                                                                                        <div class="progress-bar @colorBarra" role="progressbar" style="width: @Math.Min(porcentaje, 100)%"></div>
+                                                                                    </div>
+                                                                                    <small class="text-muted mt-1" style="font-size: 0.7rem;">@porcentaje%</small>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="text-center border-end">
+                                                                                @if (p.FinalStatus == "Cumplió")
+                                                                                {
+                                                                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Cumplió</span>
+                                                                                }
+                                                                                else if (p.FinalStatus == "No Cumplió")
+                                                                                {
+                                                                                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> No Cumplió</span>
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    <span class="badge bg-light text-muted border">Pendiente</span>
+                                                                                }
+                                                                            </td>
+                                                                            <td class="text-center pe-3">
+                                                                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                                                                    @if (p.IsApproved)
+                                                                                    {
+                                                                                        <span class="badge bg-success" title="Aprobada"><i class="bi bi-check-circle-fill"></i></span>
+                                                                                    }
+                                                                                    else if (p.IsSubmitted)
+                                                                                    {
+                                                                                        <div class="d-flex flex-column align-items-center">
+                                                                                            <span class="badge bg-warning text-dark mb-1">En Revisión</span>
+                                                                                            <button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size: 0.7rem;" @onclick="() => ApprovePriority(p.Id)"><i class="bi bi-check-lg"></i> Aprobar</button>
+                                                                                        </div>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <span class="badge bg-secondary">Borrador</span>
+                                                                                    }
+
+                                                                                    <button class="btn btn-sm btn-link text-primary p-0 ms-1" @onclick="() => EditPriority(p)" title="Editar"><i class="bi bi-pencil-square fs-5"></i></button>
+                                                                                    <button class="btn btn-sm btn-link text-danger p-0 ms-1" @onclick="() => ConfirmarEliminarPrioridad(p.Id)" title="Eliminar"><i class="bi bi-trash fs-5"></i></button>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
+
+                        @if (activeTab == "touchpoints")
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                                <div><h5 class="fw-bold text-dark">Conversaciones @DateTime.Now.Year</h5></div>
+                            </div>
+                            
+                            @if (currentYearConfig == null)
+                            {
+                                <div class="alert alert-warning">No hay configuración de fechas.</div>
+                            }
+                            else
+                            {
+                                <div class="card border-0 shadow-sm">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="ps-4" style="width: 35%">Título de la Revisión</th>
+                                                    <th>Inicio</th>
+                                                    <th>Fin</th>
+                                                    <th class="text-center">Estado</th>
+                                                    <th class="text-center"># KPIs</th>
+                                                    <th class="text-center pe-4">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var revDate in currentYearConfig.RevisionDates.OrderBy(r => r.RevisionNumber))
+                                                {
+                                                    var existingTouchpoint = touchpointsList.FirstOrDefault(t => t.RevisionNumber == revDate.RevisionNumber);
+                                                    bool isPast = DateTime.Today > revDate.EndDate;
+                                                    bool isFuture = DateTime.Today < revDate.StartDate;
+                                                    bool isActive = !isPast && !isFuture;
+                                                    bool hasData = existingTouchpoint != null && existingTouchpoint.Items.Any();
+
+                                                    string statusBadge = isPast ? (hasData ? "bg-success" : "bg-secondary") : (isActive ? "bg-primary" : "bg-light text-muted border");
+                                                    string statusText = isPast ? (hasData ? "FINALIZADO" : "CERRADO / VACÍO") : (isActive ? "EN CURSO" : "PENDIENTE");
+                                                    int kpiCount = hasData ? existingTouchpoint.Items.Count : prioritiesList.Count(p => p.IsApproved && !p.IsArchived);
+
+                                                    <tr>
+                                                        <td class="ps-4"><span class="fw-bold text-dark">Revisión @revDate.RevisionNumber</span></td>
+                                                        <td class="text-muted">@revDate.StartDate.ToString("dd MMM")</td>
+                                                        <td class="text-muted">@revDate.EndDate.ToString("dd MMM")</td>
+                                                        <td class="text-center"><span class="badge @statusBadge rounded-pill px-3">@statusText</span></td>
+                                                        <td class="text-center fw-bold text-dark">@kpiCount</td>
+                                                        <td class="text-center pe-4">
+                                                            <div class="btn-group">
+                                                                <button class="btn btn-link text-muted p-1" @onclick="() => OpenTouchpointByRevision(revDate.RevisionNumber, true)"><i class="bi bi-eye fs-4"></i></button>
+                                                                @if (isActive) { <button class="btn btn-link text-primary p-1" @onclick="() => OpenTouchpointByRevision(revDate.RevisionNumber, false)"><i class="bi bi-play-circle-fill fs-4"></i></button> }
+                                                                else { <button class="btn btn-link text-muted p-1 opacity-25" disabled><i class="bi bi-play-circle-fill fs-4"></i></button> }
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        @if (activeTab == "report")
+                        {
+                            <div class="card text-center p-5 border-0 shadow-sm mt-4">
+                                <div class="card-body">
+                                    <i class="bi bi-file-earmark-pdf display-1 text-danger opacity-50"></i>
+                                    <h3 class="mt-4 fw-bold">Informe de Desempeño</h3>
+                                    <p class="text-muted fs-5">Genera un documento PDF consolidando todas las prioridades, touchpoints e insights del ciclo @DateTime.Now.Year.</p>
+
+                                    <button class="btn btn-lg btn-danger mt-4 px-5 shadow" @onclick="ImprimirReporte">
+                                        <i class="bi bi-download me-2"></i> Descargar Informe PDF
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (showPriorityModal)
+    {
+        <div class="modal d-block" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content shadow-lg border-0">
+
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            @(editingPriority.Id == 0 ? "Definir Nuevo KPI / Prioridad" : "Editar KPI / Prioridad")
+                        </h5>
+                        <button class="btn-close btn-close-white" @onclick="() => showPriorityModal = false"></button>
+                    </div>
+
+                    <div class="modal-body p-4 bg-light">
+
+                        <div class="card mb-3 border-0 shadow-sm">
+                            <div class="card-header bg-white fw-bold text-primary border-bottom-0">
+                                1. Objetivo Global (Alineación)
+                            </div>
+                            <div class="card-body pt-0">
+                                <select class="form-select border-start border-4 border-primary"
+                                        value="@selectedGoalIdModal"
+                                        @onchange="OnGoalChanged"
+                                        disabled="@(isRevisionExpired)">
+                                    <option value="">-- Selecciona un Objetivo --</option>
+                                    @foreach (var goal in globalGoalsList)
+                                    {
+                                        <option value="@goal.Id">@goal.Title</option>
+                                    }
+                                </select>
+
+                                @if (selectedGoalIdModal > 0)
+                                {
+                                    var selectedGoal = globalGoalsList.FirstOrDefault(g => g.Id == selectedGoalIdModal);
+                                    if (selectedGoal != null && !string.IsNullOrWhiteSpace(selectedGoal.Description))
+                                    {
+                                        <div class="mt-2 p-2 rounded shadow-sm border" style="background-color: #e0f2fe; border-color: #bae6fd;">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-info-circle-fill text-primary fs-6 me-2 mt-1"></i>
+                                                <div><p class="mb-0 text-dark small">@selectedGoal.Description</p></div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card mb-3 border-0 shadow-sm">
+                            <div class="card-header bg-white fw-bold text-info border-bottom-0">
+                                2. Indicador (KPI)
+                            </div>
+                            <div class="card-body pt-0">
+                                <select class="form-select border-start border-4 border-info"
+                                        @bind="editingPriority.IndicatorId"
+                                        disabled="@(isRevisionExpired || !availableIndicators.Any())">
+                                    <option value="">-- Selecciona un Indicador --</option>
+                                    @foreach (var ind in availableIndicators)
+                                    {
+                                        <option value="@ind.Id">@ind.Title</option>
+                                    }
+                                </select>
+
+                                @if (editingPriority.IndicatorId > 0)
+                                {
+                                    var selectedInd = availableIndicators.FirstOrDefault(i => i.Id == editingPriority.IndicatorId);
+                                    if (selectedInd != null && !string.IsNullOrWhiteSpace(selectedInd.Description))
+                                    {
+                                        <div class="mt-2 p-2 rounded shadow-sm border" style="background-color: #f0fdf4; border-color: #bbf7d0;">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-lightbulb-fill text-success fs-6 me-2 mt-1"></i>
+                                                <div><p class="mb-0 text-dark small">@selectedInd.Description</p></div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card mb-3 border-0 shadow-sm">
+                            <div class="card-header bg-white fw-bold text-dark border-bottom-0">
+                                3. Definición de la Tarea (Prioridad)
+                            </div>
+                            <div class="card-body pt-0">
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-bold small">Nombre de la Tarea</label>
+                                        <input class="form-control" @bind="editingPriority.Title" disabled="@(isRevisionExpired)" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Categoría</label>
+                                        <select class="form-select" @bind="editingPriority.Category" disabled="@(isRevisionExpired)">
+                                            <option value="">-- Seleccionar --</option>
+                                            <option>QHSE</option>
+                                            <option>Ventas</option>
+                                            <option>RH</option>
+                                            <option>Manufactura</option>
+                                            <option>D&D</option>
+                                            <option>Operaciones</option>
+                                            <option>Administración y Finanzas</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3 border-0 shadow-sm">
+                            <div class="card-header bg-white fw-bold text-success border-bottom-0">
+                                4. Métricas y Medición
+                            </div>
+                            <div class="card-body pt-0">
+                                <div class="mb-4 p-3 bg-light rounded border">
+                                    <label class="form-label fw-bold small text-muted mb-2">Comportamiento de la Métrica</label>
+                                    <div class="d-flex gap-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="trackingType" id="trackMHB" value="MHB" @onchange='() => editingPriority.TrackingType = "MHB"' checked="@(editingPriority.TrackingType == "MHB")">
+                                            <label class="form-check-label fw-bold text-dark" for="trackMHB">
+                                                <i class="bi bi-graph-up-arrow text-success me-1"></i> Más es Mejor
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="trackingType" id="trackMAB" value="MAB" @onchange='() => editingPriority.TrackingType = "MAB"' checked="@(editingPriority.TrackingType == "MAB")">
+                                            <label class="form-check-label fw-bold text-dark" for="trackMAB">
+                                                <i class="bi bi-graph-down-arrow text-danger me-1"></i> Menos es Mejor
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold text-success small">Meta (Target)</label>
+                                        <input type="number" class="form-control" @bind="editingPriority.TargetValue" disabled="@(editingPriority.UnitOfMeasure == "Cursos")" />
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Unidad</label>
+                                        <select class="form-select" @bind="editingPriority.UnitOfMeasure">
+                                            <option value="">-- Seleccionar --</option>
+                                            <option value="Unidades">Unidades</option>
+                                            <option value="%">Porcentaje (%)</option>
+                                            <option value="Tarjetas">Tarjetas</option>
+                                            <option value="Cursos">Cursos</option>
+                                            <option value="Horas">Horas</option>
+                                            <option value="Días">Días</option>
+                                            <option value="MXN">Pesos (MXN)</option>
+                                            <option value="USD">Dólares (USD)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold text-primary small">Logrado (Actual)</label>
+                                        <input type="number" class="form-control" @bind="editingPriority.ActualValue" disabled="@(editingPriority.UnitOfMeasure == "Cursos")" />
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <label class="small text-muted mb-1">Progreso Calculado</label>
+                                    <div class="progress" style="height: 25px;">
+                                        @{
+                                            int porcentajeModal = editingPriority.ProgressPercentage;
+                                            string colorModal = porcentajeModal >= 100 ? "bg-success" : (editingPriority.TrackingType == "MAB" ? "bg-danger" : (porcentajeModal >= 50 ? "bg-info" : "bg-warning"));
+                                        }
+                                        <div class="progress-bar @colorModal progress-bar-striped progress-bar-animated" role="progressbar" style="width: @(Math.Min(porcentajeModal, 100))%;">
+                                            @porcentajeModal%
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <label class="form-label small">Notas de Cierre / Cumplimiento</label>
+                                    <input class="form-control" @bind="editingPriority.Notes" />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer bg-white">
+                        <button class="btn btn-light border me-auto" @onclick="() => showPriorityModal = false">Cancelar</button>
+
+                        @if (editingPriority.IsApproved)
+                        {
+                            <button class="btn btn-primary px-4 shadow-sm" @onclick="SavePriority">
+                                <i class="bi bi-save me-2"></i> Guardar Cambios
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary px-4 shadow-sm" @onclick="SavePriority">
+                                <i class="bi bi-save me-2"></i> Guardar Borrador
+                            </button>
+                            <button class="btn btn-success ms-2 px-4 shadow-sm" @onclick="ApprovePriorityFromModal">
+                                <i class="bi bi-check-circle me-1"></i> Aprobar y Asignar
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showTouchpointModal)
+    {
+        <div class="modal d-block" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content shadow-lg border-0">
+
+                    <div class="modal-header bg-white border-bottom">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded p-2 me-3"><i class="bi bi-clipboard-data fs-4"></i></div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark">Evaluación de Desempeño</h5>
+                                <span class="badge bg-info text-dark">@editingTouchpoint.Type</span>
+                                <span class="text-muted small ms-2">@editingTouchpoint.Date.ToShortDateString()</span>
+                            </div>
+                        </div>
+                        <button class="btn-close" @onclick="() => showTouchpointModal = false"></button>
+                    </div>
+
+                    <div class="modal-body bg-light p-4">
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-uppercase text-muted small mb-3"><i class="bi bi-bullseye me-1"></i> Actualización de Objetivos (KPIs)</h6>
+
+                            @if (!touchpointItemsList.Any())
+                            {
+                                <div class="alert alert-warning border-0 shadow-sm">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    El empleado no tiene prioridades activas aprobadas para evaluar en esta sesión.
+                                </div>
+                            }
+                            else
+                            {
+                                var orphanItems = touchpointItemsList.Where(item =>
+                                {
+                                    var p = prioritiesList.FirstOrDefault(x => x.Id == item.PriorityId);
+                                    return p?.Indicator == null || p.Indicator.GlobalGoalId == 0;
+                                }).ToList();
+
+                                for (int i = 0; i < globalGoalsList.Count; i++)
+                                {
+                                    var goal = globalGoalsList[i];
+                                    var goalItems = touchpointItemsList.Where(item =>
+                                    {
+                                        var p = prioritiesList.FirstOrDefault(x => x.Id == item.PriorityId);
+                                        return p?.Indicator?.GlobalGoalId == goal.Id;
+                                    }).ToList();
+
+                                    if (goalItems.Any())
+                                    {
+                                        string colColor = colorPalette[i % colorPalette.Length];
+
+                                        <div class="mb-4">
+                                            <div class="p-2 px-3 mb-3 rounded text-white d-flex align-items-center shadow-sm" style="background-color: @colColor;">
+                                                <i class="bi bi-bullseye me-2"></i>
+                                                <h6 class="mb-0 fw-bold">@goal.Title</h6>
+                                            </div>
+
+                                            <div class="row g-3">
+                                                @foreach (var item in goalItems)
+                                                {
+                                                    var original = prioritiesList.FirstOrDefault(p => p.Id == item.PriorityId);
+                                                    if (original != null)
+                                                    {
+                                                        <div class="col-12">
+                                                            <div class="card border-0 shadow-sm hover-shadow transition">
+                                                                <div class="card-body p-4">
+                                                                    <div class="row align-items-center">
+                                                                        <div class="col-md-4 border-end">
+                                                                            <div class="fw-bold text-dark mb-1">@original.Title</div>
+                                                                            <div class="text-muted small text-truncate">@original.Description</div>
+                                                                            <div class="mt-2">
+                                                                                <span class="badge bg-light text-secondary border">Meta: @original.TargetValue @original.UnitOfMeasure</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-3 px-4">
+                                                                            <label class="form-label small fw-bold text-primary text-uppercase">Avance Real</label>
+                                                                            <div class="input-group">
+                                                                                <input type="number" class="form-control fw-bold text-primary"
+                                                                                       @bind="item.RegisteredValue"
+                                                                                       disabled="@(isRevisionExpired)" />
+                                                                                <span class="input-group-text bg-white text-muted">@original.UnitOfMeasure</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-5 ps-4 border-start">
+                                                                            <label class="form-label small fw-bold text-muted text-uppercase">Feedback / Observaciones</label>
+                                                                            <textarea class="form-control bg-light" rows="2"
+                                                                                      @bind="item.Feedback"
+                                                                                      placeholder="Escribe aquí tus observaciones sobre este resultado..."
+                                                                                      disabled="@(isRevisionExpired)"></textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        @if (currentYearConfig != null && editingTouchpoint.RevisionNumber == currentYearConfig.RevisionCount)
+                                                        {
+                                                            <div class="d-flex justify-content-end mt-2 mb-3">
+                                                                <div class="form-check form-switch form-check-reverse p-2 px-3 bg-white rounded border border-success border-opacity-25 shadow-sm">
+                                                                    <input class="form-check-input fs-5 m-0 ms-3 mt-1" type="checkbox"
+                                                                           @bind="item.GoalMet"
+                                                                           id="chkMet_@item.PriorityId"
+                                                                           disabled="@(isRevisionExpired)">
+                                                                    <label class="form-check-label fw-bold text-success pt-1" for="chkMet_@item.PriorityId">
+                                                                        <i class="bi bi-check-circle-fill me-1"></i> Objetivo Cumplido (Veredicto Final)
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+
+                                if (orphanItems.Any())
+                                {
+                                    <div class="mb-4">
+                                        <div class="p-2 px-3 mb-3 rounded text-white bg-secondary d-flex align-items-center shadow-sm">
+                                            <i class="bi bi-question-circle me-2"></i>
+                                            <h6 class="mb-0 fw-bold">Sin Objetivo Asignado</h6>
+                                        </div>
+
+                                        <div class="row g-3">
+                                            @foreach (var item in orphanItems)
+                                            {
+                                                var original = prioritiesList.FirstOrDefault(p => p.Id == item.PriorityId);
+                                                if (original != null)
+                                                {
+                                                    <div class="col-12">
+                                                        <div class="card border-0 shadow-sm hover-shadow transition">
+                                                            <div class="card-body p-4">
+                                                                <div class="row align-items-center">
+                                                                    <div class="col-md-4 border-end">
+                                                                        <div class="fw-bold text-dark mb-1">@original.Title</div>
+                                                                        <div class="text-muted small text-truncate">@original.Description</div>
+                                                                        <div class="mt-2">
+                                                                            <span class="badge bg-light text-secondary border">Meta: @original.TargetValue @original.UnitOfMeasure</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-3 px-4">
+                                                                        <label class="form-label small fw-bold text-primary text-uppercase">Avance Real</label>
+                                                                        <div class="input-group">
+                                                                            <input type="number" class="form-control fw-bold text-primary"
+                                                                                   @bind="item.RegisteredValue"
+                                                                                   disabled="@(isRevisionExpired)" />
+                                                                            <span class="input-group-text bg-white text-muted">@original.UnitOfMeasure</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-5 ps-4 border-start">
+                                                                        <label class="form-label small fw-bold text-muted text-uppercase">Feedback / Observaciones</label>
+                                                                        <textarea class="form-control bg-light" rows="2"
+                                                                                  @bind="item.Feedback"
+                                                                                  placeholder="Escribe aquí tus observaciones sobre este resultado..."
+                                                                                  disabled="@(isRevisionExpired)"></textarea>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    @if (currentYearConfig != null && editingTouchpoint.RevisionNumber == currentYearConfig.RevisionCount)
+                                                    {
+                                                        <div class="d-flex justify-content-end mt-2 mb-3">
+                                                            <div class="form-check form-switch form-check-reverse p-2 px-3 bg-white rounded border border-success border-opacity-25 shadow-sm">
+                                                                <input class="form-check-input fs-5 m-0 ms-3 mt-1" type="checkbox"
+                                                                       @bind="item.GoalMet"
+                                                                       id="chkMet_@item.PriorityId"
+                                                                       disabled="@(isRevisionExpired)">
+                                                                <label class="form-check-label fw-bold text-success pt-1" for="chkMet_@item.PriorityId">
+                                                                    <i class="bi bi-check-circle-fill me-1"></i> Objetivo Cumplido (Veredicto Final)
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <hr class="my-4 opacity-10" />
+
+                        <div class="row">
+                            <div class="col-12">
+                                <h6 class="fw-bold text-uppercase text-muted small mb-3"><i class="bi bi-chat-left-text me-1"></i> Conclusiones Generales</h6>
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body p-0">
+                                        <textarea class="form-control border-0 p-4" rows="4"
+                                                  @bind="editingTouchpoint.GeneralNotes"
+                                                  disabled="@(isRevisionExpired)"
+                                                  placeholder="Escribe aquí los acuerdos generales, temas de desarrollo, clima laboral o siguientes pasos..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer bg-white py-3 px-4">
+                        @if (isRevisionExpired)
+                        {
+                            <button class="btn btn-secondary px-4 w-100" @onclick="() => showTouchpointModal = false">Cerrar</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-light border me-auto" @onclick="() => showTouchpointModal = false">Cancelar</button>
+
+                            <button class="btn btn-primary px-5 shadow-sm" @onclick="SaveTouchpointOnly">
+                                <i class="bi bi-save me-2"></i> Guardar Avance
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showConfirmModal)
+    {
+        <div class="modal d-block" style="background: rgba(0,0,0,0.7); z-index: 2100;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold">Confirmar Aprobación</h5>
+                        <button class="btn-close" @onclick="() => showConfirmModal = false"></button>
+                    </div>
+                    <div class="modal-body text-center p-4">
+                        <div class="text-success display-1 mb-2"><i class="bi bi-check-circle"></i></div>
+                        <h5 class="fw-bold">Aprobar y Asignar Objetivo</h5>
+                        <p class="text-muted">
+                            Estás creando este objetivo directamente para <strong>@selectedEmpleado.Nombre</strong>.
+                            <br />Se guardará como <strong>Aprobado</strong> inmediatamente.
+                        </p>
+
+                        <div class="bg-light p-3 rounded text-start small mt-3">
+                            <div><strong>Título:</strong> @editingPriority.Title</div>
+                            <div><strong>Meta:</strong> @editingPriority.TargetValue @editingPriority.UnitOfMeasure</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center border-0 pt-0 pb-4">
+                        <button class="btn btn-light px-4" @onclick="() => showConfirmModal = false">Guardar borrador</button>
+                        <button class="btn btn-success px-5" @onclick="ConfirmSavePriority">Confirmar Aprobación</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    string[] pastelPaletteReport = new[]
+    {
+        "#e3f2fd", // Azul pastel suave
+        "#e8f5e9", // Verde pastel suave
+        "#fffde7", // Amarillo pastel suave
+        "#fff3e0", // Naranja pastel suave
+        "#f3e5f5", // Morado pastel suave
+        "#ffebee"  // Rojo pastel suave
+    };
+
+    int pastelIdx = 0; // Contador para iterar colores
+
+    <div id="ReporteEquipo-pdf">
+        <PlantillaReporte Titulo="@($"Informe de Desempeño - {selectedEmpleado?.Nombre} {selectedEmpleado?.ApellidoPaterno}")"
+                          EsHorizontal="true"
+                          Usuario="@nombreDeLogin">
+            <CabecerasTabla>
+                <th style="width: 20%; border: 1px solid #dee2e6;">Objetivo Global</th>
+                <th style="width: 20%; border: 1px solid #dee2e6;">Indicador</th>
+                <th style="width: 35%; border: 1px solid #dee2e6;">Tarea / Prioridad</th>
+                <th style="width: 10%; text-align:center; border: 1px solid #dee2e6;">Meta</th>
+                <th style="width: 7%; text-align:center; border: 1px solid #dee2e6;">Actual</th>
+                <th style="width: 8%; text-align:center; border: 1px solid #dee2e6;">Avance</th>
+            </CabecerasTabla>
+
+            <CuerpoTabla>
+                @if (globalGoalsList != null && prioritiesList != null)
+                {
+                    @foreach (var goal in globalGoalsList)
+                    {
+                        var goalPriorities = prioritiesList.Where(p => p.Indicator != null && p.Indicator.GlobalGoalId == goal.Id && !p.IsArchived).ToList();
+                        
+                        if (!goalPriorities.Any()) continue;
+
+                        int goalRowSpan = goalPriorities.Count;
+                        bool firstGoalRow = true;
+
+                        string pastelColor = pastelPaletteReport[pastelIdx % pastelPaletteReport.Length];
+                        pastelIdx++; // Incrementamos contador para el siguiente objetivo
+
+                        var indicatorsGroup = goalPriorities.GroupBy(p => p.Indicator).ToList();
+
+                        @foreach (var indGroup in indicatorsGroup)
+                        {
+                            var indPriorities = indGroup.ToList();
+                            int indRowSpan = indPriorities.Count;
+                            bool firstIndRow = true;
+
+                            @foreach (var p in indPriorities)
+                            {
+                                <tr style="background-color: @pastelColor;"> 
+                                    @if (firstGoalRow)
+                                    {
+                                        <td rowspan="@goalRowSpan" class="align-middle" style="background-color: @pastelColor; border: 1px solid #dee2e6; position: relative; z-index: 10; padding: 10px;">
+                                            <div class="fw-bold text-dark">@goal.Title</div>
+                                            <div class="small text-muted mt-1">@goal.Description</div>
+                                        </td>
+                                        firstGoalRow = false;
+                                    }
+                                    
+                                    @if (firstIndRow)
+                                    {
+                                        <td rowspan="@indRowSpan" class="align-middle fw-semibold text-primary" style="background-color: @pastelColor; border: 1px solid #dee2e6; position: relative; z-index: 10; padding: 10px;">
+                                            @(indGroup.Key?.Title ?? "Sin Indicador")
+                                        </td>
+                                        firstIndRow = false;
+                                    }
+                                    
+                                    <td class="align-middle fw-bold" style="border: 1px solid #dee2e6;">@p.Title</td>
+                                    <td class="align-middle text-center" style="border: 1px solid #dee2e6;">
+                                        <span class="fw-bold">@p.TargetValue</span><br>
+                                        <small class="text-muted">@p.UnitOfMeasure</small>
+                                    </td>
+                                    <td class="align-middle text-center" style="border: 1px solid #dee2e6;">
+                                        <span class="text-primary fw-bold">@p.ActualValue</span>
+                                    </td>
+                                    <td class="align-middle text-center" style="border: 1px solid #dee2e6;">
+                                        <div class="progress mt-1" style="height: 10px; background-color: rgba(255,255,255,0.5);">
+                                            <div class="progress-bar @(p.ProgressPercentage >= 100 ? "bg-success" : "bg-primary")" style="width: @Math.Min(p.ProgressPercentage, 100)%"></div>
+                                        </div>
+                                        <small class="text-muted mt-1 d-block" style="font-size: 10px;">@p.ProgressPercentage%</small>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+
+                    var orphanPriorities = prioritiesList.Where(p => (p.Indicator == null || p.Indicator.GlobalGoalId == 0) && !p.IsArchived).ToList();
+                    
+                    if (orphanPriorities.Any())
+                    {
+                        int orphanSpan = orphanPriorities.Count;
+                        bool firstOrphanRow = true;
+                        string orphanColor = "#f1f3f5"; // Gris muy claro para huérfanos
+
+                        @foreach (var p in orphanPriorities)
+                        {
+                            <tr style="background-color: @orphanColor;">
+                                @if (firstOrphanRow)
+                                {
+                                    <td rowspan="@orphanSpan" colspan="2" class="align-middle fw-bold text-muted text-center" style="background-color: @orphanColor; border: 1px solid #dee2e6; position: relative; z-index: 10;">
+                                        Tareas sin Objetivo Asignado
+                                    </td>
+                                    firstOrphanRow = false;
+                                }
+                                <td class="align-middle fw-bold" style="border: 1px solid #dee2e6;">@p.Title</td>
+                                <td class="align-middle text-center" style="border: 1px solid #dee2e6;">
+                                    <span class="fw-bold">@p.TargetValue</span><br>
+                                    <small class="text-muted">@p.UnitOfMeasure</small>
+                                </td>
+                                <td class="align-middle text-center" style="border: 1px solid #dee2e6;">
+                                    <span class="text-primary fw-bold">@p.ActualValue</span>
+                                </td>
+                                <td class="align-middle text-center" style="border: 1px solid #dee2e6;">
+                                    <div class="progress mt-1" style="height: 10px; background-color: rgba(255,255,255,0.5);">
+                                        <div class="progress-bar @(p.ProgressPercentage >= 100 ? "bg-success" : "bg-primary")" style="width: @Math.Min(p.ProgressPercentage, 100)%"></div>
+                                    </div>
+                                    <small class="text-muted mt-1 d-block" style="font-size: 10px;">@p.ProgressPercentage%</small>
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            </CuerpoTabla>
+        </PlantillaReporte>
+    </div>
+}
+
+
+
+@code {
+
+    // --- PALETA DE COLORES ---
+
+    private readonly string[] colorPalette = new[]
+
+    {
+
+        "#024A86", // Azul
+
+        "#02AC66", // Verde
+
+        "#23BAC4", // Turquesa
+
+        "#E36B2C", // Naranja
+
+        "#C82A54", // Guinda/Rosa oscuro
+
+        "#8C4966"  // Morado tenue/Marrón
+
+    };
+
+    // --- ESTADO COLAPSABLES (Indicadores) ---
+    private HashSet<int> expandedIndicators = new();
+
+    private void ToggleIndicator(int indicatorId)
+    {
+        if (expandedIndicators.Contains(indicatorId))
+        {
+            expandedIndicators.Remove(indicatorId);
+        }
+        else
+        {
+            expandedIndicators.Add(indicatorId);
+        }
+    }
+
+
+    // --- ESTADO GENERAL ---
+
+    private List<EmpleadoViewModel> subordinados = new();
+
+    private bool isLoadingList = true;
+
+    private int selectedEmpId = 0;
+
+    private EmpleadoViewModel? selectedEmpleado;
+
+    private string activeTab = "priorities";
+
+
+
+    // --- ESTADO PD (Priorities) ---
+
+    private List<PdPriority> prioritiesList = new();
+
+    private bool showArchivedPriorities = false;
+
+    private bool showPriorityModal = false;
+
+    private PdPriority editingPriority = new();
+
+
+
+    // --- ESTADO PD (Touchpoints) ---
+
+    private List<PdTouchpoint> touchpointsList = new();
+
+    private bool showTouchpointModal = false;
+
+    private PdTouchpoint editingTouchpoint = new();
+
+
+
+    // URL Foto para la cabecera (Header)
+
+    private string UrlFotoPerfil => $"/api/Archivo/{selectedEmpleado?.Id}/Foto";
+
+
+
+    private int selectedGoalIdModal = 0;
+
+    private List<PdIndicator> availableIndicators = new();
+
+
+
+    private List<PdGlobalGoal> globalGoalsList = new();
+
+
+
+    // Variable nueva para manejar los items temporales del modal
+
+    private List<PdTouchpointItem> touchpointItemsList = new();
+
+
+
+    private bool isRevisionExpired = false;
+
+    private string errorMessage = "";
+
+    private bool showSuccessPopup = false;
+
+    private bool showSuccessMessage = false;
+
+
+
+    private PdYearConfig? currentYearConfig;
+
+    private bool showConfirmModal = false;
+
+
+
+ private bool isPrinting = false;
+
+ private EmpleadoViewModel? empleadoActual;
+
+ private string nombreDeLogin = "Usuario";
+
+
+
+    private async Task NewTouchpoint()
+
+    {
+
+        touchpointItemsList = new List<PdTouchpointItem>();
+
+        editingTouchpoint = new PdTouchpoint();
+
+        isRevisionExpired = false;
+
+
+
+        var activeRevision = await PdService.GetActiveRevisionAsync();
+
+
+
+        if (activeRevision == null)
+
+        {
+
+            errorMessage = "⛔ ACCESO DENEGADO: No existe una etapa de revisión activa en este momento (Según calendario RH).";
+
+            showSuccessPopup = false;
+
+            StateHasChanged();
+
+            return;
+
+        }
+
+
+
+        int revNum = activeRevision.RevisionNumber;
+
+        var existing = await PdService.GetTouchpointWithDetailsAsync(selectedEmpId, revNum);
+
+
+
+        if (existing != null)
+
+        {
+
+            editingTouchpoint = existing;
+
+            touchpointItemsList = existing.Items.ToList();
+
+        }
+
+        else
+
+        {
+
+            int supervisorIdReal = 0;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+            var userId = authState.User.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+
+            if (!string.IsNullOrEmpty(userId)) supervisorIdReal = await EmpleadoService.GetEmpleadoIdByUserIdAsync(userId);
+
+
+
+            editingTouchpoint = new PdTouchpoint
+
+            {
+
+                EmpId = selectedEmpId,
+
+                RevisionNumber = revNum,
+
+                Date = DateTime.Now,
+
+                SupervisorId = supervisorIdReal,
+
+                IsApproved = false
+
+            };
+
+
+
+            foreach (var p in prioritiesList.Where(x => x.IsApproved && !x.IsArchived))
+
+            {
+
+                touchpointItemsList.Add(new PdTouchpointItem
+
+                {
+
+                    PriorityId = p.Id,
+
+                    RegisteredValue = p.ActualValue,
+
+                    Feedback = ""
+
+                });
+
+            }
+
+        }
+
+
+
+        showTouchpointModal = true;
+
+    }
+
+
+
+    private async Task EditTouchpoint(PdTouchpoint t)
+
+    {
+
+        var fullTouchpoint = await PdService.GetTouchpointWithDetailsAsync(t.EmpId, t.RevisionNumber);
+
+
+
+        if (fullTouchpoint != null)
+
+        {
+
+            editingTouchpoint = fullTouchpoint;
+
+            touchpointItemsList = fullTouchpoint.Items.ToList();
+
+
+
+            var configYear = await PdService.GetCurrentYearConfigAsync(t.Date.Year);
+
+            var revisionDate = configYear?.RevisionDates.FirstOrDefault(r => r.RevisionNumber == t.RevisionNumber);
+
+
+
+            if (revisionDate != null)
+
+            {
+
+                isRevisionExpired = DateTime.Today > revisionDate.EndDate.Date || revisionDate.IsLockedByRH;
+
+            }
+
+            else
+
+            {
+
+                isRevisionExpired = false;
+
+            }
+
+
+
+            showTouchpointModal = true;
+
+        }
+
+    }
+
+
+
+    private async Task SaveTouchpoint()
+
+    {
+
+        bool isFinal = currentYearConfig != null && editingTouchpoint.RevisionNumber == currentYearConfig.RevisionCount;
+
+        await PdService.SaveTouchpointFullAsync(editingTouchpoint, touchpointItemsList, isFinal);
+
+
+
+        showTouchpointModal = false;
+
+        await ReloadPriorities();
+
+        await ReloadTouchpoints();
+
+    }
+
+
+
+    private async Task ApprovePriority(int id)
+
+    {
+
+        await PdService.ApprovePriorityAsync(id, true);
+
+        await ReloadPriorities();
+
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        await CargarSubordinados();
+
+    }
+
+
+
+    private async Task CargarSubordinados()
+
+    {
+
+        isLoadingList = true;
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        var user = authState.User;
+
+
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+
+        {
+
+            nombreDeLogin = user.Identity.Name ?? "Usuario";
+
+        }
+
+
+
+        var userId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+
+
+
+        if (!string.IsNullOrEmpty(userId))
+
+        {
+
+            int miId = await EmpleadoService.GetEmpleadoIdByUserIdAsync(userId);
+
+            if (miId > 0)
+
+            {
+
+                empleadoActual = await EmpleadoService.GetEmpleadoByIdAsync(miId);
+
+
+
+                var listaRaw = await EmpleadoService.GetSubordinadosCompletosAsync(miId);
+
+                subordinados = listaRaw
+
+                                .OrderBy(e => e.ApellidoPaterno)
+
+                                .ThenBy(e => e.Nombre)
+
+                                .ToList();
+
+            }
+
+        }
+
+        isLoadingList = false;
+
+    }
+
+
+
+    private async Task ImprimirReporte()
+
+    {
+
+        isPrinting = true;
+
+        StateHasChanged();
+
+
+
+        await Task.Delay(300);
+
+
+
+        await JS.InvokeVoidAsync("descargarPDF", "ReporteEquipo-pdf", $"KPIs_{selectedEmpleado?.Nombre}.pdf", "landscape");
+
+
+
+        isPrinting = false;
+
+        StateHasChanged();
+
+    }
+
+
+
+    private async Task SelectEmpleado(int empId)
+
+    {
+
+        selectedEmpId = empId;
+
+        
+
+        // 1. Ejecutamos las consultas una por una en lugar de lanzarlas todas juntas
+
+        selectedEmpleado = await EmpleadoService.GetEmpleadoByIdAsync(empId);
+
+        currentYearConfig = await PdService.GetCurrentYearConfigAsync(DateTime.Now.Year);
+
+var rawGoals = await PdService.GetGlobalGoalsAsync(DateTime.Now.Year);
+globalGoalsList = rawGoals.OrderBy(g => g.Id).ToList();
+
+
+        activeTab = "priorities";
+
+        
+        // Reiniciamos el estado de los colapsables para el nuevo empleado
+        expandedIndicators.Clear();
+
+        // 2. Quitamos el Task.WhenAll y usamos await secuencial
+
+        await ReloadPriorities();
+
+        await ReloadTouchpoints();
+
+    }
+
+
+
+    private async Task OpenTouchpointByRevision(int revisionNumber, bool forceReadOnly)
+
+    {
+
+        touchpointItemsList = new List<PdTouchpointItem>();
+
+        editingTouchpoint = new PdTouchpoint();
+
+
+
+        var revisionConfig = currentYearConfig?.RevisionDates.FirstOrDefault(r => r.RevisionNumber == revisionNumber);
+
+
+
+        bool isDateExpired = revisionConfig != null && DateTime.Today > revisionConfig.EndDate;
+
+        bool isDateFuture = revisionConfig != null && DateTime.Today < revisionConfig.StartDate;
+
+
+
+        var existing = await PdService.GetTouchpointWithDetailsAsync(selectedEmpId, revisionNumber);
+
+
+
+        if (existing != null)
+
+        {
+
+            editingTouchpoint = existing;
+
+            touchpointItemsList = existing.Items.ToList();
+
+            isRevisionExpired = existing.IsApproved || isDateExpired;
+
+        }
+
+        else
+
+        {
+
+            if (isDateExpired)
+
+            {
+
+                isRevisionExpired = true;
+
+                errorMessage = "El periodo para esta revisión ha finalizado. No es posible iniciarla.";
+
+            }
+
+            else if (isDateFuture)
+
+            {
+
+                errorMessage = "Esta revisión aún no está disponible.";
+
+                showSuccessPopup = false;
+
+                return;
+
+            }
+
+            else
+
+            {
+
+                isRevisionExpired = false;
+
+            }
+
+
+
+            int supervisorIdReal = 0;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+            var userId = authState.User.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+
+            if (!string.IsNullOrEmpty(userId)) supervisorIdReal = await EmpleadoService.GetEmpleadoIdByUserIdAsync(userId);
+
+
+
+            editingTouchpoint = new PdTouchpoint
+
+            {
+
+                EmpId = selectedEmpId,
+
+                RevisionNumber = revisionNumber,
+
+                Date = DateTime.Now,
+
+                SupervisorId = supervisorIdReal,
+
+                IsApproved = false
+
+            };
+
+
+
+            foreach (var p in prioritiesList.Where(x => x.IsApproved && !x.IsArchived))
+
+            {
+
+                touchpointItemsList.Add(new PdTouchpointItem
+
+                    {
+
+                        PriorityId = p.Id,
+
+                        RegisteredValue = p.ActualValue,
+
+                        Feedback = ""
+
+                    });
+
+            }
+
+
+
+        }
+
+        if (forceReadOnly) isRevisionExpired = true;
+
+        showTouchpointModal = true;
+
+    }
+
+
+
+    private async Task ReloadPriorities()
+
+    {
+
+        if (selectedEmpId == 0) return;
+
+        prioritiesList = await PdService.GetPrioritiesAsync(selectedEmpId, DateTime.Now.Year, showArchivedPriorities);
+
+    }
+
+
+
+    private void NewPriority()
+
+    {
+
+        isRevisionExpired = false;
+
+        editingPriority = new PdPriority { EmpId = selectedEmpId, Year = DateTime.Now.Year };
+
+        showPriorityModal = true;
+
+    }
+
+
+
+    private async Task EditPriority(PdPriority p)
+
+    {
+
+        editingPriority = new PdPriority
+
+        {
+
+            Id = p.Id,
+
+            EmpId = p.EmpId,
+
+            Title = p.Title,
+
+            Description = p.Description,
+
+            Category = p.Category,
+
+            IndicatorId = p.IndicatorId,
+
+            TrackingType = p.TrackingType ?? "MHB",
+
+            TargetValue = p.TargetValue,
+
+            ActualValue = p.ActualValue,
+
+            UnitOfMeasure = p.UnitOfMeasure,
+
+            Notes = p.Notes,
+
+            Year = p.Year,
+
+            IsArchived = p.IsArchived,
+
+            IsSubmitted = p.IsSubmitted,
+
+            IsApproved = p.IsApproved,
+
+            ReadyForReview = p.ReadyForReview
+
+        };
+
+
+
+        if (p.Indicator != null)
+
+        {
+
+            selectedGoalIdModal = p.Indicator.GlobalGoalId;
+
+            availableIndicators = await PdService.GetIndicatorsByGoalAsync(selectedGoalIdModal);
+
+        }
+
+        else
+
+        {
+
+            selectedGoalIdModal = 0;
+
+            availableIndicators.Clear();
+
+        }
+
+
+
+        showPriorityModal = true;
+
+    }
+
+
+
+    private async Task SavePriority()
+
+    {
+
+         if (!ValidatePriorityData()) return;
+
+
+
+        await PdService.SavePriorityAsync(editingPriority);
+
+
+
+        showPriorityModal = false;
+
+        await ReloadPriorities();
+
+
+
+        showSuccessMessage = true;
+
+        StateHasChanged();
+
+        await Task.Delay(3000);
+
+        showSuccessMessage = false;
+
+        StateHasChanged();
+
+    }
+
+
+
+    private async Task ArchivePriority(int id)
+
+    {
+
+        await PdService.ToggleArchivePriorityAsync(id);
+
+        await ReloadPriorities();
+
+    }
+
+
+
+    private async Task ReloadTouchpoints()
+
+    {
+
+        if (selectedEmpId == 0) return;
+
+        touchpointsList = await PdService.GetTouchpointsAsync(selectedEmpId);
+
+    }
+
+
+
+    private async Task ApproveTouchpoint()
+
+    {
+
+        if (editingTouchpoint.Id == 0) await PdService.SaveTouchpointAsync(editingTouchpoint);
+
+
+
+        await PdService.ApproveTouchpointAsync(editingTouchpoint.Id);
+
+        showTouchpointModal = false;
+
+        await ReloadTouchpoints();
+
+    }
+
+
+
+    private async Task ToggleReady(int id, bool ready)
+
+    {
+
+        await PdService.TogglePriorityReadyAsync(id, ready);
+
+
+
+        var p = prioritiesList.FirstOrDefault(x => x.Id == id);
+
+        if (p != null) p.ReadyForReview = ready;
+
+    }
+
+
+
+    private async Task SaveTouchpointDataOnly()
+
+    {
+
+        bool isFinal = currentYearConfig != null && editingTouchpoint.RevisionNumber == currentYearConfig.RevisionCount;
+
+        await PdService.SaveTouchpointFullAsync(editingTouchpoint, touchpointItemsList, isFinal);
+
+        await ReloadPriorities();
+
+    }
+
+
+
+    private async Task FinalizeTouchpoint()
+
+    {
+
+        bool isFinal = currentYearConfig != null && editingTouchpoint.RevisionNumber == currentYearConfig.RevisionCount;
+
+
+
+        await PdService.SaveTouchpointFullAsync(editingTouchpoint, touchpointItemsList, isFinal);
+
+        await PdService.ApproveTouchpointAsync(editingTouchpoint.Id);
+
+
+
+        showTouchpointModal = false;
+
+        await ReloadPriorities();
+
+        await ReloadTouchpoints();
+
+
+
+        showSuccessPopup = true;
+
+        StateHasChanged();
+
+        await Task.Delay(2000);
+
+        showSuccessPopup = false;
+
+        StateHasChanged();
+
+    }
+
+
+
+    private async Task ApprovePriorityFromModal()
+
+    {
+
+        if (!ValidatePriorityData()) return;
+
+
+
+        editingPriority.IsApproved = true;
+
+        editingPriority.IsSubmitted = true;
+
+
+
+        await PdService.SavePriorityAsync(editingPriority);
+
+
+
+        showPriorityModal = false;
+
+        StateHasChanged();
+
+        await ReloadPriorities();
+
+
+
+        showSuccessMessage = true;
+
+        StateHasChanged();
+
+        await Task.Delay(3000);
+
+        showSuccessMessage = false;
+
+        StateHasChanged();
+
+    }
+
+
+
+    private bool isRevisionExpiredForBadge(PdTouchpoint t)
+
+    {
+
+        return t.Date < DateTime.Now.AddDays(-45);
+
+    }
+
+
+
+    private async Task ConfirmSavePriority()
+
+    {
+
+        editingPriority.IsApproved = true;
+
+        editingPriority.IsSubmitted = true;
+
+
+
+        await PdService.SavePriorityAsync(editingPriority);
+
+
+
+        showConfirmModal = false;
+
+        showPriorityModal = false;
+
+        await ReloadPriorities();
+
+    }
+
+
+
+    private async Task SaveTouchpointOnly()
+
+    {
+
+        bool isFinal = currentYearConfig != null && editingTouchpoint.RevisionNumber == currentYearConfig.RevisionCount;
+
+        await PdService.SaveTouchpointFullAsync(editingTouchpoint, touchpointItemsList, isFinal);
+
+
+
+        showSuccessPopup = true;
+
+        StateHasChanged(); 
+
+
+
+        await Task.Delay(1000); 
+
+        showSuccessPopup = false;
+
+        showTouchpointModal = false;
+
+
+
+        await ReloadPriorities();
+
+        await ReloadTouchpoints();
+
+    }
+
+
+
+    private async Task OnGoalChanged(ChangeEventArgs e)
+
+    {
+
+        if (int.TryParse(e.Value?.ToString(), out int goalId))
+
+        {
+
+            selectedGoalIdModal = goalId;
+
+            availableIndicators = await PdService.GetIndicatorsByGoalAsync(goalId);
+
+            editingPriority.IndicatorId = null;
+
+        }
+
+        else
+
+        {
+
+            availableIndicators.Clear();
+
+            editingPriority.IndicatorId = null;
+
+        }
+
+    }
+
+
+
+    private bool ValidatePriorityData()
+
+    {
+
+        errorMessage = "";
+
+
+
+        if (selectedGoalIdModal == 0)
+
+        {
+
+            errorMessage = "El Objetivo Global es obligatorio. Por favor selecciona uno.";
+
+            return false;
+
+        }
+
+        if (editingPriority.IndicatorId == null || editingPriority.IndicatorId == 0)
+
+        {
+
+            errorMessage = "El Indicador es obligatorio. Por favor selecciona uno.";
+
+            return false;
+
+        }
+
+        if (string.IsNullOrWhiteSpace(editingPriority.Title))
+
+        {
+
+            errorMessage = "El Nombre de la Prioridad no puede estar vacío.";
+
+            return false;
+
+        }
+
+        if (string.IsNullOrWhiteSpace(editingPriority.Category) || editingPriority.Category == "----------")
+
+        {
+
+            errorMessage = "Debe seleccionar una Categoría válida.";
+
+            return false;
+
+        }
+
+        if (string.IsNullOrWhiteSpace(editingPriority.UnitOfMeasure))
+
+        {
+
+            errorMessage = "Debe seleccionar una Unidad de medida.";
+
+            return false;
+
+        }
+
+
+
+        if (editingPriority.UnitOfMeasure != "Cursos")
+
+        {
+
+            if (editingPriority.TrackingType == "MHB" && editingPriority.TargetValue <= 0)
+
+            {
+
+                errorMessage = "Para métricas de 'Más es Mejor', la Meta (Target) debe ser mayor a 0.";
+
+                return false;
+
+            }
+
+            else if (editingPriority.TrackingType == "MAB" && editingPriority.TargetValue < 0)
+
+            {
+
+                errorMessage = "Para métricas de 'Menos es Mejor', la Meta no puede ser negativa.";
+
+                return false;
+
+            }
+
+        }
+
+
+
+        return true;
+
+    }
+
+    
+
+    private async Task ConfirmarEliminarPrioridad(int id)
+
+    {
+
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", "¿Estás seguro de que deseas eliminar permanentemente esta tarea/prioridad? Esta acción no se puede deshacer.");
+
+
+
+        if (confirmado)
+
+        {
+
+            await PdService.DeletePriorityAsync(id);
+
+
+
+            errorMessage = "";
+
+            showSuccessMessage = true;
+
+
+
+            await ReloadPriorities(); 
+
+            StateHasChanged();
+
+
+
+            await Task.Delay(3000);
+
+            showSuccessMessage = false;
+
+            StateHasChanged();
+
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+   
+
+
+
+    private string ObtenerNombreParaReporte()
+
+    {
+
+        if (empleadoActual != null && !string.IsNullOrWhiteSpace(empleadoActual.Nombre))
+
+        {
+
+            string primerNombre = empleadoActual.Nombre.Trim().Split(' ')[0];
+
+            return $"{primerNombre} {empleadoActual.ApellidoPaterno}";
+
+        }
+
+
+
+        return nombreDeLogin;
+
+    }
+
+}
+
+
+
+<style>
+
+       
+
+    .btn-custom{
+
+        padding: 0.5rem 1rem; 
+
+        font-size: 0.8rem; 
+
+    }
+    
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    .hover-bg-gray:hover {
+        background-color: #f1f3f5 !important;
+    }
+
+</style>
