@@ -1,0 +1,612 @@
+﻿@page "/nomina/visor-historico"
+@using RRHH_ARG.Models
+@using RRHH_ARG.Data
+@using System.Globalization
+@inject PayrollService PayrollService
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<div class="visor-erp-container w-100">
+    @* --- SECCIÓN SUPERIOR COMPACTA Y RESPONSIVE --- *@
+    <div class="erp-header-form p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button class="btn btn-sm btn-outline-secondary bg-white shadow-sm me-1 d-flex align-items-center justify-content-center"
+                    style="width: 28px; height: 26px; border-radius: 4px;"
+                    @onclick='() => Nav.NavigateTo("/finanzas/hub")' title="Volver">
+                <i class="bi bi-arrow-left text-dark"></i>
+            </button>
+
+            <div class="erp-field m-0">
+                <label>AÑO:</label>
+                <div class="erp-input-box shadow-sm" style="width: 70px;">
+                    <select @bind="selectedAnio" @bind:after="OnAnioChanged">
+                        @for (int i = DateTime.Now.Year - 1; i <= DateTime.Now.Year + 1; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="erp-field m-0">
+                <label>PERIODO:</label>
+                <div class="erp-input-box shadow-sm" style="width: 120px;">
+                    <select @bind="filtroPeriodo">
+                        <option value="">-- TODOS --</option>
+                        @foreach (var p in opcionesPeriodos)
+                        {
+                            if (p.EsGenerada)
+                            {
+                                <option value="@p.IdCombo" style="color: #198754; font-weight: bold; background-color: #f0fdf4;">✓ @p.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@p.IdCombo">@p.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="erp-field m-0">
+                <label>NOMBRE:</label>
+                <div class="erp-input-box shadow-sm" style="width: 190px;">
+                    @* Se eliminó el autocompletado en tiempo real para evitar el bug visual *@
+                    <input type="text" list="nombresList" @bind="filtroNombre" @onkeyup="VerificarEnter" placeholder="Buscar..." />
+                    <datalist id="nombresList">
+                        @foreach (var n in nombresEmpleados)
+                        {
+                            <option value="@n"></option>
+                        }
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="erp-field m-0">
+                <label>SUBSIDIARIA:</label>
+                <div class="erp-input-box shadow-sm" style="width: 110px;">
+                    <select @bind="filtroSubsidiaria">
+                        <option value=""></option>
+                        @foreach (var sub in subsidiarias)
+                        {
+                            <option value="@sub.SubNombre">@sub.SubNombre</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="erp-btn-primary shadow-sm" @onclick="BuscarNominas">
+                <i class="bi bi-search me-1"></i> CONSULTAR
+            </button>
+            <button class="erp-btn-secondary shadow-sm" @onclick="LimpiarFiltros">
+                <i class="bi bi-eraser me-1"></i> LIMPIAR
+            </button>
+            @* NUEVO BOTÓN DE REPORTE *@
+            <button class="erp-btn-secondary shadow-sm fw-bold border-secondary" @onclick="AbrirModalReporte" style="color: #253C60;">
+                <i class="bi bi-file-earmark-text me-1"></i> REPORTE
+            </button>
+        </div>
+    </div>
+
+    @* --- CUERPO: TABLAS CON SUMATORIAS --- *@
+    <div class="visor-body p-2 w-100">
+        @if (isBusy)
+        {
+            <div class="text-center py-5"><span class="spinner-border text-secondary"></span><p class="mt-2 small text-muted">Cargando histórico...</p></div>
+        }
+        else if (!registrosAgrupados.Any())
+        {
+            <div class="alert alert-secondary text-center py-2 shadow-sm border-0"><i class="bi bi-info-circle me-2"></i> No se encontraron resultados.</div>
+        }
+        else
+        {
+            @foreach (var grupo in registrosAgrupados)
+            {
+                var columnasDinamicas = grupo.SelectMany(r => r.Detalles)
+                .GroupBy(d => d.Concepto)
+                .Select(g => new { Concepto = g.Key, Tipo = g.First().Tipo })
+                .OrderBy(x => x.Tipo == "P" ? 0 : 1)
+                .ThenBy(x => x.Concepto)
+                .ToList();
+
+                <div class="periodo-seccion mb-3 shadow-sm w-100">
+                    <div class="periodo-header py-1 px-3 d-flex justify-content-between align-items-center">
+                        <div class="fw-bold">
+                            @if (vistaActualEsPorEmpleado)
+                            {
+                                <i class="bi bi-person-lines-fill text-primary me-2"></i>
+                                @grupo.Key
+                            }
+                            else
+                            {
+                                <i class="bi bi-calendar3 text-primary me-2"></i>
+                                @grupo.Key
+                            }
+                        </div>
+                        <span class="badge bg-dark opacity-50" style="font-size: 10px;">@grupo.Count() RECIBOS</span>
+                    </div>
+
+                    <div class="table-responsive w-100">
+                        <table class="erp-table text-nowrap w-100">
+                            <thead>
+                                <tr>
+                                    @* SI ES VISTA EMPLEADO EL HEADER ES PERIODO, SI NO, ES EMPLEADO *@
+                                    <th style="min-width: 220px; position: sticky; left: 0; z-index: 11; background-color: #e2e6ea; border-right: 2px solid #bbb;">
+                                        @(vistaActualEsPorEmpleado ? "PERIODO DE PAGO" : "EMPLEADO")
+                                    </th>
+                                    <th style="min-width: 120px;">SUBSIDIARIA</th>
+
+                                    @{
+                                        var sueldoCol = columnasDinamicas.FirstOrDefault(c => c.Concepto.ToUpper().Contains("SUELDO BASE"));
+                                    }
+                                    @if (sueldoCol != null)
+                                    {
+                                        <th class="text-end" style="min-width: 90px;">BASE QNAL</th>
+                                    }
+
+                                    <th class="text-end text-success" style="min-width: 100px; border-left: 1px solid #bbb;">T. PERCEP.</th>
+                                    <th class="text-end text-danger" style="min-width: 100px;">T. DEDUC.</th>
+                                    <th class="text-end text-danger" style="min-width: 90px;">DEUDA ANT.</th>
+                                    <th class="text-end text-dark" style="min-width: 110px; background-color: #d1d5db;">NETO PAGAR</th>
+                                    <th class="text-end text-primary" style="min-width: 100px;">PAGO APLIC.</th>
+                                    <th class="text-end text-danger" style="min-width: 100px; border-right: 1px solid #bbb;">ADEUDO</th>
+
+                                    @foreach (var col in columnasDinamicas.Where(c => !c.Concepto.ToUpper().Contains("SUELDO BASE")))
+                                    {
+                                        <th class="text-end" style="min-width: 90px; font-weight: normal; opacity: 0.8;">
+                                            @col.Concepto.ToUpper()
+                                        </th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in grupo)
+                                {
+                                    <tr>
+                                        @* SI ES VISTA EMPLEADO MOSTRAMOS EL PERIODO, SI NO, EL NOMBRE *@
+                                        <td class="fw-bold bg-white" style="position: sticky; left: 0; z-index: 5; border-right: 2px solid #bbb;">
+                                            @(vistaActualEsPorEmpleado? row.TituloAgrupador: row.Empleado)
+                                        </td>
+                                        <td class="text-muted small">@row.Subsidiaria</td>
+
+                                        @if (sueldoCol != null)
+                                        {
+                                            var d = row.Detalles.FirstOrDefault(x => x.Concepto == sueldoCol.Concepto);
+                                            <td class="text-end text-success">@(d != null ? d.Total.ToString("N2") : "-")</td>
+                                        }
+
+                                        <td class="text-end fw-bold text-success" style="background-color: #f8fbfb; border-left: 1px solid #ddd;">
+                                            <i class="bi bi-info-circle cursor-pointer text-muted me-1" @onclick="() => AbrirTooltip(row, PestañaTooltip.Percepciones)"></i>
+                                            @row.TotalPercepciones.ToString("N2")
+                                        </td>
+                                        <td class="text-end fw-bold text-danger" style="background-color: #fdf8f8;">
+                                            <i class="bi bi-info-circle cursor-pointer text-muted me-1" @onclick="() => AbrirTooltip(row, PestañaTooltip.Deducciones)"></i>
+                                            @row.TotalDeducciones.ToString("N2")
+                                        </td>
+                                        <td class="text-end fw-bold text-danger">@row.AdeudoAnterior.ToString("N2")</td>
+                                        <td class="text-end fw-bold bg-light">@row.Neto.ToString("N2")</td>
+                                        <td class="text-end fw-bold text-primary">@row.PagoAplicado.ToString("N2")</td>
+                                        <td class="text-end fw-bold text-danger" style="border-right: 1px solid #ddd;">@row.Adeudado.ToString("N2")</td>
+
+                                        @foreach (var col in columnasDinamicas.Where(c => !c.Concepto.ToUpper().Contains("SUELDO BASE")))
+                                        {
+                                            var d = row.Detalles.FirstOrDefault(x => x.Concepto == col.Concepto);
+                                            <td class="text-end small @(col.Tipo == "P" ? "text-success" : "text-danger")">
+                                                @(d != null ? d.Total.ToString("N2") : "-")
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                            @* --- PIE DE TABLA CON SUMATORIAS --- *@
+                            <tfoot style="background-color: #eee; border-top: 2px solid #999;">
+                                <tr class="fw-bold">
+                                    <td style="position: sticky; left: 0; z-index: 5; background-color: #eee; border-right: 2px solid #bbb;" class="text-end">
+                                        TOTAL @(vistaActualEsPorEmpleado ? "ACUMULADO" : "PERIODO"):
+                                    </td>
+                                    <td></td>
+                                    @if (sueldoCol != null)
+                                    {
+                                        <td class="text-end text-success">
+                                            @grupo.Sum(x => x.Detalles.FirstOrDefault(d => d.Concepto == sueldoCol.Concepto)?.Total ?? 0).ToString("N2")
+                                        </td>
+                                    }
+                                    <td class="text-end text-success border-left">@grupo.Sum(x => x.TotalPercepciones).ToString("C2")</td>
+                                    <td class="text-end text-danger">@grupo.Sum(x => x.TotalDeducciones).ToString("C2")</td>
+                                    <td class="text-end text-danger">@grupo.Sum(x => x.AdeudoAnterior).ToString("C2")</td>
+                                    <td class="text-end text-dark bg-light">@grupo.Sum(x => x.Neto).ToString("C2")</td>
+                                    <td class="text-end text-primary">@grupo.Sum(x => x.PagoAplicado).ToString("C2")</td>
+                                    <td class="text-end text-danger" style="border-right: 1px solid #bbb;">@grupo.Sum(x => x.Adeudado).ToString("C2")</td>
+
+                                    @foreach (var col in columnasDinamicas.Where(c => !c.Concepto.ToUpper().Contains("SUELDO BASE")))
+                                    {
+                                        <td class="text-end @(col.Tipo == "P" ? "text-success" : "text-danger")">
+                                            @grupo.Sum(x => x.Detalles.FirstOrDefault(d => d.Concepto == col.Concepto)?.Total ?? 0).ToString("N2")
+                                        </td>
+                                    }
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@* TOOLTIP / MODAL ESTILO GRIS *@
+@if (nominaEnTooltip != null)
+{
+    <div class="erp-modal-overlay" @onclick="CerrarTooltip">
+        <div class="erp-modal-content" @onclick:stopPropagation="true">
+            <div class="erp-modal-header @(pestañaActiva == PestañaTooltip.Percepciones ? "per" : "ded")">
+                <i class="bi bi-list-ul me-1"></i> DESGLOSE
+                <i class="bi bi-x-lg float-end cursor-pointer" @onclick="CerrarTooltip"></i>
+            </div>
+            <div class="erp-modal-body py-2 px-3">
+                <div class="text-center small border-bottom mb-2 pb-1">
+                    <strong>@nominaEnTooltip.Empleado</strong><br />
+                    <span class="text-muted">@nominaEnTooltip.TituloAgrupador</span>
+                </div>
+                <table class="w-100" style="font-size: 11px;">
+                    @foreach (var d in nominaEnTooltip.Detalles.Where(x => x.Tipo == (pestañaActiva == PestañaTooltip.Percepciones ? "P" : "D")))
+                    {
+                        <tr>
+                            <td class="text-muted">@d.Concepto</td>
+                            <td class="text-end fw-bold">@d.Total.ToString("N2")</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+            <div class="erp-modal-footer py-1 px-2 text-end fw-bold" style="font-size: 12px;">
+                TOTAL: @(pestañaActiva == PestañaTooltip.Percepciones ? nominaEnTooltip.TotalPercepciones.ToString("C2") : nominaEnTooltip.TotalDeducciones.ToString("C2"))
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================================================= *@
+@* MODAL DE GENERACIÓN DE REPORTES                           *@
+@* ========================================================= *@
+@if (showReportModal)
+{
+    <div class="erp-modal-overlay">
+        <div class="erp-modal-content" style="width: 380px;">
+            <div class="erp-modal-header" style="background-color: #253C60;">
+                <i class="bi bi-printer-fill me-2"></i> EXPORTAR REPORTE
+                <i class="bi bi-x-lg float-end cursor-pointer" @onclick="CerrarModalReporte"></i>
+            </div>
+            <div class="erp-modal-body bg-light p-3">
+                <div class="mb-3">
+                    <label class="fw-bold mb-1" style="font-size: 11px; color: #555;">FORMATO DE EXPORTACIÓN:</label>
+                    <select class="form-select form-select-sm shadow-sm" @bind="formatoReporte">
+                        <option value="EXCEL">📊 Microsoft Excel (.xlsx)</option>
+                        <option value="PDF">📄 Documento PDF (.pdf)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-bold mb-1" style="font-size: 11px; color: #555;">PERIODO:</label>
+                    <select class="form-select form-select-sm shadow-sm" @bind="reportePeriodo">
+                        <option value="">-- Todos los Periodos del Año --</option>
+                        @foreach (var p in opcionesPeriodos)
+                        {
+                            <option value="@p.IdCombo">@p.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-bold mb-1" style="font-size: 11px; color: #555;">EMPLEADO:</label>
+                    <select class="form-select form-select-sm shadow-sm" @bind="reporteEmpleado">
+                        <option value="">-- Todos los Empleados --</option>
+                        @foreach (var n in nombresEmpleados)
+                        {
+                            <option value="@n">@n</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="alert alert-info py-2 px-3 mb-0 shadow-sm border-0" style="font-size: 11px;">
+                    <i class="bi bi-info-circle-fill me-1"></i> El reporte mantendrá la estructura exacta de la sábana de nómina con todos los conceptos desglosados.
+                </div>
+            </div>
+            <div class="erp-modal-footer d-flex justify-content-end gap-2">
+                <button class="btn btn-sm btn-secondary fw-bold shadow-sm" @onclick="CerrarModalReporte">CANCELAR</button>
+                <button class="btn btn-sm btn-primary fw-bold shadow-sm" style="background-color: #253C60; border: none;" @onclick="EjecutarReporte" disabled="@isBusy">
+                    @if (isBusy)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    <i class="bi bi-download me-1"></i> GENERAR
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .visor-erp-container {
+        background-color: #d1d5db;
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        overflow-x: hidden;
+    }
+
+    .erp-header-form {
+        background-color: #e5e7eb;
+        border-bottom: 2px solid #9ca3af;
+    }
+
+    .erp-field {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+        .erp-field label {
+            font-size: 10px;
+            font-weight: bold;
+            color: #4b5563;
+            margin: 0;
+        }
+
+    .erp-input-box {
+        border: 1px solid #9ca3af;
+        background: white;
+        padding: 2px 5px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        border-radius: 2px;
+    }
+
+        .erp-input-box input, .erp-input-box select {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+    .erp-btn-primary {
+        background: #253C60;
+        border: 1px solid #1a2a44;
+        color: white;
+        padding: 3px 12px;
+        font-size: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+
+    .erp-btn-secondary {
+        background: #ffffff;
+        border: 1px solid #9ca3af;
+        color: #4b5563;
+        padding: 3px 12px;
+        font-size: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+
+    .periodo-header {
+        background-color: #4b5563;
+        color: white;
+        font-size: 11px;
+        border: 1px solid #333;
+    }
+
+    .erp-table {
+        border-collapse: collapse;
+        background: white;
+        border: 1px solid #9ca3af;
+        font-size: 11px;
+    }
+
+        .erp-table th {
+            background-color: #e5e7eb;
+            border: 1px solid #bbb;
+            padding: 5px 8px;
+            color: #333;
+        }
+
+        .erp-table td {
+            border: 1px solid #eee;
+            padding: 4px 8px;
+            vertical-align: middle;
+        }
+
+        .erp-table tr:hover td {
+            background-color: #f0f4f8;
+        }
+
+    .erp-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.3);
+        z-index: 2000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .erp-modal-content {
+        background: white;
+        border: 1px solid #444;
+        width: 280px;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .erp-modal-header {
+        padding: 5px 10px;
+        font-weight: bold;
+        font-size: 10px;
+        color: white;
+    }
+
+        .erp-modal-header.per {
+            background: #198754;
+        }
+
+        .erp-modal-header.ded {
+            background: #dc3545;
+        }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+</style>
+
+@code {
+    private int selectedAnio;
+    private string filtroPeriodo = "";
+    private string filtroNombre = "";
+    private string filtroSubsidiaria = "";
+    private bool isBusy = false;
+
+    // Estado del pivot dinámico (arregla el bug visual)
+    private bool vistaActualEsPorEmpleado = false;
+
+    private List<Subsidiarium> subsidiarias = new();
+    private List<VisorNominaDTO> registrosTodos = new();
+    private List<string> nombresEmpleados = new();
+
+    // Lista agrupada que la vista consume
+    private IEnumerable<IGrouping<string, VisorNominaDTO>> registrosAgrupados = new List<IGrouping<string, VisorNominaDTO>>();
+
+    private VisorNominaDTO nominaEnTooltip;
+    private enum PestañaTooltip { Percepciones, Deducciones }
+    private PestañaTooltip pestañaActiva;
+
+    // Variables para el Reporte
+    private bool showReportModal = false;
+    private string formatoReporte = "EXCEL";
+    private string reportePeriodo = "";
+    private string reporteEmpleado = "";
+
+    // Clase auxiliar para el combo de periodos
+    public class ComboPeriodo
+    {
+        public string IdCombo { get; set; }
+        public string Nombre { get; set; }
+        public bool EsGenerada { get; set; }
+    }
+    private List<ComboPeriodo> opcionesPeriodos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        selectedAnio = DateTime.Now.Year;
+        subsidiarias = await PayrollService.GetSubsidiariasAsync();
+
+        await ActualizarEstadoPeriodosAsync();
+        await BuscarNominas();
+        nombresEmpleados = registrosTodos.Select(r => r.Empleado).Distinct().OrderBy(n => n).ToList();
+    }
+
+    private async Task ActualizarEstadoPeriodosAsync()
+    {
+        opcionesPeriodos.Clear();
+        var periodosExistentes = await PayrollService.GetPeriodosGeneradosAsync(selectedAnio);
+
+        for (int i = 1; i <= 12; i++)
+        {
+            string nombreMes = new DateTime(2000, i, 1).ToString("MMMM", new CultureInfo("es-MX")).ToUpper();
+            int p1 = ((i - 1) * 2) + 1;
+            int p2 = ((i - 1) * 2) + 2;
+
+            opcionesPeriodos.Add(new ComboPeriodo { IdCombo = $"P{p1}", Nombre = $"{nombreMes} (P{p1})", EsGenerada = periodosExistentes.Contains($"P{p1}") });
+            opcionesPeriodos.Add(new ComboPeriodo { IdCombo = $"P{p2}", Nombre = $"{nombreMes} (P{p2})", EsGenerada = periodosExistentes.Contains($"P{p2}") });
+        }
+    }
+
+    private async Task OnAnioChanged()
+    {
+        await ActualizarEstadoPeriodosAsync();
+        await BuscarNominas();
+    }
+
+    private async Task VerificarEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await BuscarNominas();
+    }
+
+    private async Task BuscarNominas()
+    {
+        isBusy = true;
+        try
+        {
+            registrosTodos = await PayrollService.GetHistorialVisorAsync(filtroNombre, filtroSubsidiaria, selectedAnio, filtroPeriodo);
+
+            // LA MAGIA DEL PIVOT:
+            // Solo cambiamos la variable de estado cuando presionamos "Consultar"
+            if (!string.IsNullOrWhiteSpace(filtroNombre))
+            {
+                vistaActualEsPorEmpleado = true;
+                registrosAgrupados = registrosTodos.OrderByDescending(r => r.FechaInicio).GroupBy(x => x.Empleado);
+            }
+            else
+            {
+                vistaActualEsPorEmpleado = false;
+                registrosAgrupados = registrosTodos.OrderByDescending(r => r.FechaInicio).ThenBy(r => r.Empleado).GroupBy(x => x.TituloAgrupador);
+            }
+        }
+        finally { isBusy = false; }
+    }
+
+    private async Task LimpiarFiltros()
+    {
+        filtroNombre = "";
+        filtroSubsidiaria = "";
+        filtroPeriodo = "";
+        await BuscarNominas();
+    }
+    private void AbrirModalReporte()
+    {
+        // Hereda mágicamente las preferencias que el usuario ya tenía filtradas en la tabla
+        reportePeriodo = filtroPeriodo;
+        reporteEmpleado = filtroNombre;
+        formatoReporte = "EXCEL";
+        showReportModal = true;
+    }
+
+    private void CerrarModalReporte() => showReportModal = false;
+
+    private async Task EjecutarReporte()
+    {
+        isBusy = true;
+        try
+        {
+            if (formatoReporte == "EXCEL")
+            {
+                var fileBytes = await PayrollService.GenerarReporteExcelAsync(selectedAnio, reportePeriodo, reporteEmpleado);
+
+                // Volvemos a cambiar la extensión a .xlsx de forma nativa
+                var fileName = $"ReporteNomina_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                // Le enviamos el Content-Type oficial de las hojas de cálculo modernas de Microsoft
+                await JS.InvokeVoidAsync("descargarArchivoBase64", fileName, Convert.ToBase64String(fileBytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+            else if (formatoReporte == "PDF")
+            {
+                await JS.InvokeVoidAsync("alert", "Módulo en desarrollo.");
+            }
+
+            showReportModal = false;
+        }
+        finally { isBusy = false; }
+    }
+
+
+    private void AbrirTooltip(VisorNominaDTO fila, PestañaTooltip tab) { nominaEnTooltip = fila; pestañaActiva = tab; }
+    private void CerrarTooltip() => nominaEnTooltip = null;
+}

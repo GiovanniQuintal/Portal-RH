@@ -67,8 +67,13 @@ public partial class Empleado
     public decimal? SAE_MENSUAL { get; set; }
     public decimal? SAE_QUINCENAL { get; set; }
     public decimal? SAE_SDI { get; set; }
+    [Column("EMP_BANCO")]
+    public string? Banco { get; set; }
 
-   
+    [Column("EMP_CUENTA")]
+    public string? CuentaBancaria { get; set; }
+
+
     [Column("vac_tomadas_iniciales")]
     public int VacTomadasIniciales { get; set; } = 0;
 

@@ -1,6 +1,6 @@
 ﻿@page "/finanzas/hub"
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize(Roles = "RH, Admin")]
+@attribute [Authorize(Roles = "RH, Admin, FA")]
 
 <div class="hub-container p-4">
     <div class="mb-5 text-center">
@@ -8,99 +8,132 @@
         <p class="text-muted">Gestión de capital humano, proyecciones y pagos</p>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center max-w-1000 mx-auto">
+    <div class="max-w-1000 mx-auto">
 
-        <div class="col">
-            <a href="/nomina/dashboard" class="text-decoration-none">
-                <div class="card h-100 hub-card text-center border-0 shadow-sm">
-                    <div class="card-body p-5">
-                        <div class="icon-wrapper mb-3 text-gold">
-                            <i class="bi bi-cash-coin" style="font-size: 3.5rem;"></i>
+        <div class="mb-5">
+            <h4 class="section-title fw-bold">Nóminas</h4>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-start">
+
+                <div class="col">
+                    <a href="/nomina/dashboard" class="text-decoration-none">
+                        <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                            <div class="card-body p-5">
+                                <div class="icon-wrapper mb-3 text-gold">
+                                    <i class="bi bi-cash-coin" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title fw-bold text-dark">Pre-Nómina</h5>
+                                <hr class="hub-divider mx-auto my-3" />
+                                <p class="card-text text-muted small">Generación de recibos y cálculo de nómina quincenal.</p>
+                            </div>
                         </div>
-                        <h5 class="card-title fw-bold text-dark">Pre-Nómina</h5>
-                        <hr class="hub-divider mx-auto my-3" />
-                        <p class="card-text text-muted small">Generación de recibos y cálculo de nómina quincenal.</p>
-                    </div>
+                    </a>
                 </div>
-            </a>
+
+                <div class="col">
+                    <a href="/nomina/visor-historico" class="text-decoration-none">
+                        <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                            <div class="card-body p-5">
+                                <div class="icon-wrapper mb-3 text-gold">
+                                    <i class="bi bi-clock-history" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title fw-bold text-dark">Repositorio Pre-Nóminas</h5>
+                                <hr class="hub-divider mx-auto my-3" />
+                                <p class="card-text text-muted small">Consulta, búsqueda y filtro de nóminas cerradas con desglose detallado.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col">
+                    <a href="/finanzas/proyeccion-nomina" class="text-decoration-none">
+                        <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                            <div class="card-body p-5">
+                                <div class="icon-wrapper mb-3 text-gold">
+                                    <i class="bi bi-graph-up-arrow" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title fw-bold text-dark">Proyección de Nóminas</h5>
+                                <hr class="hub-divider mx-auto my-3" />
+                                <p class="card-text text-muted small">Simulación financiera del gasto de nómina y beneficios hasta fin de año.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+            </div>
         </div>
 
-        @* ======================================================== *@
-        @* NUEVA TARJETA: PROYECCIÓN ANUAL DE NÓMINA                *@
-        @* ======================================================== *@
-        <div class="col">
-            <a href="/finanzas/proyeccion-nomina" class="text-decoration-none">
-                <div class="card h-100 hub-card text-center border-0 shadow-sm">
-                    <div class="card-body p-5">
-                        <div class="icon-wrapper mb-3 text-gold">
-                            <i class="bi bi-graph-up-arrow" style="font-size: 3.5rem;"></i>
+        <div class="mb-5">
+            <h4 class="section-title fw-bold">Vacaciones</h4>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-start">
+
+                <div class="col">
+                    <a href="/finanzas/vacaciones" class="text-decoration-none">
+                        <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                            <div class="card-body p-5">
+                                <div class="icon-wrapper mb-3 text-gold">
+                                    <i class="bi bi-calendar-check" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title fw-bold text-dark">Solicitud de Vacaciones</h5>
+                                <hr class="hub-divider mx-auto my-3" />
+                                <p class="card-text text-muted small">Captura de días netos y prima vacacional.</p>
+                            </div>
                         </div>
-                        <h5 class="card-title fw-bold text-dark">Proyección de Nómina</h5>
-                        <hr class="hub-divider mx-auto my-3" />
-                        <p class="card-text text-muted small">Simulación financiera del gasto de nómina y beneficios hasta fin de año.</p>
-                    </div>
+                    </a>
                 </div>
-            </a>
+
+                <div class="col">
+                    <a href="/finanzas/kardex-vacaciones" class="text-decoration-none">
+                        <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                            <div class="card-body p-5">
+                                <div class="icon-wrapper mb-3 text-gold">
+                                    <i class="bi bi-journal-bookmark-fill" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title fw-bold text-dark">Kardex de Vacaciones</h5>
+                                <hr class="hub-divider mx-auto my-3" />
+                                <p class="card-text text-muted small">Control de saldos anuales y derechos por empleado.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+            </div>
         </div>
 
-        <div class="col">
-            <a href="/finanzas/vacaciones" class="text-decoration-none">
-                <div class="card h-100 hub-card text-center border-0 shadow-sm">
-                    <div class="card-body p-5">
-                        <div class="icon-wrapper mb-3 text-gold">
-                            <i class="bi bi-calendar-check" style="font-size: 3.5rem;"></i>
-                        </div>
-                        <h5 class="card-title fw-bold text-dark">Solicitud de Vacaciones</h5>
-                        <hr class="hub-divider mx-auto my-3" />
-                        <p class="card-text text-muted small">Captura de días netos y prima vacacional.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
+        <div class="mb-4">
+            <h4 class="section-title fw-bold">Indemnizaciones</h4>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-start">
 
-        <div class="col">
-            <a href="/finanzas/kardex-vacaciones" class="text-decoration-none">
-                <div class="card h-100 hub-card text-center border-0 shadow-sm">
-                    <div class="card-body p-5">
-                        <div class="icon-wrapper mb-3 text-gold">
-                            <i class="bi bi-journal-bookmark-fill" style="font-size: 3.5rem;"></i>
+                <div class="col">
+                    <a href="/finanzas/pasivo-laboral" class="text-decoration-none">
+                        <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                            <div class="card-body p-5">
+                                <div class="icon-wrapper mb-3 text-gold">
+                                    <i class="bi bi-calculator-fill" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title fw-bold text-dark">Calculadora de Indemnizaciones</h5>
+                                <hr class="hub-divider mx-auto my-3" />
+                                <p class="card-text text-muted small">Calculadora financiera de liquidaciones y finiquitos.</p>
+                            </div>
                         </div>
-                        <h5 class="card-title fw-bold text-dark">Kardex de Vacaciones</h5>
-                        <hr class="hub-divider mx-auto my-3" />
-                        <p class="card-text text-muted small">Control de saldos anuales y derechos por empleado.</p>
-                    </div>
+                    </a>
                 </div>
-            </a>
-        </div>
 
-        <div class="col">
-            <a href="/finanzas/pasivo-laboral" class="text-decoration-none">
-                <div class="card h-100 hub-card text-center border-0 shadow-sm">
-                    <div class="card-body p-5">
-                        <div class="icon-wrapper mb-3 text-gold">
-                            <i class="bi bi-calculator-fill" style="font-size: 3.5rem;"></i>
+                <div class="col">
+                    <a href="/finanzas/proyeccion-pasivos" class="text-decoration-none">
+                        <div class="card h-100 hub-card text-center border-0 shadow-sm">
+                            <div class="card-body p-5">
+                                <div class="icon-wrapper mb-3 text-gold">
+                                    <i class="bi bi-calendar2-x" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <h5 class="card-title fw-bold text-dark">Proyección global de Indemnizaciones</h5>
+                                <hr class="hub-divider mx-auto my-3" />
+                                <p class="card-text text-muted small">Proyección de liquidaciones y finiquitos.</p>
+                            </div>
                         </div>
-                        <h5 class="card-title fw-bold text-dark">Calculadora de prestaciones laborales</h5>
-                        <hr class="hub-divider mx-auto my-3" />
-                        <p class="card-text text-muted small">Calculadora financiera de liquidaciones y finiquitos.</p>
-                    </div>
+                    </a>
                 </div>
-            </a>
-        </div>
 
-        <div class="col">
-            <a href="/finanzas/proyeccion-pasivos" class="text-decoration-none">
-                <div class="card h-100 hub-card text-center border-0 shadow-sm">
-                    <div class="card-body p-5">
-                        <div class="icon-wrapper mb-3 text-gold">
-                            <i class="bi bi-calendar2-x" style="font-size: 3.5rem;"></i>
-                        </div>
-                        <h5 class="card-title fw-bold text-dark">Proyección Pasivo Laboral</h5>
-                        <hr class="hub-divider mx-auto my-3" />
-                        <p class="card-text text-muted small">Proyección financiera de liquidaciones y finiquitos.</p>
-                    </div>
-                </div>
-            </a>
+            </div>
         </div>
 
     </div>
@@ -118,6 +151,15 @@
 
     .text-gold {
         color: #b8974a;
+    }
+
+    /* Nuevo estilo para los títulos de sección */
+    .section-title {
+        color: #253C60;
+        border-bottom: 3px solid #b8974a;
+        display: inline-block;
+        padding-bottom: 5px;
+        margin-bottom: 1rem;
     }
 
     .hub-card {

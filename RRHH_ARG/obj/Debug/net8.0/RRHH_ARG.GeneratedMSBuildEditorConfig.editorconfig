@@ -1,7 +1,5 @@
 is_global = true
 build_property.TargetFramework = net8.0
-build_property.TargetFrameworkIdentifier = .NETCoreApp
-build_property.TargetFrameworkVersion = v8.0
 build_property.TargetPlatformMinVersion = 
 build_property.UsingMicrosoftNETSdkWeb = true
 build_property.ProjectTypeGuids = 
@@ -11,369 +9,373 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = RRHH_ARG
 build_property.RootNamespace = RRHH_ARG
-build_property.ProjectDir = C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\
+build_property.ProjectDir = G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG
+build_property.MSBuildProjectDirectory = G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 8.0
 build_property.EnableCodeStyleSeverity = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/AccessDenied.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/AccessDenied.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXEFjY2Vzc0RlbmllZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ConfirmEmail.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ConfirmEmail.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXENvbmZpcm1FbWFpbC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ConfirmEmailChange.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ConfirmEmailChange.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXENvbmZpcm1FbWFpbENoYW5nZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ExternalLogin.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ExternalLogin.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXEV4dGVybmFsTG9naW4ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ForgotPassword.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ForgotPassword.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXEZvcmdvdFBhc3N3b3JkLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ForgotPasswordConfirmation.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ForgotPasswordConfirmation.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXEZvcmdvdFBhc3N3b3JkQ29uZmlybWF0aW9uLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/InvalidPasswordReset.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/InvalidPasswordReset.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXEludmFsaWRQYXNzd29yZFJlc2V0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/InvalidUser.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/InvalidUser.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXEludmFsaWRVc2VyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Lockout.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Lockout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXExvY2tvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/LoginWith2fa.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/LoginWith2fa.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXExvZ2luV2l0aDJmYS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/LoginWithRecoveryCode.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/LoginWithRecoveryCode.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXExvZ2luV2l0aFJlY292ZXJ5Q29kZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/ChangePassword.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/ChangePassword.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxDaGFuZ2VQYXNzd29yZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/DeletePersonalData.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/DeletePersonalData.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxEZWxldGVQZXJzb25hbERhdGEucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/Disable2fa.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/Disable2fa.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxEaXNhYmxlMmZhLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/Email.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/Email.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxFbWFpbC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/EnableAuthenticator.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/EnableAuthenticator.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxFbmFibGVBdXRoZW50aWNhdG9yLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/ExternalLogins.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/ExternalLogins.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxFeHRlcm5hbExvZ2lucy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/GenerateRecoveryCodes.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/GenerateRecoveryCodes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxHZW5lcmF0ZVJlY292ZXJ5Q29kZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/Index.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxJbmRleC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/PersonalData.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/PersonalData.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxQZXJzb25hbERhdGEucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/ResetAuthenticator.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/ResetAuthenticator.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxSZXNldEF1dGhlbnRpY2F0b3IucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/SetPassword.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/SetPassword.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxTZXRQYXNzd29yZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/TwoFactorAuthentication.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/TwoFactorAuthentication.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxUd29GYWN0b3JBdXRoZW50aWNhdGlvbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/_Imports.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Manage/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXE1hbmFnZVxfSW1wb3J0cy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ProyeccionNomina.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ProyeccionNomina.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXFByb3llY2Npb25Ob21pbmEucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Register.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Register.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXFJlZ2lzdGVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/RegisterConfirmation.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/RegisterConfirmation.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXFJlZ2lzdGVyQ29uZmlybWF0aW9uLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ResendEmailConfirmation.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ResendEmailConfirmation.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXFJlc2VuZEVtYWlsQ29uZmlybWF0aW9uLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ResetPassword.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ResetPassword.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXFJlc2V0UGFzc3dvcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ResetPasswordConfirmation.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/ResetPasswordConfirmation.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXFJlc2V0UGFzc3dvcmRDb25maXJtYXRpb24ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/_Imports.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXF9JbXBvcnRzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Shared/AccountLayout.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Shared/AccountLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFNoYXJlZFxBY2NvdW50TGF5b3V0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Shared/ExternalLoginPicker.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Shared/ExternalLoginPicker.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFNoYXJlZFxFeHRlcm5hbExvZ2luUGlja2VyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Shared/ManageLayout.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Shared/ManageLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFNoYXJlZFxNYW5hZ2VMYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Shared/ManageNavMenu.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Shared/ManageNavMenu.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFNoYXJlZFxNYW5hZ2VOYXZNZW51LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Shared/RedirectToLogin.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Shared/RedirectToLogin.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFNoYXJlZFxSZWRpcmVjdFRvTG9naW4ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Shared/ShowRecoveryCodes.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Shared/ShowRecoveryCodes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFNoYXJlZFxTaG93UmVjb3ZlcnlDb2Rlcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Shared/StatusMessage.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Shared/StatusMessage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFNoYXJlZFxTdGF0dXNNZXNzYWdlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/App.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/App.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Layout/LoginLayout.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Layout/LoginLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcTG9naW5MYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Account/GestionRoles.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Account/GestionRoles.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBY2NvdW50XEdlc3Rpb25Sb2xlcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/AdminPD.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/AdminPD.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBZG1pblBELnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/AdminPrioridades.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/AdminPrioridades.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBZG1pblByaW9yaWRhZGVzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/AsignarSupervisores.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/AsignarSupervisores.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBc2lnbmFyU3VwZXJ2aXNvcmVzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Auth.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Auth.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBdXRoLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Cursos.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Cursos.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDdXJzb3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Error.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xFcnJvci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Expedientes.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Expedientes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xFeHBlZGllbnRlcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/FinanzasHub.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/FinanzasHub.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xGaW5hbnphc0h1Yi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/ForceChangePassword.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/ForceChangePassword.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xGb3JjZUNoYW5nZVBhc3N3b3JkLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/GestionDocumentos.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/GestionDocumentos.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xHZXN0aW9uRG9jdW1lbnRvcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/GestionUsuarios.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/GestionUsuarios.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xHZXN0aW9uVXN1YXJpb3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/GestiónAreas.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/GestiónAreas.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xHZXN0acOzbkFyZWFzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Home.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Inicio.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Inicio.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xJbmljaW8ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/KardexVacaciones.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/KardexVacaciones.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xLYXJkZXhWYWNhY2lvbmVzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/MiEpp.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/MiEpp.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xNaUVwcC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/MiExpediente.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/MiExpediente.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xNaUV4cGVkaWVudGUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/MiPuesto.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/MiPuesto.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xNaVB1ZXN0by5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/MisObjetivos.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/MisObjetivos.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xNaXNPYmpldGl2b3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/MisTarjetasQhse.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/MisTarjetasQhse.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xNaXNUYXJqZXRhc1Foc2UucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/PanelEpp.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/PanelEpp.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQYW5lbEVwcC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/PasivoLaboral.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/PasivoLaboral.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQYXNpdm9MYWJvcmFsLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/PayrollDashboard.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/PayrollDashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQYXlyb2xsRGFzaGJvYXJkLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/ProyeccionPasivos.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/PayrollViewer.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQYXlyb2xsVmlld2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/ProyeccionPasivos.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQcm95ZWNjaW9uUGFzaXZvcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/QhseDashboard.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/QhseDashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xRaHNlRGFzaGJvYXJkLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/QhseForm.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/QhseForm.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xRaHNlRm9ybS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Reports/PlantillaReporte.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Reports/PlantillaReporte.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xSZXBvcnRzXFBsYW50aWxsYVJlcG9ydGUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Shared/LoginLayout.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Shared/LoginLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTaGFyZWRcTG9naW5MYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Shared/NewEventDialog.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Shared/NewEventDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTaGFyZWRcTmV3RXZlbnREaWFsb2cucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Subordinados.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Subordinados.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTdWJvcmRpbmFkb3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/VacacionesForm.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/VacacionesForm.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xWYWNhY2lvbmVzRm9ybS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/VerIncidenciaModal.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/VerIncidenciaModal.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xWZXJJbmNpZGVuY2lhTW9kYWwucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/VerOrganigrama.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/VerOrganigrama.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xWZXJPcmdhbmlncmFtYS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Weather.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Weather.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xXZWF0aGVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Routes.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Routes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSb3V0ZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/_Imports.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xfSW1wb3J0cy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Login.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Account/Pages/Login.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBY2NvdW50XFBhZ2VzXExvZ2luLnJhem9y
 build_metadata.AdditionalFiles.CssScope = b-qprah335yh
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Layout/MainLayout.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Layout/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcTWFpbkxheW91dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-usbz0gkw46
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Layout/NavMenu.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Layout/NavMenu.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcTmF2TWVudS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-53v4oihvtj
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/CardWidget.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/CardWidget.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDYXJkV2lkZ2V0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = b-6sixeee0xp
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/EditarEmpleado.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/EditarEmpleado.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xFZGl0YXJFbXBsZWFkby5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-bkf01bzkt1
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Empleados.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Empleados.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xFbXBsZWFkb3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-9w6nqow5fk
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Incidencias.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Incidencias.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xJbmNpZGVuY2lhcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-df7cc06e04
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Reclutamiento.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Reclutamiento.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xSZWNsdXRhbWllbnRvLnJhem9y
 build_metadata.AdditionalFiles.CssScope = b-p3vi8h6xk3
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/RegistroAplicantes.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/RegistroAplicantes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xSZWdpc3Ryb0FwbGljYW50ZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-1njpz5gid4
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Shared/InputArchivo.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Shared/InputArchivo.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTaGFyZWRcSW5wdXRBcmNoaXZvLnJhem9y
 build_metadata.AdditionalFiles.CssScope = b-29eq7xa79q
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Shared/RegistroIncidenciaModal.razor]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Shared/RegistroIncidenciaModal.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTaGFyZWRcUmVnaXN0cm9JbmNpZGVuY2lhTW9kYWwucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-n9kttmjm7h
 
-[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/Account/Roles.cshtml]
+[G:/Descargas/test RRHH/Final/RRHH_ARG/RRHH_ARG/Components/Pages/Account/Roles.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBY2NvdW50XFJvbGVzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

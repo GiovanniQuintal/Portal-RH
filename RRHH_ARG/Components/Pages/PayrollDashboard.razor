@@ -7,6 +7,8 @@
 @inject IJSRuntime JS
 @inject NavigationManager Nav
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "RH, Admin, FA")]
 
 <div class="payroll-container p-3">
     <div class="top-panel mb-3 d-flex justify-content-between align-items-center">
@@ -36,8 +38,7 @@
                     <select class="form-select form-select-sm" style="min-width: 180px;" @onchange="OnPeriodoChanged">
                         @foreach (var p in opcionesPeriodos)
                         {
-                            @* APLICAMOS ESTILO VISUAL SI LA SÁBANA YA EXISTE *@
-                            if (p.EsGenerada)
+                            @if (p.EsGenerada)
                             {
                                 <option value="@p.IdCombo" selected="@(p.Mes == selectedMes && p.Quincena == selectedQuincena)" style="color: #198754; font-weight: bold; background-color: #f0fdf4;">
                                     ✓ @p.Nombre
@@ -53,7 +54,6 @@
                     </select>
                 </div>
 
-                @* BOTONES AGRUPADOS A LA IZQUIERDA *@
                 <div class="col-auto d-flex gap-2">
                     <button class="btn btn-sm btn-primary px-4 fw-bold shadow-sm" @onclick="CargarNomina" disabled="@isBusy">
                         @if (isBusy)
@@ -71,7 +71,6 @@
         </div>
     </div>
 
-    @* TÍTULO DINÁMICO Y CANDADO DE SEGURIDAD *@
     <div class="d-flex justify-content-between align-items-center mb-2 px-1">
         <h5 class="m-0 fw-bold text-secondary">
             <span class="text-dark">P@(((selectedMes - 1) * 2) + selectedQuincena) @GetNombreMes(selectedMes) @selectedAnio</span>
@@ -80,8 +79,6 @@
         @if (periodoActual != null)
         {
             <div class="d-flex gap-2 align-items-center">
-
-                @* NUEVO: BOTÓN ELIMINAR SÁBANA (Solo si no está bloqueada) *@
                 @if (!isLocked)
                 {
                     <button class="btn btn-outline-danger shadow-sm d-flex justify-content-center align-items-center p-0"
@@ -92,7 +89,6 @@
                     </button>
                 }
 
-                @* BOTÓN RESTAURAR EMPLEADO *@
                 @if (matrizNomina != null && !isLocked)
                 {
                     <button class="btn btn-warning shadow-sm d-flex justify-content-center align-items-center p-0"
@@ -103,7 +99,6 @@
                     </button>
                 }
 
-                @* BOTÓN CANDADO *@
                 <button class="btn @(isLocked ? "btn-danger" : "btn-success") shadow-sm d-flex justify-content-center align-items-center p-0"
                         style="width: 38px; height: 38px; border-radius: 6px;"
                         @onclick="ToggleLock"
@@ -119,21 +114,22 @@
         <table class="table table-hover mb-0 excel-table align-middle text-nowrap" style="font-size: 0.75rem;">
             <thead class="bg-navy">
                 <tr>
-                    <th class="text-center sticky-header-1" style="min-width: 45px; width: 45px; max-width: 45px;">Est</th>
-                    <th class="sticky-header-2 user-select-none" style="min-width: 220px; width: 220px; max-width: 220px; cursor: pointer;" @onclick="SortByEmpleado" title="Clic para ordenar por Apellidos">
-    Empleado
-    @if (sortColumn == "Empleado")
-    {
-        <i class="bi @(isSortAscending ? "bi-sort-alpha-down" : "bi-sort-alpha-up") ms-1 text-warning"></i>
-    }
-</th>
-<th class="user-select-none" style="min-width: 140px; cursor: pointer;" @onclick="SortBySubsidiaria" title="Clic para agrupar por Subsidiaria">
-    Subsidiaria
-    @if (sortColumn == "Subsidiaria")
-    {
-        <i class="bi @(isSortAscending ? "bi-sort-alpha-down" : "bi-sort-alpha-up") ms-1 text-warning"></i>
-    }
-</th>
+                    <th class="text-center sticky-col-1" style="min-width: 45px; width: 45px; max-width: 45px; z-index: 20;">Est</th>
+                    <th class="sticky-col-2 user-select-none" style="min-width: 220px; width: 220px; max-width: 220px; cursor: pointer; z-index: 20;" @onclick="SortByEmpleado" title="Clic para ordenar por Apellidos">
+                        Empleado
+                        @if (sortColumn == "Empleado")
+                        {
+                            <i class="bi @(isSortAscending ? "bi-sort-alpha-down" : "bi-sort-alpha-up") ms-1 text-warning"></i>
+                        }
+                    </th>
+                    <th class="user-select-none" style="min-width: 140px; cursor: pointer;" @onclick="SortBySubsidiaria" title="Clic para agrupar por Subsidiaria">
+                        Subsidiaria
+                        @if (sortColumn == "Subsidiaria")
+                        {
+                            <i class="bi @(isSortAscending ? "bi-sort-alpha-down" : "bi-sort-alpha-up") ms-1 text-warning"></i>
+                        }
+                    </th>
+                    <th style="min-width: 120px;">Banco</th>
                     <th class="text-end px-1">Qnal Pactado</th>
                     <th class="text-center px-1">Días P.</th>
                     <th class="text-end px-1 text-info fw-bold" style="background-color: #1a2a44;">Sueldo Deveng.</th>
@@ -144,7 +140,7 @@
                         {
                             <th class="text-end px-1">
                                 @(c.Concepto.ToUpper().Contains("DOMINICAL") ? "7MO DÍA / PRIMA DOMINICAL" :
-                                                c.Concepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : c.Concepto)
+                                        c.Concepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : c.Concepto)
                                 @if (c.CeldaEditable)
                                 {
                                     <i class="bi bi-calculator ms-1 opacity-50" title="Calculado Automáticamente"></i>
@@ -154,7 +150,10 @@
                     }
                     <th class="text-end px-1">T. Percepciones</th>
                     <th class="text-end px-1">T. Deducciones</th>
+                    <th class="text-end px-1 text-danger">DEUDA ANT.</th>
                     <th class="text-end px-1 fw-bold text-warning">TOTAL A PAGAR</th>
+                    <th class="text-end px-1 fw-bold text-primary">PAGO APLIC.</th>
+                    <th class="text-end px-1 fw-bold text-danger">ADEUDO</th>
                 </tr>
             </thead>
             <tbody>
@@ -178,7 +177,7 @@
                 else
                 {
                     <Virtualize Items="@matrizNomina" Context="fila" ItemSize="40" OverscanCount="15">
-                        <tr class="@(isLocked ? "opacity-75" : "")">
+                        <tr class="@(isLocked ? "opacity-75" : "") @(fila.IsSaving ? "opacity-50 pe-none bg-light" : "")">
                             <td class="text-center sticky-col-1" style="min-width: 45px; width: 45px; max-width: 45px;">
                                 <div class="status-circle @GetStatusColor(fila.Estado)" title="@fila.Estado"></div>
                             </td>
@@ -189,13 +188,16 @@
                             <td class="text-muted px-2" style="font-size: 0.7rem;">
                                 <i class="bi bi-building me-1"></i>@fila.NombreSubsidiaria
                             </td>
+                            <td class="text-muted px-2" style="font-size: 0.7rem; font-weight: bold;">
+                                @fila.Banco
+                            </td>
 
                             <td class="text-end text-muted px-1">@fila.SaeQuincenalPactado.ToString("C2")</td>
                             <td class="text-center fw-bold text-dark px-1 bg-light">@fila.DiasPagados.ToString("0.##")</td>
 
                             <td class="text-end fw-bold text-primary px-1" style="background-color: #f8fbfb;">
                                 @{
-                                    int diasTotalesQ = selectedQuincena == 1 ? 15 : DateTime.DaysInMonth(selectedAnio, selectedMes) - 15;
+                                    int diasTotalesQ = 15;
                                     decimal customSd = fila.SaeQuincenalPactado / (decimal)diasTotalesQ;
                                     decimal devengado = Math.Round(customSd * fila.DiasPagados, 2);
                                 }
@@ -212,7 +214,7 @@
                                     <td class="text-end p-0 position-relative" style="min-width: 65px;">
                                         @if (celda.IsEditing && !isLocked)
                                         {
-                                            <input type="number" step="0.01" autofocus
+                                            <input type="number" step="any" autofocus
                                                    class="excel-input-dashboard fw-bold"
                                                    @bind="celda.ValorEditado"
                                                    @onblur="() => ProcesarCeldaInline(fila, c, celda)"
@@ -243,22 +245,43 @@
                             <td class="text-end bg-light px-1">
                                 <span class="text-danger fw-bold">@fila.TotalDeducciones.ToString("C2")</span>
                             </td>
+                            <td class="text-end text-danger px-1">
+                                @fila.AdeudoAnterior.ToString("C2")
+                            </td>
                             <td class="text-end fw-bold px-1" style="font-size: 0.85rem; background-color: #eef2f7;">
                                 @fila.TotalPagado.ToString("C2")
+                            </td>
+                            <td class="text-end p-0 position-relative bg-light" style="min-width: 85px;">
+                                @if (!isLocked)
+                                {
+                                    <div class="d-flex align-items-center w-100 h-100">
+                                        <span class="text-primary ms-1 position-absolute" style="left: 4px; pointer-events: none; font-size: 0.7rem;">$</span>
+                                        <input type="number" step="any" class="excel-input-dashboard text-primary fw-bold pe-1"
+                                               value="@(fila.PagoAplicado == 0 ? null : fila.PagoAplicado)"
+                                               @onchange="@(async (e) => await UpdatePagoAplicadoInline(fila, e))"
+                                               title="Editar Pago Aplicado" disabled="@isLocked" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="fw-bold text-primary px-1">@fila.PagoAplicado.ToString("C2")</span>
+                                }
+                            </td>
+                            <td class="text-end fw-bold text-danger px-1 bg-light">
+                                @fila.Adeudado.ToString("C2")
                             </td>
                         </tr>
                     </Virtualize>
                 }
             </tbody>
 
-            @* TOTALES GENERALES DE LA SÁBANA *@
             @if (matrizNomina != null && matrizNomina.Any())
             {
-                <tfoot style="position: sticky; bottom: 0; z-index: 10; background-color: #eef2f7; border-top: 2px solid #253C60;">
+                <tfoot style="position: sticky; bottom: 0; z-index: 25; background-color: #eef2f7; border-top: 2px solid #253C60;">
                     <tr>
-                        <td class="sticky-col-1" style="background-color: #eef2f7;"></td>
-                        <td class="sticky-col-2 text-end fw-bold text-dark pe-3" style="background-color: #eef2f7;">TOTAL:</td>
-                        <td colspan="4" style="background-color: #eef2f7;"></td>
+                        <td class="sticky-col-1" style="background-color: #eef2f7; z-index: 30;"></td>
+                        <td class="sticky-col-2 text-end fw-bold text-dark pe-3" style="background-color: #eef2f7; z-index: 30;">TOTAL:</td>
+                        <td colspan="5" style="background-color: #eef2f7;"></td>
 
                         @if (columnasOrdenadas != null)
                         {
@@ -278,8 +301,17 @@
                         <td class="text-end fw-bold text-danger px-1" style="background-color: #eef2f7;">
                             @matrizNomina.Sum(f => f.TotalDeducciones).ToString("C2")
                         </td>
+                        <td class="text-end fw-bold text-danger px-1" style="background-color: #eef2f7;">
+                            @matrizNomina.Sum(f => f.AdeudoAnterior).ToString("C2")
+                        </td>
                         <td class="text-end fw-bold text-dark px-1" style="font-size: 0.9rem; background-color: #eef2f7;">
                             @matrizNomina.Sum(f => f.TotalPagado).ToString("C2")
+                        </td>
+                        <td class="text-end fw-bold text-primary px-1" style="background-color: #eef2f7;">
+                            @matrizNomina.Sum(f => f.PagoAplicado).ToString("C2")
+                        </td>
+                        <td class="text-end fw-bold text-danger px-1" style="background-color: #eef2f7;">
+                            @matrizNomina.Sum(f => f.Adeudado).ToString("C2")
                         </td>
                     </tr>
                 </tfoot>
@@ -288,9 +320,7 @@
     </div>
 </div>
 
-@* ========================================================= *@
-@* MODAL PARA CONFIRMAR GENERACIÓN (NUEVA SÁBANA)            *@
-@* ========================================================= *@
+@* ... MODALES DE GENERACIÓN/RESTAURACIÓN/ELIMINACIÓN ... *@
 @if (showConfirmGenerateModal)
 {
     <div class="modal d-block" style="background-color: rgba(0,0,0,0.6); z-index: 1050;">
@@ -320,9 +350,6 @@
     </div>
 }
 
-@* ========================================================= *@
-@* MODAL PARA CONFIRMAR RESTAURACIÓN                         *@
-@* ========================================================= *@
 @if (showConfirmRestoreModal)
 {
     <div class="modal d-block" style="background-color: rgba(0,0,0,0.6); z-index: 1050;">
@@ -352,9 +379,6 @@
     </div>
 }
 
-@* ========================================================= *@
-@* MODAL PARA CONFIRMAR EXCLUSIÓN (ELIMINAR RECIBO INDIVIDUAL)*@
-@* ========================================================= *@
 @if (showConfirmDeleteModal && empleadoSeleccionado != null)
 {
     <div class="modal d-block" style="background-color: rgba(0,0,0,0.7); z-index: 1100;">
@@ -386,9 +410,6 @@
     </div>
 }
 
-@* ========================================================= *@
-@* NUEVO MODAL: ELIMINAR SÁBANA COMPLETA                     *@
-@* ========================================================= *@
 @if (showConfirmDeleteSabanaModal && periodoActual != null)
 {
     <div class="modal d-block" style="background-color: rgba(0,0,0,0.7); z-index: 1100;">
@@ -446,26 +467,31 @@
                     }
                     else if (desgloseRecibo != null && empleadoSeleccionado != null)
                     {
-                        // Separación inteligente usando la base de datos (TRES GRUPOS)
-                        var conceptosBeneficios = desgloseRecibo.Where(d => d.Clasificacion == "BENEFICIO").ToList();
-                        var conceptosDescuentos = desgloseRecibo.Where(d => d.Clasificacion == "DEDUCCIONES").ToList();
-                        var conceptosRegulares = desgloseRecibo.Where(d => d.Clasificacion != "BENEFICIO" && d.Clasificacion != "DEDUCCIONES").ToList();
+                        
+                            var conceptosBeneficios = desgloseRecibo.Where(d => d.Clasificacion == "BENEFICIO").ToList();
+                            var conceptosDescuentos = desgloseRecibo.Where(d => d.Clasificacion == "DEDUCCIONES").ToList();
+                            var conceptosRegulares = desgloseRecibo.Where(d => d.Clasificacion != "BENEFICIO" && d.Clasificacion != "DEDUCCIONES").ToList();
 
-                        var percepciones = conceptosRegulares.Where(c => c.Tipo == "P").ToList();
-                        var deducciones = conceptosRegulares.Where(c => c.Tipo == "D").ToList();
+                            var percepciones = conceptosRegulares.Where(c => c.Tipo == "P").ToList();
+                            var deducciones = conceptosRegulares.Where(c => c.Tipo == "D").ToList();
 
-                        int totalRows = Math.Max(percepciones.Count + 1, deducciones.Count);
+                            int totalRows = Math.Max(percepciones.Count + 1, deducciones.Count);
 
-                        // CÁLCULO BASE PROPORCIONAL
-                        int diasTotalesQuincena = selectedQuincena == 1 ? 15 : DateTime.DaysInMonth(selectedAnio, selectedMes) - 15;
-                        decimal customSdSueldo = empleadoSeleccionado.SaeQuincenalPactado / (decimal)diasTotalesQuincena;
-                        decimal sueldoBaseProporcional = Math.Round(customSdSueldo * empleadoSeleccionado.DiasPagados, 2);
+                            // CORRECCIÓN: BASE 15 SIEMPRE
+                            int diasTotalesQuincena = 15;
+                            decimal customSdSueldo = empleadoSeleccionado.SaeQuincenalPactado / (decimal)diasTotalesQuincena;
+                            decimal sueldoBaseProporcional = Math.Round(customSdSueldo * empleadoSeleccionado.DiasPagados, 2);
 
-                        decimal totalPercepcionesRegulares = sueldoBaseProporcional + percepciones.Sum(p => p.Total);
-                        decimal totalDeduccionesRegulares = deducciones.Sum(d => d.Total);
-                        decimal netoRegulares = totalPercepcionesRegulares - totalDeduccionesRegulares;
+                            decimal totalPercepcionesRegulares = sueldoBaseProporcional + percepciones.Sum(p => p.Total);
+                            decimal totalDeduccionesRegulares = deducciones.Sum(d => d.Total);
+                            decimal netoRegulares = totalPercepcionesRegulares - totalDeduccionesRegulares;
 
-                        @* ENCABEZADO DE INFORMACIÓN *@
+                            // CÁLCULOS DEL GRAN TOTAL
+                            decimal granTotalPercepciones = totalPercepcionesRegulares + conceptosBeneficios.Sum(b => b.Total);
+                            decimal granTotalDeducciones = totalDeduccionesRegulares + conceptosDescuentos.Sum(d => d.Total);
+                            decimal granNetoAPagar = (granTotalPercepciones - granTotalDeducciones) + empleadoSeleccionado.AdeudoAnterior;
+                        
+
                         <div class="aspel-info-box mb-3">
                             <div class="row gx-2 align-items-center mb-1">
                                 <div class="col-6"><strong>Empleado:</strong>  @empleadoSeleccionado.NombreCompleto</div>
@@ -480,7 +506,6 @@
                             </div>
                         </div>
 
-                        @* TABLA PRINCIPAL DIVIDIDA *@
                         <div class="table-responsive shadow-sm">
                             <table class="aspel-table">
                                 <thead>
@@ -502,14 +527,13 @@
                                     @for (int i = 0; i < totalRows; i++)
                                     {
                                         <tr>
-                                            @* LADO IZQUIERDO: PERCEPCIONES *@
                                             @if (i == 0)
                                             {
                                                 <td class="aspel-cell aspel-cell-concept fw-bold">1. Sueldo Base Quincenal</td>
                                                 <td class="aspel-cell text-center">
-                                                    <input type="number" step="0.5" class="aspel-input d-inline text-center bg-white border border-primary text-primary fw-bold w-100"
-                                                           @bind="empleadoSeleccionado.DiasPagados"
-                                                           @bind:after="StateHasChanged"
+                                                    <input type="number" step="any" class="aspel-input d-inline text-center bg-white border border-primary text-primary fw-bold w-100"
+                                                           value="@(empleadoSeleccionado.DiasPagados == 0 ? null : empleadoSeleccionado.DiasPagados)"
+                                                           @onchange="UpdateDiasPagados"
                                                            disabled="@isLocked" title="Días Trabajados" />
                                                 </td>
                                                 <td class="aspel-cell aspel-border-center text-end fw-bold text-primary">
@@ -523,32 +547,52 @@
                                                     <div class="d-flex align-items-center justify-content-between">
                                                         <span class="text-truncate">
                                                             @(p.NombreConcepto.ToUpper().Contains("DOMINICAL") ? "7MO DÍA / PRIMA DOMINICAL" :
-                                                                                                    p.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : p.NombreConcepto)
-                                                        </span>
+                                                                                                        p.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : p.NombreConcepto)
+                                        </span>
 
-                                                        @if (p.RequiereCantidad || p.NombreConcepto.ToUpper().Contains("DOMINICAL"))
+                                        @if (p.RequiereCantidad || p.NombreConcepto.ToUpper().Contains("DOMINICAL"))
                                                         {
-                                                            @if (p.IncidenciaId.HasValue)
+                                                            @if (!string.IsNullOrWhiteSpace(p.Comentario) && p.Comentario.Contains("Ref: INC-"))
                                                             {
-                                                                <a href="javascript:void(0)" class="badge bg-info text-dark ms-2 text-decoration-none" title="Ver Folio de Incidencia" @onclick="() => AbrirModalIncidencia(p)"><i class="bi bi-link-45deg"></i> INC-@p.IncidenciaId.Value</a>
+                                                                var folios = p.Comentario.Replace("Ref: ", "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+                                                                foreach (var folio in folios)
+                                                                {
+                                                                    var folioClean = folio.Trim();
+                                                                    var soloNum = folioClean.Replace("INC-", "");
+                                                                    int.TryParse(soloNum, out int numId);
+
+                                                                    <a href="javascript:void(0)" class="badge bg-info text-dark ms-1 shadow-sm font-monospace text-decoration-none"
+                                                                       style="font-size: 0.65rem;" title="Ver incidencia consolidada"
+                                                                       @onclick='() => AbrirModalIncidencia(new NominaImporteDTO { IncidenciaId = numId, NombreConcepto = p.NombreConcepto, Cantidad = p.Cantidad, Comentario = p.Comentario })'>
+                                                                        <i class="bi bi-link-45deg"></i> @folioClean
+                                                                    </a>
+                                                                }
+                                                            }
+                                                            else if (p.IncidenciaId.HasValue && p.IncidenciaId > 0)
+                                                            {
+                                                                <a href="javascript:void(0)" class="badge bg-info text-dark ms-2 text-decoration-none shadow-sm font-monospace" style="font-size: 0.65rem;" title="Ver Folio de Incidencia" @onclick="() => AbrirModalIncidencia(p)"><i class="bi bi-link-45deg"></i> INC-@p.IncidenciaId.Value</a>
                                                             }
                                                             else if (p.Cantidad > 0)
                                                             {
-                                                                <span class="badge bg-warning text-dark ms-2" title="Se generará el folio al guardar" style="font-size: 0.65rem;"><i class="bi bi-hourglass-split"></i> PENDIENTE</span>
+                                                                <span class="badge bg-warning text-dark ms-2 shadow-sm font-monospace" title="Se generará el folio al guardar" style="font-size: 0.65rem;"><i class="bi bi-hourglass-split"></i> PENDIENTE</span>
                                                             }
                                                         }
                                                     </div>
                                                 </td>
                                                 <td class="aspel-cell">
-                                                    @if (p.RequiereCantidad)
+                                                    @if (p.RequiereCantidad && !p.EsMontoDirecto)
                                                     {
-                                                        <input type="number" step="0.5" class="aspel-input text-center" placeholder="-" @bind="p.Cantidad" @bind:after="() => CalcularLinea(p)" disabled="@isLocked" />
+                                                        <input type="number" step="any" class="aspel-input text-center" placeholder="-"
+                                                               value="@(p.Cantidad == 0 ? null : p.Cantidad)"
+                                                               @onchange="@(e => UpdateCantidad(p, e))" disabled="@isLocked" />
                                                     }
                                                 </td>
                                                 <td class="aspel-cell aspel-border-center">
                                                     <div class="d-flex align-items-center h-100 w-100">
                                                         <span class="text-muted ms-1">$</span>
-                                                        <input type="number" step="0.01" class="aspel-input text-end w-100" placeholder="-" @bind="p.Total" @bind:after="() => SincronizarImporte(p)" disabled="@isLocked" />
+                                                        <input type="number" step="any" class="aspel-input text-end w-100" placeholder="-"
+                                                               value="@(p.Total == 0 ? null : p.Total)"
+                                                               @onchange="@(e => UpdateTotal(p, e))" disabled="@isLocked" />
                                                     </div>
                                                 </td>
                                             }
@@ -559,7 +603,6 @@
                                                 <td class="aspel-cell aspel-border-center"></td>
                                             }
 
-                                            @* LADO DERECHO: DEDUCCIONES *@
                                             @if (i < deducciones.Count)
                                             {
                                                 var d = deducciones[i];
@@ -567,32 +610,52 @@
                                                     <div class="d-flex align-items-center justify-content-between">
                                                         <span class="text-truncate">
                                                             @(d.NombreConcepto.ToUpper().Contains("DOMINICAL") ? "7MO DÍA / PRIMA DOMINICAL" :
-                                                                                                    d.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : d.NombreConcepto)
-                                                        </span>
+                                                                                                        d.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : d.NombreConcepto)
+                                        </span>
 
-                                                        @if (d.RequiereCantidad || d.NombreConcepto.ToUpper().Contains("DOMINICAL"))
+                                        @if (d.RequiereCantidad || d.NombreConcepto.ToUpper().Contains("DOMINICAL"))
                                                         {
-                                                            @if (d.IncidenciaId.HasValue)
+                                                            @if (!string.IsNullOrWhiteSpace(d.Comentario) && d.Comentario.Contains("Ref: INC-"))
                                                             {
-                                                                <a href="javascript:void(0)" class="badge bg-info text-dark ms-2 text-decoration-none" title="Ver Folio de Incidencia" @onclick="() => AbrirModalIncidencia(d)"><i class="bi bi-link-45deg"></i> INC-@d.IncidenciaId.Value</a>
+                                                                var folios = d.Comentario.Replace("Ref: ", "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+                                                                foreach (var folio in folios)
+                                                                {
+                                                                    var folioClean = folio.Trim();
+                                                                    var soloNum = folioClean.Replace("INC-", "");
+                                                                    int.TryParse(soloNum, out int numId);
+
+                                                                    <a href="javascript:void(0)" class="badge bg-info text-dark ms-1 shadow-sm font-monospace text-decoration-none"
+                                                                       style="font-size: 0.65rem;" title="Ver incidencia consolidada"
+                                                                       @onclick='() => AbrirModalIncidencia(new NominaImporteDTO { IncidenciaId = numId, NombreConcepto = d.NombreConcepto, Cantidad = d.Cantidad, Comentario = d.Comentario })'>
+                                                                        <i class="bi bi-link-45deg"></i> @folioClean
+                                                                    </a>
+                                                                }
+                                                            }
+                                                            else if (d.IncidenciaId.HasValue && d.IncidenciaId > 0)
+                                                            {
+                                                                <a href="javascript:void(0)" class="badge bg-info text-dark ms-2 text-decoration-none shadow-sm font-monospace" style="font-size: 0.65rem;" title="Ver Folio de Incidencia" @onclick="() => AbrirModalIncidencia(d)"><i class="bi bi-link-45deg"></i> INC-@d.IncidenciaId.Value</a>
                                                             }
                                                             else if (d.Cantidad > 0)
                                                             {
-                                                                <span class="badge bg-warning text-dark ms-2" title="Se generará el folio al guardar" style="font-size: 0.65rem;"><i class="bi bi-hourglass-split"></i> PENDIENTE</span>
+                                                                <span class="badge bg-warning text-dark ms-2 shadow-sm font-monospace" title="Se generará el folio al guardar" style="font-size: 0.65rem;"><i class="bi bi-hourglass-split"></i> PENDIENTE</span>
                                                             }
                                                         }
                                                     </div>
                                                 </td>
                                                 <td class="aspel-cell">
-                                                    @if (d.RequiereCantidad)
+                                                    @if (d.RequiereCantidad && !d.EsMontoDirecto)
                                                     {
-                                                        <input type="number" step="0.5" class="aspel-input text-center text-danger" placeholder="-" @bind="d.Cantidad" @bind:after="() => CalcularLinea(d)" disabled="@isLocked" />
+                                                        <input type="number" step="any" class="aspel-input text-center text-danger" placeholder="-"
+                                                               value="@(d.Cantidad == 0 ? null : d.Cantidad)"
+                                                               @onchange="@(e => UpdateCantidad(d, e))" disabled="@isLocked" />
                                                     }
                                                 </td>
                                                 <td class="aspel-cell">
                                                     <div class="d-flex align-items-center h-100 w-100">
                                                         <span class="text-muted ms-1">$</span>
-                                                        <input type="number" step="0.01" class="aspel-input text-danger text-end w-100" placeholder="-" @bind="d.Total" @bind:after="() => SincronizarImporte(d)" disabled="@isLocked" />
+                                                        <input type="number" step="any" class="aspel-input text-danger text-end w-100" placeholder="-"
+                                                               value="@(d.Total == 0 ? null : d.Total)"
+                                                               @onchange="@(e => UpdateTotal(d, e))" disabled="@isLocked" />
                                                     </div>
                                                 </td>
                                             }
@@ -607,21 +670,22 @@
                                 </tbody>
                                 <tfoot>
                                     <tr class="aspel-footer">
-                                        <td colspan="2" class="aspel-cell text-end pe-3">Suma de percepciones</td>
-                                        <td class="aspel-cell aspel-border-center text-end">$ @totalPercepcionesRegulares.ToString("N2")</td>
-                                        <td colspan="2" class="aspel-cell text-end pe-3">Suma de deducciones</td>
-                                        <td class="aspel-cell text-end">$ @totalDeduccionesRegulares.ToString("N2")</td>
+                                        <td colspan="2" class="aspel-cell text-end pe-3 fw-bold">Suma de percepciones</td>
+                                        <td class="aspel-cell aspel-border-center text-end fw-bold">$ @totalPercepcionesRegulares.ToString("N2")</td>
+                                        <td colspan="2" class="aspel-cell text-end pe-3 fw-bold">Suma de deducciones</td>
+                                        <td class="aspel-cell text-end fw-bold">$ @totalDeduccionesRegulares.ToString("N2")</td>
                                     </tr>
                                     <tr class="aspel-footer">
-                                        <td colspan="3" class="aspel-border-center" style="background-color: white; border-bottom: none !important;"></td>
-                                        <td colspan="2" class="aspel-cell text-end pe-3">Neto a pagar</td>
-                                        <td class="aspel-cell text-end fw-bold">$ @netoRegulares.ToString("N2")</td>
+                                        @* AQUÍ OCURRE LA MAGIA DEL RECORTE *@
+                                        <td colspan="3" class="hidden-corner" style="border-right: 2px solid #008080 !important;"></td>
+
+                                        <td colspan="2" class="aspel-cell neto-box text-end pe-3 fw-bold">Neto a pagar</td>
+                                        <td class="aspel-cell neto-box text-end fw-bold" style="font-size: 0.85rem;">$ @netoRegulares.ToString("N2")</td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
 
-                        @* TABLA DE BENEFICIOS ADICIONALES (TIPO P) *@
                         @if (conceptosBeneficios.Any())
                         {
                             <div class="mt-4">
@@ -640,21 +704,13 @@
                                             {
                                                 <tr>
                                                     <td class="aspel-cell aspel-cell-concept fw-bold">
-                                                        <div class="d-flex align-items-center justify-content-between px-2">
-                                                            <span>@item.NombreConcepto</span>
-                                                        </div>
+                                                        <div class="px-2">@item.NombreConcepto</div>
                                                     </td>
-                                                    <td class="aspel-cell">
-                                                        @if (item.RequiereCantidad)
-                                                        {
-                                                            <input type="number" step="0.5" class="aspel-input text-center" placeholder="-" @bind="item.Cantidad" @bind:after="() => CalcularLinea(item)" disabled="@isLocked" />
-                                                        }
+                                                    <td class="aspel-cell text-center text-muted">
+                                                        @(item.Cantidad > 0 && !item.EsMontoDirecto ? item.Cantidad.Value.ToString("0.##") : "-")
                                                     </td>
-                                                    <td class="aspel-cell">
-                                                        <div class="d-flex align-items-center h-100 w-100 px-2">
-                                                            <span class="text-muted ms-1">$</span>
-                                                            <input type="number" step="0.01" class="aspel-input text-success text-end w-100" placeholder="-" @bind="item.Total" @bind:after="() => SincronizarImporte(item)" disabled="@isLocked" />
-                                                        </div>
+                                                    <td class="aspel-cell text-end pe-2">
+                                                        <span class="text-success fw-bold">$ @item.Total.ToString("N2")</span>
                                                     </td>
                                                 </tr>
                                             }
@@ -670,7 +726,6 @@
                             </div>
                         }
 
-                        @* NUEVA TABLA: DESCUENTOS FIJOS (TIPO D) *@
                         @if (conceptosDescuentos.Any())
                         {
                             <div class="mt-4">
@@ -689,21 +744,13 @@
                                             {
                                                 <tr>
                                                     <td class="aspel-cell aspel-cell-concept fw-bold">
-                                                        <div class="d-flex align-items-center justify-content-between px-2">
-                                                            <span>@item.NombreConcepto</span>
-                                                        </div>
+                                                        <div class="px-2">@item.NombreConcepto</div>
                                                     </td>
-                                                    <td class="aspel-cell">
-                                                        @if (item.RequiereCantidad)
-                                                        {
-                                                            <input type="number" step="0.5" class="aspel-input text-center text-danger" placeholder="-" @bind="item.Cantidad" @bind:after="() => CalcularLinea(item)" disabled="@isLocked" />
-                                                        }
+                                                    <td class="aspel-cell text-center text-muted">
+                                                        @(item.Cantidad > 0 && !item.EsMontoDirecto ? item.Cantidad.Value.ToString("0.##") : "-")
                                                     </td>
-                                                    <td class="aspel-cell">
-                                                        <div class="d-flex align-items-center h-100 w-100 px-2">
-                                                            <span class="text-muted ms-1">$</span>
-                                                            <input type="number" step="0.01" class="aspel-input text-danger text-end w-100" placeholder="-" @bind="item.Total" @bind:after="() => SincronizarImporte(item)" disabled="@isLocked" />
-                                                        </div>
+                                                    <td class="aspel-cell text-end pe-2">
+                                                        <span class="text-danger fw-bold">$ @item.Total.ToString("N2")</span>
                                                     </td>
                                                 </tr>
                                             }
@@ -718,6 +765,47 @@
                                 </div>
                             </div>
                         }
+
+                        @* ========================================== *@
+                        @* PANEL DE RESUMEN FINAL Y PAGOS             *@
+                        @* ========================================== *@
+                        <div class="card border-1 shadow-sm mt-4" style="background-color: #f8fbfb; border-color: #b8daff !important;">
+                            <div class="card-body p-3">
+                                <div class="row align-items-center">
+
+                                    @* TOTAL A PAGAR (REAL) *@
+                                    <div class="col-md-4 text-center border-end">
+                                        <span class="text-muted small fw-bold"><i class="bi bi-wallet2"></i> GRAN TOTAL A PAGAR</span>
+                                        @if (empleadoSeleccionado.AdeudoAnterior > 0)
+                                        {
+                                            <span class="d-block text-danger font-monospace" style="font-size: 0.65rem;">(Incluye $ @empleadoSeleccionado.AdeudoAnterior.ToString("N2") de saldo anterior)</span>
+                                        }
+                                        <h4 class="text-dark fw-bold mb-0 mt-1">$ @granNetoAPagar.ToString("N2")</h4>
+                                    </div>
+
+                                    @* PAGO APLICADO (CAPTURABLE) *@
+                                    <div class="col-md-4 text-center border-end">
+                                        <span class="text-muted small fw-bold text-primary">PAGO APLICADO REAL</span>
+                                        <div class="d-flex justify-content-center mt-1">
+                                            <div class="input-group input-group-sm shadow-sm" style="width: 160px;">
+                                                <span class="input-group-text bg-white text-primary border-primary fw-bold">$</span>
+                                                <input type="number" step="any" class="form-control text-end text-primary fw-bold border-primary"
+                                                       @bind="empleadoSeleccionado.PagoAplicado" disabled="@isLocked" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @* SALDO ADEUDADO *@
+                                    <div class="col-md-4 text-center">
+                                        <span class="text-muted small fw-bold text-danger">ADEUDADO (SALDO PENDIENTE)</span>
+                                        <h4 class="text-danger fw-bold mb-0 mt-1">
+                                            $ @((granNetoAPagar - empleadoSeleccionado.PagoAplicado).ToString("N2"))
+                                        </h4>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="mt-4 d-flex justify-content-between align-items-center" style="font-family: 'Segoe UI', sans-serif;">
                             <div>
@@ -769,9 +857,6 @@
     </div>
 }
 
-@* ========================================================= *@
-@* MINI MODAL (DETALLE DE INCIDENCIA OFICIAL)                *@
-@* ========================================================= *@
 @if (showIncidenciaModal && itemComentarioActivo != null)
 {
     <div class="modal d-block" style="background-color: rgba(0,0,0,0.4); z-index: 1060;">
@@ -786,7 +871,7 @@
                     <div class="mb-3 mt-2">
                         <span class="badge bg-secondary">
                             @(itemComentarioActivo.NombreConcepto.ToUpper().Contains("DOMINICAL") ? "7MO DÍA / PRIMA DOMINICAL" :
-                                                                                    itemComentarioActivo.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : itemComentarioActivo.NombreConcepto)
+                                                                                                    itemComentarioActivo.NombreConcepto.ToUpper().Contains("FESTIVO") ? "DÍA FESTIVO" : itemComentarioActivo.NombreConcepto)
                         </span>
                     </div>
                     <div class="alert alert-info border-info p-2 small text-start">
@@ -807,9 +892,6 @@
     </div>
 }
 
-@* ========================================================= *@
-@* MODAL DE ÉXITO AUTO-CERRABLE                              *@
-@* ========================================================= *@
 @if (showSuccessModal)
 {
     <div class="modal d-block" style="background-color: rgba(0,0,0,0.3); z-index: 1200;">
@@ -854,18 +936,16 @@
 
     private bool showSuccessModal = false;
 
-    // SIMPLIFICACIÓN DEL COMBOBOX
     public class ComboPeriodo { 
         public int Mes { get; set; } 
         public int Quincena { get; set; } 
         public string Nombre { get; set; } 
         public string IdCombo => $"{Mes}|{Quincena}"; 
-        public bool EsGenerada { get; set; } = false; // <--- NUEVA PROPIEDAD
+        public bool EsGenerada { get; set; } = false; 
     }
     private List<ComboPeriodo> opcionesPeriodos = new();
 
-    // VARIABLES PARA ORDENAMIENTO
-    private string sortColumn = "Subsidiaria"; // Por defecto agrupamos por subsidiaria
+    private string sortColumn = "Subsidiaria"; 
     private bool isSortAscending = true;
 
     private void SortByEmpleado()
@@ -873,7 +953,7 @@
         if (matrizNomina == null || !matrizNomina.Any()) return;
 
         if (sortColumn == "Empleado")
-            isSortAscending = !isSortAscending; // Invierte de A-Z a Z-A
+            isSortAscending = !isSortAscending; 
         else
         {
             sortColumn = "Empleado";
@@ -887,7 +967,7 @@
         if (matrizNomina == null || !matrizNomina.Any()) return;
 
         if (sortColumn == "Subsidiaria")
-            isSortAscending = !isSortAscending; // Invierte de A-Z a Z-A
+            isSortAscending = !isSortAscending; 
         else
         {
             sortColumn = "Subsidiaria";
@@ -902,14 +982,12 @@
 
         if (sortColumn == "Empleado")
         {
-            // Rompe el grupo de subsidiarias y ordena a todos parejo por apellidos
             matrizNomina = isSortAscending 
                 ? matrizNomina.OrderBy(m => m.NombreCompleto).ToList() 
                 : matrizNomina.OrderByDescending(m => m.NombreCompleto).ToList();
         }
         else if (sortColumn == "Subsidiaria")
         {
-            // Agrupa por subsidiaria y luego por apellidos
             matrizNomina = isSortAscending 
                 ? matrizNomina.OrderBy(m => m.NombreSubsidiaria).ThenBy(m => m.NombreCompleto).ToList() 
                 : matrizNomina.OrderByDescending(m => m.NombreSubsidiaria).ThenBy(m => m.NombreCompleto).ToList();
@@ -924,9 +1002,10 @@
         selectedQuincena = hoy.Day <= 15 ? 1 : 2;
 
         catalogoConceptos = await PayrollService.GetConceptosAsync();
-        columnasOrdenadas = catalogoConceptos;
-        
-        await ActualizarEstadoPeriodosAsync(); // <--- LLAMADA AL NUEVO MÉTODO
+
+        columnasOrdenadas = catalogoConceptos.Where(c => c.MostrarEnSabana).ToList();
+
+        await ActualizarEstadoPeriodosAsync();
         await CargarNomina();
     }
 
@@ -934,10 +1013,8 @@
     {
         opcionesPeriodos.Clear();
 
-        // 1. Le pedimos al Servicio que nos traiga la lista (¡Sin violar la seguridad!)
         var periodosExistentes = await PayrollService.GetPeriodosGeneradosAsync(selectedAnio);
 
-        // 2. Armamos la lista del 1 al 12
         for (int i = 1; i <= 12; i++)
         {
             string nombreMes = GetNombreMes(i);
@@ -962,7 +1039,6 @@
         }
     }
 
-    // --- NUEVO MÉTODO CUANDO CAMBIA EL AÑO ---
     private async Task OnAnioChanged()
     {
         await ActualizarEstadoPeriodosAsync();
@@ -983,7 +1059,6 @@
         matrizNomina = null;
     }
 
-    // BOTÓN "CONSULTAR"
     private async Task CargarNomina()
     {
         isBusy = true;
@@ -993,14 +1068,12 @@
 
             if (periodoActual == null)
             {
-                // NO EXISTE: Preguntamos si quiere crearlo
                 matrizNomina = null;
                 showConfirmGenerateModal = true;
                 isLocked = false;
             }
             else
             {
-                // SÍ EXISTE: Lo cargamos y ordenamos columnas
                 isLocked = periodoActual.Bloqueado;
                 var matriz = await PayrollService.GetMatrizNominaAsync(periodoActual.NominaId);
                 matrizNomina = matriz;
@@ -1011,7 +1084,6 @@
         finally { isBusy = false; }
     }
 
-    // BOTÓN "SÍ, GENERAR / RESTAURAR" DEL MODAL
     private async Task ConfirmarGeneracion()
     {
         isBusy = true;
@@ -1019,13 +1091,13 @@
         {
             periodoActual = await PayrollService.GenerarNuevaNominaAsync(selectedAnio, selectedMes, selectedQuincena);
             var matriz = await PayrollService.GetMatrizNominaAsync(periodoActual.NominaId);
-matrizNomina = matriz;
-AplicarOrdenamiento();
+            matrizNomina = matriz;
+            AplicarOrdenamiento();
             OrdenarColumnasDinamicas();
             showConfirmGenerateModal = false;
             showConfirmRestoreModal = false;
             
-            await ActualizarEstadoPeriodosAsync(); // <--- Refrescamos el combo
+            await ActualizarEstadoPeriodosAsync();
         }
         finally { isBusy = false; }
     }
@@ -1034,15 +1106,19 @@ AplicarOrdenamiento();
     {
         if (matrizNomina == null || !matrizNomina.Any())
         {
-            columnasOrdenadas = catalogoConceptos;
+            columnasOrdenadas = catalogoConceptos.Where(c => c.MostrarEnSabana).ToList();
             return;
         }
 
         var conceptosLlenos = catalogoConceptos.Where(c =>
+            c.MostrarEnSabana &&
             matrizNomina.Any(m => m.Conceptos.ContainsKey(c.ConceptoId) && m.Conceptos[c.ConceptoId].Total > 0)
         ).ToList();
 
-        var conceptosVacios = catalogoConceptos.Except(conceptosLlenos).ToList();
+        var conceptosVacios = catalogoConceptos
+            .Where(c => c.MostrarEnSabana)
+            .Except(conceptosLlenos)
+            .ToList();
 
         columnasOrdenadas = conceptosLlenos.Concat(conceptosVacios).ToList();
     }
@@ -1051,7 +1127,6 @@ AplicarOrdenamiento();
     {
         if (periodoActual != null)
         {
-            // Invertimos el estado actual del candado
             isLocked = !isLocked;
 
             await PayrollService.ToggleBloqueoAsync(periodoActual.NominaId, isLocked);
@@ -1071,69 +1146,121 @@ AplicarOrdenamiento();
     private void ActivarEdicionCelda(CeldaNominaDTO celda, NominaConceptos concepto)
     {
         if (isLocked) return;
-        celda.ValorEditado = concepto.CeldaEditable ? celda.Cantidad : (celda.Total == 0 ? null : celda.Total);
+
+        celda.ValorEditado = (concepto.CeldaEditable && !concepto.EsMontoDirecto)
+                             ? celda.Cantidad
+                             : (celda.Total == 0 ? null : celda.Total);
         celda.IsEditing = true;
     }
 
     private async Task ProcesarCeldaInline(NominaMatrizDTO fila, NominaConceptos concepto, CeldaNominaDTO celda)
     {
-        if (isLocked) { celda.IsEditing = false; return; }
+        if (!celda.IsEditing) return;
+
+        // 1. REBOTAR: Si la fila ya está viajando al servidor, ignoramos los clics extra
+        if (fila.IsSaving || isLocked) { celda.IsEditing = false; return; }
 
         celda.IsEditing = false;
         decimal valorEntrado = celda.ValorEditado ?? 0;
         decimal sdi = fila.SaeSdi;
         decimal salarioDiarioNormal = fila.SaeQuincenalPactado / 15m;
 
-        if (concepto.CeldaEditable)
+        fila.IsSaving = true; // 2. PONER SEGURO
+        StateHasChanged();
+
+        try
         {
-            celda.Cantidad = valorEntrado;
-            string nombreConcepto = concepto.Concepto.ToUpper();
+            if (concepto.CeldaEditable)
+            {
+                if (concepto.EsMontoDirecto)
+                {
+                    celda.Cantidad = valorEntrado > 0 ? 1 : null;
+                    celda.Total = valorEntrado;
+                }
+                else
+                {
+                    celda.Cantidad = valorEntrado;
+                    string nombreConcepto = concepto.Concepto.ToUpper();
 
-            if (nombreConcepto.Contains("HORAS EXTRAS")) celda.Total = Math.Round(valorEntrado * ((sdi / 8m) * 2m), 2);
-            else if (nombreConcepto.Contains("FESTIVO") || nombreConcepto.Contains("DESCANSO")) celda.Total = Math.Round(valorEntrado * (sdi * 3m), 2);
-            else if (nombreConcepto.Contains("DOMINICAL")) celda.Total = Math.Round(valorEntrado * (salarioDiarioNormal * 0.25m), 2);
-            else if (nombreConcepto.Contains("BAJA") || nombreConcepto.Contains("FALTA")) celda.Total = Math.Round(valorEntrado * sdi, 2);
-            else celda.Total = 0;
+                    if (nombreConcepto.Contains("HORAS EXTRAS")) celda.Total = Math.Round(valorEntrado * ((sdi / 8m) * 2m), 2);
+                    else if (nombreConcepto.Contains("FESTIVO") || nombreConcepto.Contains("DESCANSO")) celda.Total = Math.Round(valorEntrado * (sdi * 3m), 2);
+                    else if (nombreConcepto.Contains("DOMINICAL")) celda.Total = Math.Round(valorEntrado * (salarioDiarioNormal * 0.25m), 2);
+                    else if (nombreConcepto.Contains("BAJA") || nombreConcepto.Contains("FALTA")) celda.Total = Math.Round(valorEntrado * sdi, 2);
+                    else celda.Total = 0;
+                }
+            }
+            else
+            {
+                celda.Total = valorEntrado;
+                celda.Cantidad = null;
+            }
+
+            int diasTotalesQ = 15;
+            decimal customSdSueldo = fila.SaeQuincenalPactado / (decimal)diasTotalesQ;
+            decimal sueldoBaseProporcional = Math.Round(customSdSueldo * fila.DiasPagados, 2);
+
+            fila.TotalPercepciones = sueldoBaseProporcional + catalogoConceptos
+                .Where(c => c.Tipo == "P")
+                .Sum(c => fila.Conceptos.GetValueOrDefault(c.ConceptoId)?.Total ?? 0);
+
+            fila.TotalDeducciones = catalogoConceptos
+                .Where(c => c.Tipo == "D")
+                .Sum(c => fila.Conceptos.GetValueOrDefault(c.ConceptoId)?.Total ?? 0);
+
+            // AQUÍ ESTABA EL DETALLE MATEMÁTICO DE LA SÁBANA (Sumar Deuda anterior)
+            fila.TotalPagado = (fila.TotalPercepciones - fila.TotalDeducciones) + fila.AdeudoAnterior;
+
+            if (fila.Estado == "NO_REGISTRADO") fila.Estado = "EN_PROCESO";
+
+            // 1. Traemos la lista ORIGINAL para no perder el ID ni la bandera "RequiereCantidad"
+            var desgloseRealBD = await PayrollService.GetDesgloseParaEdicionAsync(fila.NomId);
+
+            foreach (var kvp in fila.Conceptos)
+            {
+                var bdItem = desgloseRealBD.FirstOrDefault(df => df.ConId == kvp.Key);
+
+                if (bdItem != null)
+                {
+                    // Si el concepto ya existía, solo actualizamos los números tecleados
+                    bdItem.Cantidad = kvp.Value.Cantidad;
+                    bdItem.Total = kvp.Value.Total;
+                    bdItem.Importe = kvp.Value.Total;
+                }
+                else if (kvp.Value.Total > 0 || kvp.Value.Cantidad > 0)
+                {
+                    // Si es un concepto totalmente nuevo, lo agregamos prendiendo todas las banderas necesarias
+                    var cat = catalogoConceptos.First(c => c.ConceptoId == kvp.Key);
+                    desgloseRealBD.Add(new NominaImporteDTO
+                    {
+                        ConId = kvp.Key,
+                        Tipo = cat.Tipo,
+                        Total = kvp.Value.Total,
+                        Importe = kvp.Value.Total,
+                        Cantidad = kvp.Value.Cantidad,
+                        RequiereCantidad = cat.CeldaEditable && !cat.EsMontoDirecto, // <--- ESTO ENCIENDE LA INCIDENCIA
+                        NombreConcepto = cat.Concepto
+                    });
+                }
+            }
+
+            await PayrollService.GuardarReciboAsync(fila.NomId, fila.DiasPagados, fila.PagoAplicado, desgloseRealBD, fila.Estado);
+
+            // Refrescamos en la pantalla los nuevos IDs generados por el servidor
+            var desgloseActualizado = await PayrollService.GetDesgloseParaEdicionAsync(fila.NomId);
+            foreach (var itemBD in desgloseActualizado)
+            {
+                if (fila.Conceptos.ContainsKey(itemBD.ConId))
+                {
+                    // Solo se usa de forma interna para que al abrir el Modal ya tenga el ID Puesto
+                    fila.Conceptos[itemBD.ConId].Total = itemBD.Total;
+                }
+            }
         }
-        else
+        finally
         {
-            celda.Total = valorEntrado;
-            celda.Cantidad = null;
+            fila.IsSaving = false; // 3. QUITAR SEGURO al terminar
+            StateHasChanged();
         }
-
-        int diasTotalesQ = selectedQuincena == 1 ? 15 : DateTime.DaysInMonth(selectedAnio, selectedMes) - 15;
-        decimal customSdSueldo = fila.SaeQuincenalPactado / (decimal)diasTotalesQ;
-        decimal sueldoBaseProporcional = Math.Round(customSdSueldo * fila.DiasPagados, 2);
-
-        // Aquí está la corrección:
-        fila.TotalPercepciones = sueldoBaseProporcional + catalogoConceptos
-            .Where(c => c.Tipo == "P")
-            .Sum(c => fila.Conceptos.GetValueOrDefault(c.ConceptoId)?.Total ?? 0);
-
-        fila.TotalDeducciones = catalogoConceptos
-            .Where(c => c.Tipo == "D")
-            .Sum(c => fila.Conceptos.GetValueOrDefault(c.ConceptoId)?.Total ?? 0);
-
-        // REGLA DE ORO: NETO = P - D
-        fila.TotalPagado = fila.TotalPercepciones - fila.TotalDeducciones;
-
-        if (fila.Estado == "NO_REGISTRADO") fila.Estado = "EN_PROCESO";
-
-        var desgloseFalso = new List<NominaImporteDTO>();
-        foreach (var kvp in fila.Conceptos)
-        {
-            var cat = catalogoConceptos.First(c => c.ConceptoId == kvp.Key);
-            desgloseFalso.Add(new NominaImporteDTO { ConId = kvp.Key, Tipo = cat.Tipo, Total = kvp.Value.Total, Importe = kvp.Value.Total, Cantidad = kvp.Value.Cantidad });
-        }
-
-        var desgloseRealBD = await PayrollService.GetDesgloseParaEdicionAsync(fila.NomId);
-        foreach (var itemBD in desgloseRealBD)
-        {
-            var itemFalso = desgloseFalso.FirstOrDefault(df => df.ConId == itemBD.ConId);
-            if (itemFalso != null) itemFalso.NdeId = itemBD.NdeId;
-        }
-
-        await PayrollService.GuardarReciboAsync(fila.NomId, fila.DiasPagados, desgloseFalso, fila.Estado);
     }
 
     private void CalcularLinea(NominaImporteDTO item)
@@ -1143,14 +1270,23 @@ AplicarOrdenamiento();
             item.Total = 0; item.Importe = 0; StateHasChanged(); return;
         }
 
-        decimal sdi = empleadoSeleccionado.SaeSdi;
-        decimal salarioDiarioNormal = empleadoSeleccionado.SaeQuincenalPactado / 15m;
-        string nombreConcepto = item.NombreConcepto.ToUpper();
+        var conceptoRegla = catalogoConceptos.FirstOrDefault(c => c.ConceptoId == item.ConId);
 
-        if (nombreConcepto.Contains("HORAS EXTRAS")) item.Total = Math.Round(item.Cantidad.Value * ((sdi / 8m) * 2m), 2);
-        else if (nombreConcepto.Contains("FESTIVO") || nombreConcepto.Contains("DESCANSO")) item.Total = Math.Round(item.Cantidad.Value * (sdi * 3m), 2);
-        else if (nombreConcepto.Contains("DOMINICAL")) item.Total = Math.Round(item.Cantidad.Value * (salarioDiarioNormal * 0.25m), 2);
-        else if (nombreConcepto.Contains("BAJA") || nombreConcepto.Contains("FALTA")) item.Total = Math.Round(item.Cantidad.Value * sdi, 2);
+        if (conceptoRegla != null && conceptoRegla.EsMontoDirecto)
+        {
+            item.Total = item.Cantidad.Value;
+        }
+        else
+        {
+            decimal sdi = empleadoSeleccionado.SaeSdi;
+            decimal salarioDiarioNormal = empleadoSeleccionado.SaeQuincenalPactado / 15m;
+            string nombre = item.NombreConcepto.ToUpper();
+
+            if (nombre.Contains("HORAS EXTRAS")) item.Total = Math.Round(item.Cantidad.Value * ((sdi / 8m) * 2m), 2);
+            else if (nombre.Contains("FESTIVO") || nombre.Contains("DESCANSO")) item.Total = Math.Round(item.Cantidad.Value * (sdi * 3m), 2);
+            else if (nombre.Contains("DOMINICAL")) item.Total = Math.Round(item.Cantidad.Value * (salarioDiarioNormal * 0.25m), 2);
+            else item.Total = Math.Round(item.Cantidad.Value * sdi, 2); 
+        }
 
         item.Importe = item.Total;
         StateHasChanged();
@@ -1166,45 +1302,109 @@ AplicarOrdenamiento();
     {
         if (matrizNomina == null || !matrizNomina.Any()) return;
 
-        var sb = new StringBuilder();
-        sb.Append("Subsidiaria,Empleado,Sueldo Quincenal,Dias a Pagar,Sueldo Devengado,");
-        foreach (var c in columnasOrdenadas) sb.Append($"{QuitarAcentos(c.Concepto)},");
-        sb.AppendLine("Total Percepciones,Total Deducciones,Total Pagado");
+        // 1. Inicializamos el libro de ClosedXML nativo
+        using var workbook = new ClosedXML.Excel.XLWorkbook();
+        var worksheet = workbook.Worksheets.Add("Sábana Prenómina");
 
+        // Recuperamos el color corporativo Navy Blue de las cabeceras de tu Sábana
+        var colorNavy = ClosedXML.Excel.XLColor.FromHtml("#253C60");
+
+        // --- CONSTRUCCIÓN DE CABECERAS ---
+        int colIndex = 1;
+        worksheet.Cell(1, colIndex++).Value = "Subsidiaria";
+        worksheet.Cell(1, colIndex++).Value = "Empleado";
+        worksheet.Cell(1, colIndex++).Value = "Banco";
+        worksheet.Cell(1, colIndex++).Value = "Sueldo Quincenal";
+        worksheet.Cell(1, colIndex++).Value = "Dias a Pagar";
+        worksheet.Cell(1, colIndex++).Value = "Sueldo Devengado";
+
+        // Cabeceras de conceptos dinámicos de la quincena
+        foreach (var c in columnasOrdenadas)
+        {
+            worksheet.Cell(1, colIndex++).Value = QuitarAcentos(c.Concepto).ToUpper();
+        }
+
+        // Cabeceras de totales finales
+        worksheet.Cell(1, colIndex++).Value = "Total Percepciones";
+        worksheet.Cell(1, colIndex++).Value = "Total Deducciones";
+        worksheet.Cell(1, colIndex++).Value = "Deuda Anterior";
+        worksheet.Cell(1, colIndex++).Value = "Total Pagado";
+        worksheet.Cell(1, colIndex++).Value = "Pago Aplicado";
+        worksheet.Cell(1, colIndex++).Value = "Adeudo";
+
+        // Aplicar estilos profesionales a la fila de cabecera (Negrita, Fondo Navy, Texto Blanco)
+        var rangoEncabezado = worksheet.Range(1, 1, 1, colIndex - 1);
+        rangoEncabezado.Style.Font.Bold = true;
+        rangoEncabezado.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
+        rangoEncabezado.Style.Fill.BackgroundColor = colorNavy;
+        rangoEncabezado.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+
+        // --- ENLACE Y MAPEO DE DATOS ---
+        int rowIndex = 2;
         foreach (var fila in matrizNomina)
         {
-            string nombreLimpio = QuitarAcentos(fila.NombreCompleto);
-            string subNombre = QuitarAcentos(fila.NombreSubsidiaria);
+            colIndex = 1;
+            worksheet.Cell(rowIndex, colIndex++).Value = QuitarAcentos(fila.NombreSubsidiaria);
+            worksheet.Cell(rowIndex, colIndex++).Value = QuitarAcentos(fila.NombreCompleto);
+            worksheet.Cell(rowIndex, colIndex++).Value = QuitarAcentos(fila.Banco ?? "Sin Banco");
 
-            int diasTotalesQ = selectedQuincena == 1 ? 15 : DateTime.DaysInMonth(selectedAnio, selectedMes) - 15;
+            // Sueldo Quincenal Pactado
+            var cellSueldo = worksheet.Cell(rowIndex, colIndex++);
+            cellSueldo.Value = fila.SaeQuincenalPactado;
+            cellSueldo.Style.NumberFormat.Format = "$#,##0.00"; // Formato de moneda real
+
+            // Días a Pagar
+            worksheet.Cell(rowIndex, colIndex++).Value = fila.DiasPagados;
+
+            // Sueldo Devengado (Base 15 estándar)
+            int diasTotalesQ = 15;
             decimal customSd = fila.SaeQuincenalPactado / (decimal)diasTotalesQ;
             decimal sueldoDevengado = Math.Round(customSd * fila.DiasPagados, 2);
 
-            sb.Append($"\"{subNombre}\",\"{nombreLimpio}\",{fila.SaeQuincenalPactado},{fila.DiasPagados},{sueldoDevengado},");
+            var cellDevengado = worksheet.Cell(rowIndex, colIndex++);
+            cellDevengado.Value = sueldoDevengado;
+            cellDevengado.Style.NumberFormat.Format = "$#,##0.00";
+
+            // Iteramos los valores reales de cada concepto dinámico de la quincena
             foreach (var c in columnasOrdenadas)
             {
                 decimal valor = fila.Conceptos.GetValueOrDefault(c.ConceptoId)?.Total ?? 0;
-                sb.Append($"{valor},");
+                var cellConcepto = worksheet.Cell(rowIndex, colIndex++);
+                cellConcepto.Value = valor;
+                cellConcepto.Style.NumberFormat.Format = "$#,##0.00";
             }
-            sb.AppendLine($"{fila.TotalPercepciones},{fila.TotalDeducciones},{fila.TotalPagado}");
+
+            // Columnas finales de totales, pagos y adeudos
+            decimal[] montosFinales = { fila.TotalPercepciones, fila.TotalDeducciones, fila.AdeudoAnterior, fila.TotalPagado, fila.PagoAplicado, fila.Adeudado };
+            foreach (var monto in montosFinales)
+            {
+                var cellMonto = worksheet.Cell(rowIndex, colIndex++);
+                cellMonto.Value = monto;
+                cellMonto.Style.NumberFormat.Format = "$#,##0.00";
+            }
+
+            rowIndex++;
         }
 
-        var preamble = Encoding.UTF8.GetPreamble();
-        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-        var finalBytes = new byte[preamble.Length + bytes.Length];
-        Buffer.BlockCopy(preamble, 0, finalBytes, 0, preamble.Length);
-        Buffer.BlockCopy(bytes, 0, finalBytes, preamble.Length, bytes.Length);
+        // Autoajustamos el ancho de las columnas según su contenido
+        worksheet.Columns(1, colIndex - 1).AdjustToContents();
 
-        var base64 = Convert.ToBase64String(finalBytes);
-        var filename = $"Nomina_{selectedAnio}_M{selectedMes}_Q{selectedQuincena}.csv";
+        // 4. Transformamos el libro binario a un flujo de memoria
+        using var ms = new System.IO.MemoryStream();
+        workbook.SaveAs(ms);
+        var bytes = ms.ToArray();
 
+        var base64 = Convert.ToBase64String(bytes);
+        var filename = $"Nomina_{selectedAnio}_M{selectedMes}_Q{selectedQuincena}.xlsx";
+
+        // 5. Invocamos la descarga con el Content-Type nativo de las hojas OpenXML de Office
         await JS.InvokeVoidAsync("eval",
             $@"var link = document.createElement('a');
-               link.download = '{filename}';
-               link.href = 'data:text/csv;charset=utf-8;base64,{base64}';
-               document.body.appendChild(link);
-               link.click();
-               document.body.removeChild(link);");
+           link.download = '{filename}';
+           link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{base64}';
+           document.body.appendChild(link);
+           link.click();
+           document.body.removeChild(link);");
     }
 
     private async Task AbrirModalEdicion(NominaMatrizDTO fila)
@@ -1233,7 +1433,7 @@ AplicarOrdenamiento();
         isModalBusy = true;
         try
         {
-            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, desgloseRecibo, estadoEditado);
+            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, empleadoSeleccionado.PagoAplicado, desgloseRecibo, estadoEditado);
             CerrarModal();
             await CargarNomina();
             await MostrarAvisoExitoAsync();
@@ -1247,7 +1447,7 @@ AplicarOrdenamiento();
         isModalBusy = true;
         try
         {
-            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, desgloseRecibo, estadoEditado);
+            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, empleadoSeleccionado.PagoAplicado, desgloseRecibo, estadoEditado);
             int currentIndex = matrizNomina.FindIndex(m => m.NomId == empleadoSeleccionado.NomId);
             await CargarNomina();
 
@@ -1267,7 +1467,7 @@ AplicarOrdenamiento();
         isModalBusy = true;
         try
         {
-            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, desgloseRecibo, estadoEditado);
+            await PayrollService.GuardarReciboAsync(empleadoSeleccionado.NomId, empleadoSeleccionado.DiasPagados, empleadoSeleccionado.PagoAplicado, desgloseRecibo, estadoEditado);
             int currentIndex = matrizNomina.FindIndex(m => m.NomId == empleadoSeleccionado.NomId);
             await CargarNomina();
 
@@ -1281,7 +1481,6 @@ AplicarOrdenamiento();
         finally { isModalBusy = false; }
     }
 
-    // BOTÓN DE EXCLUIR EMPLEADO INDIVIDUAL
     private async Task EjecutarEliminacionRecibo()
     {
         if (isLocked || empleadoSeleccionado == null) return;
@@ -1291,12 +1490,11 @@ AplicarOrdenamiento();
             await PayrollService.EliminarReciboAsync(empleadoSeleccionado.NomId);
             CerrarModal();
             showConfirmDeleteModal = false;
-            await CargarNomina(); // Refrescamos
+            await CargarNomina(); 
         }
         finally { isModalBusy = false; }
     }
 
-    // NUEVO: BOTÓN DE ELIMINAR SÁBANA COMPLETA
     private async Task EjecutarEliminacionSabana()
     {
         if (isLocked || periodoActual == null) return;
@@ -1308,7 +1506,7 @@ AplicarOrdenamiento();
             periodoActual = null;
             matrizNomina = null;
             await MostrarAvisoExitoAsync();
-            await ActualizarEstadoPeriodosAsync(); // <--- Refrescamos el combo
+            await ActualizarEstadoPeriodosAsync(); 
         }
         finally { isBusy = false; }
     }
@@ -1347,6 +1545,95 @@ AplicarOrdenamiento();
         await Task.Delay(1500);
         showSuccessModal = false;
         StateHasChanged();
+    }
+
+    private void UpdateDiasPagados(ChangeEventArgs e)
+    {
+        string val = e.Value?.ToString();
+        empleadoSeleccionado.DiasPagados = string.IsNullOrWhiteSpace(val) ? 0 : (decimal.TryParse(val, out var result) ? result : 0);
+        StateHasChanged();
+    }
+
+    private void UpdateCantidad(NominaImporteDTO item, ChangeEventArgs e)
+    {
+        string val = e.Value?.ToString();
+        item.Cantidad = string.IsNullOrWhiteSpace(val) ? null : (decimal.TryParse(val, out var result) ? result : null);
+        CalcularLinea(item);
+    }
+
+    private void UpdateTotal(NominaImporteDTO item, ChangeEventArgs e)
+    {
+        string val = e.Value?.ToString();
+        item.Total = string.IsNullOrWhiteSpace(val) ? 0 : (decimal.TryParse(val, out var result) ? result : 0);
+        SincronizarImporte(item);
+    }
+
+    private async Task UpdatePagoAplicadoInline(NominaMatrizDTO fila, ChangeEventArgs e)
+    {
+        // 1. REBOTAR: Si la fila ya está viajando al servidor, no hacemos caso a más clics
+        if (fila.IsSaving || isLocked) return;
+
+        fila.IsSaving = true; // PONER SEGURO
+        StateHasChanged();
+
+        try
+        {
+            string val = e.Value?.ToString();
+            fila.PagoAplicado = string.IsNullOrWhiteSpace(val) ? 0 : (decimal.TryParse(val, out var result) ? result : 0);
+
+            fila.Adeudado = fila.TotalPagado - fila.PagoAplicado;
+
+            if (fila.Estado == "NO_REGISTRADO") fila.Estado = "EN_PROCESO";
+
+            // 2. Traemos la lista ORIGINAL de la BD para no perder IDs ni banderas (Adiós lista falsa)
+            var desgloseRealBD = await PayrollService.GetDesgloseParaEdicionAsync(fila.NomId);
+
+            foreach (var kvp in fila.Conceptos)
+            {
+                var bdItem = desgloseRealBD.FirstOrDefault(df => df.ConId == kvp.Key);
+
+                if (bdItem != null)
+                {
+                    // Si el concepto ya existía, sincronizamos los números de la sábana
+                    bdItem.Cantidad = kvp.Value.Cantidad;
+                    bdItem.Total = kvp.Value.Total;
+                    bdItem.Importe = kvp.Value.Total;
+                }
+                else if (kvp.Value.Total > 0 || kvp.Value.Cantidad > 0)
+                {
+                    // Si es un concepto nuevo, lo metemos con sus banderas correctas para las incidencias
+                    var cat = catalogoConceptos.First(c => c.ConceptoId == kvp.Key);
+                    desgloseRealBD.Add(new NominaImporteDTO
+                    {
+                        ConId = kvp.Key,
+                        Tipo = cat.Tipo,
+                        Total = kvp.Value.Total,
+                        Importe = kvp.Value.Total,
+                        Cantidad = kvp.Value.Cantidad,
+                        RequiereCantidad = cat.CeldaEditable && !cat.EsMontoDirecto,
+                        NombreConcepto = cat.Concepto
+                    });
+                }
+            }
+
+            // 3. Guardamos pasando la lista íntegra
+            await PayrollService.GuardarReciboAsync(fila.NomId, fila.DiasPagados, fila.PagoAplicado, desgloseRealBD, fila.Estado);
+
+            // 4. Refrescamos para que, si se generó un Folio nuevo, la sábana se entere en vivo
+            var desgloseActualizado = await PayrollService.GetDesgloseParaEdicionAsync(fila.NomId);
+            foreach (var itemBD in desgloseActualizado)
+            {
+                if (fila.Conceptos.ContainsKey(itemBD.ConId))
+                {
+                    fila.Conceptos[itemBD.ConId].Total = itemBD.Total;
+                }
+            }
+        }
+        finally
+        {
+            fila.IsSaving = false; // QUITAR SEGURO
+            StateHasChanged();
+        }
     }
 }
 
@@ -1392,7 +1679,7 @@ AplicarOrdenamiento();
     }
 
     thead th.sticky-col-1, thead th.sticky-col-2 {
-        z-index: 15 !important;
+        z-index: 20 !important;
         border-right: 2px solid #1a2a44 !important;
     }
 
@@ -1526,10 +1813,60 @@ AplicarOrdenamiento();
     .aspel-table {
         border-collapse: collapse;
         width: 100%;
-        border: 1px solid #008080;
         background-color: #ffffe6;
         font-family: 'Tahoma', sans-serif;
         font-size: 0.75rem;
+        /* Quitamos el borde global para poder hacer el recorte en el pie de página */
+        border: none !important;
+    }
+
+    .aspel-table {
+        border-collapse: collapse;
+        width: 100%;
+        background-color: #ffffe6;
+        font-family: 'Tahoma', sans-serif;
+        font-size: 0.75rem;
+        /* Quitamos el borde global para poder hacer el recorte en el pie de página */
+        border: none !important;
+    }
+
+        /* 1. Borde superior grueso */
+        .aspel-table thead tr:first-child th {
+            border-top: 2px solid #008080;
+        }
+
+        /* 2. Borde lateral izquierdo grueso */
+        .aspel-table tr th:first-child,
+        .aspel-table tr td:first-child {
+            border-left: 2px solid #008080;
+        }
+
+        /* 3. Borde lateral derecho grueso */
+        .aspel-table tr th:last-child,
+        .aspel-table tr td:last-child {
+            border-right: 2px solid #008080;
+        }
+
+    /* 4. Divisor central grueso */
+    .aspel-border-center {
+        border-right: 2px solid #008080 !important;
+    }
+
+    /* 5. Cierre inferior de tablas (Línea de sumas) */
+    .aspel-table tfoot tr:first-child td {
+        border-bottom: 2px solid #008080;
+    }
+
+    /* 6. Cierre inferior del bloque recortado "Neto a Pagar" */
+    .aspel-table tfoot tr:last-child td.neto-box {
+        border-bottom: 2px solid #008080;
+    }
+
+    /* 7. Esquina invisible (Desaparece el cuadro blanco creando el escalón) */
+    .aspel-table tfoot tr:last-child td.hidden-corner {
+        border-left: none !important;
+        border-bottom: none !important;
+        background-color: transparent !important;
     }
 
     .aspel-header {
@@ -1551,7 +1888,8 @@ AplicarOrdenamiento();
     }
 
     .aspel-cell {
-        border: 1px solid #e0e0e0;
+        border: none; /* Quitamos los bordes grises encerrados */
+        border-bottom: 1px solid #e0e0e0; /* Dejamos solo la línea divisoria tenue horizontal */
         padding: 2px 4px;
         vertical-align: middle;
         height: 26px;
@@ -1560,12 +1898,9 @@ AplicarOrdenamiento();
     .aspel-cell-concept {
         color: #333;
     }
-
     .aspel-border-center {
+        /* Se quitan los overrrides innecesarios para que no pinte bordes abajo */
         border-right: 2px solid #008080 !important;
-        border-top-width: 1px !important;
-        border-bottom-width: 1px !important;
-        border-left-width: 1px !important;
     }
 
     .aspel-footer {
@@ -1591,4 +1926,21 @@ AplicarOrdenamiento();
         .aspel-input:disabled {
             color: #999;
         }
+
+    /* ================================================= */
+    /* QUITAR FLECHAS SOLO EN EL MODAL DETALLE DE NÓMINA */
+    /* ================================================= */
+
+    /* Para Chrome, Safari, Edge, Opera */
+    .aspel-table input[type="number"]::-webkit-outer-spin-button,
+    .aspel-table input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Para Firefox */
+    .aspel-table input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
 </style>

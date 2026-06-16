@@ -26,8 +26,9 @@
                     <i class="bi bi-person-add"></i>
                 </button>
 
-                <button class="btn btn-danger btn-custom" @onclick="ImprimirReporte">
-                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                @* EL BOTÓN AHORA ABRE EL MODAL DE OPCIONES *@
+                <button class="btn btn-danger btn-custom" @onclick="AbrirModalReporte" title="Exportar Reporte">
+                    <i class="bi bi-file-earmark-arrow-down-fill"></i>
                 </button>
             </div>
         </div>
@@ -79,7 +80,6 @@
                                     </div>
                                     <div>
                                         <span class="fw-bold d-block">@empleado.Nombre @empleado.Apellidos</span>
-                                        
                                     </div>
                                 </div>
                             </td>
@@ -134,6 +134,9 @@
 }
 else
 {
+    // ========================================================
+    // TU PLANTILLA PDF ORIGINAL (NO SE TOCÓ NADA)
+    // ========================================================
     <div id="ReporteEmpleados-pdf">
         <PlantillaReporte Titulo="Reporte de Empleados y Expedientes"
                           EsHorizontal="false"
@@ -223,6 +226,44 @@ else
     </div>
 }
 
+@* ========================================================= *@
+@* MODAL PARA SELECCIONAR FORMATO DE REPORTE                 *@
+@* ========================================================= *@
+@if (showReportModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 8px;">
+                <div class="modal-header bg-danger text-white py-2" style="border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                    <h6 class="modal-title fw-bold m-0"><i class="bi bi-printer-fill me-2"></i> Exportar Empleados</h6>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalReporte"></button>
+                </div>
+                <div class="modal-body bg-light p-3">
+                    <label class="fw-bold mb-2 small text-muted">SELECCIONE EL FORMATO:</label>
+                    <select class="form-select shadow-sm" @bind="formatoReporte">
+                        <option value="PDF">📄 Documento PDF (Visual)</option>
+                        <option value="EXCEL">📊 Microsoft Excel (Datos)</option>
+                    </select>
+
+                    <div class="alert alert-warning mt-3 mb-0 p-2 small border-0 shadow-sm">
+                        <i class="bi bi-info-circle-fill me-1"></i> El reporte de Excel incluirá únicamente a los <strong>Empleados Activos</strong> en el sistema.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 d-flex justify-content-between">
+                    <button class="btn btn-secondary btn-sm fw-bold shadow-sm" @onclick="CerrarModalReporte">Cancelar</button>
+                    <button class="btn btn-danger btn-sm fw-bold shadow-sm" @onclick="EjecutarReporte" disabled="@isReportBusy">
+                        @if (isReportBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-download me-1"></i> Generar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private EditarEmpleado editarModal;
     private List<EmpleadoViewModel> allEmpleados = new();
@@ -234,27 +275,24 @@ else
     private string SearchTerm
     {
         get => _searchTerm;
-        set
-        {
-            _searchTerm = value;
-            ApplyFilters();
-        }
+        set { _searchTerm = value; ApplyFilters(); }
     }
 
     private string _filterArea = "";
     private string FilterArea
     {
         get => _filterArea;
-        set
-        {
-            _filterArea = value;
-            ApplyFilters();
-        }
+        set { _filterArea = value; ApplyFilters(); }
     }
 
     private bool isPrinting = false;
     private EmpleadoViewModel? empleadoActual;
     private string nombreDeLogin = "Usuario";
+
+    // Variables para el Modal de Reporte
+    private bool showReportModal = false;
+    private bool isReportBusy = false;
+    private string formatoReporte = "PDF";
 
     protected override async Task OnInitializedAsync()
     {
@@ -264,11 +302,9 @@ else
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
             nombreDeLogin = user.Identity.Name ?? "Usuario";
-
             try
             {
                 var userId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
-
                 if (!string.IsNullOrEmpty(userId))
                 {
                     int empId = await EmpleadoService.GetEmpleadoIdByUserIdAsync(userId);
@@ -278,9 +314,7 @@ else
                     }
                 }
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         await LoadData();
@@ -347,6 +381,46 @@ else
         };
     }
 
+    // ==========================================
+    // NUEVA LÓGICA DE REPORTES (EXCEL Y PDF)
+    // ==========================================
+    private void AbrirModalReporte()
+    {
+        formatoReporte = "PDF"; // Por defecto
+        showReportModal = true;
+    }
+
+    private void CerrarModalReporte() => showReportModal = false;
+
+    private async Task EjecutarReporte()
+    {
+        isReportBusy = true;
+        try
+        {
+            if (formatoReporte == "EXCEL")
+            {
+                // Llamamos al método nuevo que creamos en el Service
+                var fileBytes = await EmpleadoService.GenerarReporteExcelEmpleadosActivosAsync();
+                var fileName = $"EmpleadosActivos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                // Usamos la función global que ya tenías en el App.razor
+                await JSRuntime.InvokeVoidAsync("descargarArchivoBase64", fileName, Convert.ToBase64String(fileBytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                showReportModal = false;
+            }
+            else if (formatoReporte == "PDF")
+            {
+                // Ejecutamos tu PDF actual usando la vista oculta
+                showReportModal = false;
+                await ImprimirReporte();
+            }
+        }
+        finally
+        {
+            isReportBusy = false;
+        }
+    }
+
+    // Tu método original intacto
     private async Task ImprimirReporte()
     {
         isPrinting = true;
@@ -377,7 +451,6 @@ else
             try
             {
                 await Task.Delay(500);
-
                 var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
 
                 if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("openId", out var idVal))

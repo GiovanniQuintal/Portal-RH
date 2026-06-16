@@ -194,18 +194,41 @@ namespace RRHH_ARG.Services
         // ==========================================================
         // TABLA DE LEY (VACACIONES DIGNAS MÉXICO)
         // ==========================================================
-        private decimal CalcularDiasPorLey(int anioCumplido)
+        // ==========================================================
+        // TABLA DE LEY (VACACIONES DIGNAS MÉXICO Y LEY ANTERIOR)
+        // ==========================================================
+        public decimal CalcularDiasPorLey(int anioCumplido, DateTime fechaAniversario)
         {
-            if (anioCumplido == 1) return 12;
-            if (anioCumplido == 2) return 14;
-            if (anioCumplido == 3) return 16;
-            if (anioCumplido == 4) return 18;
-            if (anioCumplido == 5) return 20;
-            if (anioCumplido >= 6 && anioCumplido <= 10) return 22;
-            if (anioCumplido >= 11 && anioCumplido <= 15) return 24;
-            if (anioCumplido >= 16 && anioCumplido <= 20) return 26;
-            if (anioCumplido >= 21 && anioCumplido <= 25) return 28;
-            return 30; // 26 años o más
+            // La reforma de Vacaciones Dignas entró en vigor el 1 de enero de 2023
+            bool esLeyNueva = fechaAniversario >= new DateTime(2023, 1, 1);
+
+            if (esLeyNueva)
+            {
+                // NUEVA TABLA (2023 en adelante)
+                if (anioCumplido == 1) return 12;
+                if (anioCumplido == 2) return 14;
+                if (anioCumplido == 3) return 16;
+                if (anioCumplido == 4) return 18;
+                if (anioCumplido == 5) return 20;
+                if (anioCumplido >= 6 && anioCumplido <= 10) return 22;
+                if (anioCumplido >= 11 && anioCumplido <= 15) return 24;
+                if (anioCumplido >= 16 && anioCumplido <= 20) return 26;
+                if (anioCumplido >= 21 && anioCumplido <= 25) return 28;
+                return 30; // 26 años o más
+            }
+            else
+            {
+                // TABLA ANTIGUA (Hasta el 31 de diciembre de 2022)
+                if (anioCumplido == 1) return 6;
+                if (anioCumplido == 2) return 8;
+                if (anioCumplido == 3) return 10;
+                if (anioCumplido == 4) return 12;
+                if (anioCumplido >= 5 && anioCumplido <= 9) return 14;
+                if (anioCumplido >= 10 && anioCumplido <= 14) return 16;
+                if (anioCumplido >= 15 && anioCumplido <= 19) return 18;
+                if (anioCumplido >= 20 && anioCumplido <= 24) return 20;
+                return 22; // 25 años o más en la ley antigua
+            }
         }
 
         // ==========================================================
@@ -252,7 +275,11 @@ namespace RRHH_ARG.Services
                 DateTime fechaFinPeriodo = fechaIngreso.AddYears(i);
                 string periodoCorrecto = $"{fechaInicioPeriodo.Year} - {fechaFinPeriodo.Year}";
                 DateTime caducidadCorrecta = fechaFinPeriodo.AddMonths(18);
-                decimal derechoCorrecto = CalcularDiasPorLey(i);
+
+                // ---> LÍNEA MODIFICADA: Ahora evalúa en qué año cayó este aniversario
+                decimal derechoCorrecto = CalcularDiasPorLey(i, fechaFinPeriodo);
+
+                
 
                 var existente = kardexExistentes.FirstOrDefault(k => k.NumeroAniversario == i);
 

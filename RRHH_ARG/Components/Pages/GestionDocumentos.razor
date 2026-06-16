@@ -88,9 +88,12 @@
 
                     @if (docEnEdicion.DexId == 0)
                     {
-                        <div class="alert alert-info small">
-                            <i class="bi bi-clock-history"></i> Se registrará con fecha de <strong>HOY (@DateTime.Now.ToShortDateString())</strong>. Solo los empleados contratados a partir de hoy verán este requisito.
-                        </div>
+                       
+                        {
+                            <div class="alert alert-info small">
+                                <i class="bi bi-info-circle"></i> <strong>Nota:</strong> Este nuevo documento será requerido globalmente para todos los colaboradores registrados en el sistema de manera retroactiva.
+                            </div>
+                        }
                     }
                 </div>
                 <div class="modal-footer">

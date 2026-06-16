@@ -127,6 +127,17 @@
             html2pdf().set(opciones).from(elemento).save();
         };
     </script>
+
+    <script>
+        window.descargarArchivoBase64 = function (filename, base64String, contentType) {
+            var link = document.createElement('a');
+            link.download = filename;
+            link.href = 'data:' + contentType + ';base64,' + base64String;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 </body>
 
 </html>

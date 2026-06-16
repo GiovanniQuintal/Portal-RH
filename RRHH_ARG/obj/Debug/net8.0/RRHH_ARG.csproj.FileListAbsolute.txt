@@ -1332,9 +1332,6 @@ C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
-C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
-C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
@@ -1376,3 +1373,219 @@ C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.pdb
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.genruntimeconfig.cache
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\ref\RRHH_ARG.dll
 C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Private.Windows.Core.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Private.Windows.GdiPlus.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.IO.Packaging.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ClosedXML.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ClosedXML.Parser.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ExcelNumberFormat.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RBush.dll
+C:\Users\Usuario1\Downloads\test\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\SixLabors.Fonts.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\appsettings.Development.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\appsettings.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RRHH_ARG.staticwebassets.runtime.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RRHH_ARG.staticwebassets.endpoints.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RRHH_ARG.exe
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RRHH_ARG.deps.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RRHH_ARG.runtimeconfig.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RRHH_ARG.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RRHH_ARG.pdb
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Azure.Core.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Azure.Identity.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\BlazorBootstrap.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\BlazorFluentUI.CoreComponents.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\BlazorFluentUI.ListComponents.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ClosedXML.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ClosedXML.Parser.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\DynamicData.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ExcelNumberFormat.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Humanizer.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Authorization.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Components.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Components.Forms.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Components.Web.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptography.Internal.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.AspNetCore.Metadata.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Design.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.Abstractions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Http.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Logging.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emoji.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.Activities.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.AnimalsNature.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.Flags.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.FoodDrink.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.Objects.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.PeopleBody.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.SmileysEmotion.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.Symbols.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Emojis.TravelPlaces.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Icons.Color.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Icons.Filled.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Icons.Light.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.FluentUI.AspNetCore.Components.Icons.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.JSInterop.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Mono.TextTemplating.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\RBush.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\SixLabors.Fonts.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\SvgPathProperties.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.ClientModel.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.CodeDom.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Composition.AttributedModel.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Composition.Convention.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Composition.Hosting.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Composition.Runtime.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Composition.TypedParts.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Drawing.Common.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Private.Windows.Core.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Private.Windows.GdiPlus.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.IO.Packaging.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Memory.Data.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Reactive.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Runtime.Caching.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Security.Permissions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\System.Windows.Extensions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Blazor.Diagrams.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\Blazor.Diagrams.Core.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.csproj.AssemblyReference.cache
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\rpswa.dswa.cache.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.GeneratedMSBuildEditorConfig.editorconfig
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.AssemblyInfoInputs.cache
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.AssemblyInfo.cs
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.csproj.CoreCompileInputs.cache
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.MvcApplicationPartsAssemblyInfo.cache
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.RazorAssemblyInfo.cache
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.RazorAssemblyInfo.cs
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\rjimswa.dswa.cache.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\jsmodules\jsmodules.build.manifest.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Account\Pages\Login.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Layout\MainLayout.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Layout\NavMenu.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Pages\CardWidget.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Pages\EditarEmpleado.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Pages\Empleados.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Pages\Incidencias.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Pages\Reclutamiento.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Pages\RegistroAplicantes.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Pages\Shared\InputArchivo.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\Components\Pages\Shared\RegistroIncidenciaModal.razor.rz.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\bundle\RRHH_ARG.styles.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\scopedcss\projectbundle\RRHH_ARG.bundle.scp.css
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.build.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.build.json.cache
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.development.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.csproj.Up2Date
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\refint\RRHH_ARG.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.pdb
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.genruntimeconfig.cache
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\ref\RRHH_ARG.dll

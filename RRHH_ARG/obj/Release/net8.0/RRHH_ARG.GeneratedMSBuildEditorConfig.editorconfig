@@ -278,6 +278,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQYXlyb2xsRGFzaGJvYXJkLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/PayrollViewer.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQYXlyb2xsVmlld2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Usuario1/Downloads/test/RRHH_ARG/RRHH_ARG/Components/Pages/ProyeccionPasivos.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQcm95ZWNjaW9uUGFzaXZvcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

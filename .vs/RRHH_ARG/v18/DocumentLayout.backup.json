@@ -3,8 +3,88 @@
   "WorkspaceRootPath": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\pages\\payrolldashboard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\payrolldashboard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\data\\payrollservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\data\\payrollservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\models\\nominaempleado.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\models\\nominaempleado.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\models\\nominaconceptos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\models\\nominaconceptos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\pages\\payrollviewer.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\payrollviewer.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\account\\pages\\proyeccionnomina.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\account\\pages\\proyeccionnomina.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\pages\\finanzashub.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\finanzashub.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\pages\\gestiondocumentos.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\gestiondocumentos.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\data\\empleadoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\data\\empleadoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\pages\\expedientes.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\expedientes.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\pages\\editarempleado.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\editarempleado.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\pages\\empleados.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\empleados.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\models\\empleadoviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\models\\empleadoviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\models\\empleado.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\models\\empleado.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\routes.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\routes.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|c:\\users\\usuario1\\downloads\\test\\rrhh_arg\\rrhh_arg\\components\\pages\\weather.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\weather.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,7 +94,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 21,
           "Children": [
             {
               "$type": "Bookmark",
@@ -26,7 +106,252 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "NominaEmpleado.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Models\\NominaEmpleado.cs",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Models\\NominaEmpleado.cs",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Models\\NominaEmpleado.cs",
+              "RelativeToolTip": "RRHH_ARG\\Models\\NominaEmpleado.cs",
+              "ViewState": "AgIAABEAAAAAAAAAAAAgwBwAAAAxAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-04T23:23:22.494Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ProyeccionNomina.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Account\\Pages\\ProyeccionNomina.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Account\\Pages\\ProyeccionNomina.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Account\\Pages\\ProyeccionNomina.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Account\\Pages\\ProyeccionNomina.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-28T01:18:04.028Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "GestionDocumentos.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\GestionDocumentos.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\GestionDocumentos.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\GestionDocumentos.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\GestionDocumentos.razor",
+              "ViewState": "AgIAADUAAAAAAAAAAAAlwFoAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-28T00:29:15.428Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Expedientes.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\Expedientes.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\Expedientes.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\Expedientes.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\Expedientes.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-28T00:27:36.185Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Empleado.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Models\\Empleado.cs",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Models\\Empleado.cs",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Models\\Empleado.cs",
+              "RelativeToolTip": "RRHH_ARG\\Models\\Empleado.cs",
+              "ViewState": "AgIAABEAAAAAAAAAAAA3wEMAAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-15T16:53:25.401Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "EmpleadoViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Models\\EmpleadoViewModel.cs",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Models\\EmpleadoViewModel.cs",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Models\\EmpleadoViewModel.cs",
+              "RelativeToolTip": "RRHH_ARG\\Models\\EmpleadoViewModel.cs",
+              "ViewState": "AgIAAFoAAAAAAAAAAAAywDsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-15T16:46:01.313Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "EditarEmpleado.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\EditarEmpleado.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\EditarEmpleado.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\EditarEmpleado.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\EditarEmpleado.razor",
+              "ViewState": "AgIAAKkFAAAAAAAAAAAQwNgFAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-12T20:34:08.52Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Properties\\launchSettings.json",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Properties\\launchSettings.json",
+              "RelativeToolTip": "RRHH_ARG\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-05-12T19:27:06.396Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "EmpleadoService.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Data\\EmpleadoService.cs",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Data\\EmpleadoService.cs",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Data\\EmpleadoService.cs",
+              "RelativeToolTip": "RRHH_ARG\\Data\\EmpleadoService.cs",
+              "ViewState": "AgIAAEsEAAAAAAAAAAAQwGAEAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-12T19:26:36.746Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Empleados.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\Empleados.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\Empleados.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\Empleados.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\Empleados.razor",
+              "ViewState": "AgIAAMgBAAAAAAAAAAAYwNYBAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-12T19:22:57.91Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "App.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\App.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\App.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\App.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\App.razor",
+              "ViewState": "AgIAAGoAAAAAAAAAAAAqwI8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-11T23:44:02.874Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Routes.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Routes.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Routes.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Routes.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Routes.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-11T23:44:01.73Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Program.cs",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Program.cs",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Program.cs",
+              "RelativeToolTip": "RRHH_ARG\\Program.cs",
+              "ViewState": "AgIAAI0AAAAAAAAAAAAwwKIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-11T23:43:51.227Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "FinanzasHub.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\FinanzasHub.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\FinanzasHub.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\FinanzasHub.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\FinanzasHub.razor",
+              "ViewState": "AgIAABQAAAAAAAAAAAAAAI4AAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-11T19:27:42.098Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "PayrollViewer.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\PayrollViewer.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\PayrollViewer.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\PayrollViewer.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\PayrollViewer.razor",
+              "ViewState": "AgIAADkCAAAAAAAAAAAuwFgCAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-11T19:27:10.866Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "NominaConceptos.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Models\\NominaConceptos.cs",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Models\\NominaConceptos.cs",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Models\\NominaConceptos.cs",
+              "RelativeToolTip": "RRHH_ARG\\Models\\NominaConceptos.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAwBsAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-11T16:17:45.31Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PayrollService.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Data\\PayrollService.cs",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Data\\PayrollService.cs",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Data\\PayrollService.cs",
+              "RelativeToolTip": "RRHH_ARG\\Data\\PayrollService.cs",
+              "ViewState": "AgIAAKUBAAAAAAAAAAAmwMMBAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-11T15:50:34.678Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "NavMenu.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Layout\\NavMenu.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Layout\\NavMenu.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Layout\\NavMenu.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Layout\\NavMenu.razor",
+              "ViewState": "AgIAADEBAAAAAAAAAAAAAEwBAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-11T15:26:55.137Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Weather.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\Weather.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\Weather.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\Weather.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\Weather.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-11T15:25:24.681Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "PayrollDashboard.razor",
+              "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\PayrollDashboard.razor",
+              "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\PayrollDashboard.razor",
+              "ToolTip": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\PayrollDashboard.razor",
+              "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\PayrollDashboard.razor",
+              "ViewState": "AgIAAIsGAAAAAAAAAAAcwJoGAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-11T15:02:29.771Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\Usuario1\\Downloads\\test\\RRHH_ARG\\RRHH_ARG\\appsettings.json",
               "RelativeDocumentMoniker": "RRHH_ARG\\appsettings.json",

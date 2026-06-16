@@ -26,6 +26,10 @@ namespace RRHH_ARG.Models
 
         public decimal Pagado { get; set; }
 
+        public decimal PagoAplicado { get; set; }
+        public decimal Adeudado { get; set; }
+        public decimal AdeudoAnterior { get; set; }
+
         [Required]
         [StringLength(50)]
         public string Estado { get; set; } = "EN_PROCESO";

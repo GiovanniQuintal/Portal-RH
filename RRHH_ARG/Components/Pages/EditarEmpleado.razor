@@ -691,6 +691,20 @@
                                     <small class="text-muted" style="font-size: 0.7rem;">Base para horas extras y festivos (Mensual / 30).</small>
                                 </div>
 
+                                @* --- NUEVOS CAMPOS BANCARIOS --- *@
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Institución Bancaria</label>
+                                    <select @bind="empleadoViewModel.Banco" class="form-select" disabled="@(!isEditable)">
+                                        <option value="">-- Seleccionar --</option>
+                                        <option value="BBVA">BBVA</option>
+                                        <option value="EXTERNO">Externo (Otros Bancos)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Cuenta / CLABE</label>
+                                    <input @bind="empleadoViewModel.CuentaBancaria" class="form-control" placeholder="18 dígitos" disabled="@(!isEditable)" maxlength="18" />
+                                </div>
 
                                 @{
                                     var listaBeneficios = empleadoViewModel.Beneficios.Where(b => b.Clasificacion == "BENEFICIO").ToList();

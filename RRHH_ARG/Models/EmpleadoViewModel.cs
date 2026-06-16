@@ -58,6 +58,9 @@ namespace RRHH_ARG.Models
         public decimal? SaeQuincenal { get; set; }
         public decimal? SaeSdi { get; set; }
 
+        public string? Banco { get; set; }
+        public string? CuentaBancaria { get; set; }
+
         public List<BeneficioEmpleadoDTO> Beneficios { get; set; } = new();
 
         // 3. PROPIEDAD INTELIGENTE PARA LA TABLA

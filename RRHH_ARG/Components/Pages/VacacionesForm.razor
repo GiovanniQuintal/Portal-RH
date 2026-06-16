@@ -9,20 +9,29 @@
 
 <div class="p-3">
     @* BARRA SUPERIOR: SELECTOR Y BOTÓN HUB *@
-    <div class="mb-3 d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center gap-2" style="max-width: 600px;">
-            <label class="fw-bold small">Empleado a capturar:</label>
-            <select class="form-select form-select-sm shadow-sm" @onchange="OnEmpleadoChanged">
+    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap" style="max-width: 700px;">
+            <label class="fw-bold small m-0">Empleado a capturar:</label>
+            <select class="form-select form-select-sm shadow-sm" style="width: auto; min-width: 250px;" @onchange="OnEmpleadoChanged">
                 <option value="0">-- Seleccione --</option>
                 @foreach (var emp in listaEmpleados)
                 {
                     <option value="@emp.Id">@emp.Nombre @emp.ApellidoPaterno</option>
                 }
             </select>
+
+            @* ETIQUETA VISUAL DEL SALDO *@
+            @if (solicitud.EmpleadoId > 0)
+            {
+                <span class="badge @(solicitud.SaldoDisponible > 0 ? "bg-success" : "bg-danger") shadow-sm d-flex align-items-center px-2 py-1" style="font-size: 0.85rem;">
+                    <i class="bi bi-calendar2-check-fill me-1"></i>
+                    Saldo Disponible: @solicitud.SaldoDisponible.ToString("0.##") días
+                </span>
+            }
         </div>
-        
-        @* NUEVO: Botón para regresar al Hub *@
-        <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick='() => Nav.NavigateTo("/finanzas/hub")'>
+
+        @* Botón para regresar al Hub *@
+        <button class="btn btn-outline-secondary btn-sm shadow-sm text-nowrap" @onclick='() => Nav.NavigateTo("/finanzas/hub")'>
             <i class="bi bi-arrow-left"></i> Volver al Hub
         </button>
     </div>
@@ -71,6 +80,7 @@
             </div>
 
             @* FILA 4: Vacaciones y Prima (Cálculo Automático) *@
+           
             <div class="d-flex gap-4 mb-4">
                 <div class="w-50">
                     <div class="d-flex">
@@ -81,9 +91,12 @@
                 </div>
 
                 <div class="w-50">
-                    @* Formateado visualmente como moneda si lo prefieres, pero numérico para cálculos *@
                     <InputNumber @bind-Value="solicitud.PrimaVacacionalEstimada" class="classic-input w-100 text-end text-success fw-bold" disabled />
                     <div class="classic-label"><u>P</u>rima vac. de Días de vac. (Cálculo SDI)</div>
+                    @* NUEVA NOTA DE ADVERTENCIA *@
+                    <div class="text-danger mt-1 fw-bold" style="font-size: 0.65rem;">
+                        <i class="bi bi-info-circle-fill"></i> Nota: Esta cantidad es solo informativa. NO se agregará automáticamente a la prenómina.
+                    </div>
                 </div>
             </div>
 
@@ -123,6 +136,23 @@
         </EditForm>
     </div>
 </div>
+
+@* MODAL DE ÉXITO DE 2 SEGUNDOS *@
+@if (showSuccessModal)
+{
+    <div class="modal d-block" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 0;">
+                <div class="modal-header py-2" style="background-color: #198754; color: white; border-radius: 0;">
+                    <h6 class="modal-title m-0 fw-bold"><i class="bi bi-check-circle"></i> Éxito</h6>
+                </div>
+                <div class="modal-body p-4 text-center bg-light">
+                    <h6 class="fw-bold text-success mb-0">Se agregó a las incidencias correctamente.</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private VacacionSolicitudDTO solicitud = new();
@@ -184,11 +214,24 @@
         StateHasChanged();
     }
 
+    private bool showSuccessModal = false; // Variable para controlar el modal
+
     private async Task GuardarSolicitud()
     {
         if (solicitud.EmpleadoId > 0 && solicitud.DiasVacaciones <= solicitud.SaldoDisponible)
         {
+            // 1. Guardamos en la base de datos
             await VacacionService.RegistrarVacacionesAsync(solicitud);
+
+            // 2. Mostramos el modal de éxito
+            showSuccessModal = true;
+            StateHasChanged();
+
+            // 3. Hacemos que el sistema espere 2 segundos (2000 milisegundos)
+            await Task.Delay(2000);
+
+            // 4. Cerramos el modal y navegamos al Kardex
+            showSuccessModal = false;
             Nav.NavigateTo("/finanzas/kardex-vacaciones");
         }
     }

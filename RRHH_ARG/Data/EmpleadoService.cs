@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ClosedXML.Excel;
 
 using static RRHH_ARG.Components.Pages.QhseDashboard;
 using static RRHH_ARG.Components.Pages.QhseForm;
@@ -115,12 +116,12 @@ namespace RRHH_ARG.Data
         }
 
         // =================================================================
-        // 3. GUARDAR INCIDENCIA (ESCRITURA) Y SINCRONIZAR KARDEX
+        // 3. GUARDAR INCIDENCIA (ESCRITURA) Y SINCRONIZAR KARDEX / NÓMINA
         // =================================================================
         public async Task AddIncidenciaAsync(IncidenciaDTO vm)
         {
             using var context = _dbFactory.CreateDbContext();
-            using var transaction = await context.Database.BeginTransactionAsync(); // <--- TRANSACCIÓN AÑADIDA
+            using var transaction = await context.Database.BeginTransactionAsync();
 
             try
             {
@@ -168,9 +169,8 @@ namespace RRHH_ARG.Data
                 await context.SaveChangesAsync();
 
                 // =================================================================
-                // MAGIA: SINCRONIZACIÓN INVERSA (INCIDENCIAS -> KARDEX VACACIONES)
+                // MAGIA 1: SINCRONIZACIÓN INVERSA (INCIDENCIAS -> KARDEX VACACIONES)
                 // =================================================================
-                // Si el TipoId es '2' (Vacaciones) y hay días por descontar
                 if (vm.TipoId == 2 && vm.Cantidad > 0)
                 {
                     decimal diasRestantesPorAplicar = vm.Cantidad;
@@ -207,79 +207,259 @@ namespace RRHH_ARG.Data
 
                         diasRestantesPorAplicar -= aDescontar;
                     }
-
                     await context.SaveChangesAsync();
                 }
 
-                await transaction.CommitAsync(); // <-- CONFIRMAMOS TODO JUNTO
+                // =================================================================
+                // MAGIA 2: SINCRONIZACIÓN BILATERAL (INCIDENCIAS -> SÁBANA NÓMINA)
+                // =================================================================
+                if (vm.TipoId != 2) // Excluimos vacaciones de este recálculo financiero
+                {
+                    await SincronizarPrenominaDesdeIncidenciaAsync(vm.EmpleadoId, vm.FechaIncidencia, context);
+                }
+
+                await transaction.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync(); // <-- REVERTIMOS SI HAY ERROR
+                await transaction.RollbackAsync();
                 throw;
             }
         }
 
         // =================================================================
-        // 4. ELIMINAR INCIDENCIA
+        // 4. ELIMINAR INCIDENCIA Y ACTUALIZAR SÁBANA
         // =================================================================
         public async Task DeleteIncidenciaAsync(int incidenciaId)
         {
             using var context = _dbFactory.CreateDbContext();
+            using var transaction = await context.Database.BeginTransactionAsync();
 
-            var incidencia = await context.Incidencium.FindAsync(incidenciaId);
-
-            if (incidencia != null)
+            try
             {
-                if (incidencia.DinId != null)
+                var incidencia = await context.Incidencium.FindAsync(incidenciaId);
+
+                if (incidencia != null)
                 {
-                    var detalle = await context.DetalleIncidencium.FindAsync(incidencia.DinId);
-                    if (detalle != null) context.DetalleIncidencium.Remove(detalle);
+                    DateTime fechaAfectada = incidencia.IncFecha ?? DateTime.Now;
+
+                    var historial = await context.HistorialIncidencium.FirstOrDefaultAsync(h => h.IncId == incidenciaId);
+                    int empId = historial?.EmpId ?? 0;
+
+                    int? dinId = incidencia.DinId;
+
+                    // Borramos el historial y la incidencia
+                    if (historial != null) context.HistorialIncidencium.Remove(historial);
+                    context.Incidencium.Remove(incidencia);
+                    await context.SaveChangesAsync(); // Se borra para que el recálculo no la encuentre
+
+                    // Sincronizamos la nómina ahora que la incidencia ya no existe
+                    if (empId > 0)
+                    {
+                        await SincronizarPrenominaDesdeIncidenciaAsync(empId, fechaAfectada, context);
+                    }
+
+                    // Finalmente borramos el detalle y el archivo
+                    if (dinId != null)
+                    {
+                        var detalle = await context.DetalleIncidencium.FindAsync(dinId);
+                        if (detalle != null) context.DetalleIncidencium.Remove(detalle);
+                        await context.SaveChangesAsync();
+                    }
                 }
 
-                var historial = await context.HistorialIncidencium.FirstOrDefaultAsync(h => h.IncId == incidenciaId);
-                if (historial != null)
-                {
-                    context.HistorialIncidencium.Remove(historial);
-                }
-
-                context.Incidencium.Remove(incidencia);
-                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
             }
         }
 
         // =================================================================
-        // 5. ACTUALIZAR INCIDENCIA
+        // 5. ACTUALIZAR INCIDENCIA Y RECALCULAR SÁBANA
         // =================================================================
         public async Task UpdateIncidenciaAsync(IncidenciaDTO vm)
         {
             using var context = _dbFactory.CreateDbContext();
+            using var transaction = await context.Database.BeginTransactionAsync();
 
-            var incidencia = await context.Incidencium.FindAsync(vm.IncidenciaId);
-
-            if (incidencia != null)
+            try
             {
-                incidencia.IncFecha = vm.FechaIncidencia;
+                var incidencia = await context.Incidencium.FindAsync(vm.IncidenciaId);
 
-                if (incidencia.DinId != null)
+                if (incidencia != null)
                 {
-                    var detalle = await context.DetalleIncidencium.FindAsync(incidencia.DinId);
-                    if (detalle != null)
-                    {
-                        detalle.TinId = vm.TipoId; // Usamos el ID
-                        //detalle.DinTipo = vm.Tipo;
-                        detalle.DinCantidad = vm.Cantidad; // <--- ACTUALIZA LA CANTIDAD
-                        detalle.DinDescripcion = vm.Descripcion;
+                    DateTime fechaAntigua = incidencia.IncFecha ?? DateTime.Now;
+                    var historial = await context.HistorialIncidencium.FirstOrDefaultAsync(h => h.IncId == vm.IncidenciaId);
+                    int empId = historial?.EmpId ?? 0;
 
-                        if (vm.ArchivoBytes != null && vm.ArchivoBytes.Length > 0)
+                    incidencia.IncFecha = vm.FechaIncidencia;
+
+                    if (incidencia.DinId != null)
+                    {
+                        var detalle = await context.DetalleIncidencium.FindAsync(incidencia.DinId);
+                        if (detalle != null)
                         {
-                            detalle.DinArchivo = vm.NombreArchivo;
-                            detalle.DinContenido = vm.ArchivoBytes; // <--- FALTABA ESTO
+                            detalle.TinId = vm.TipoId;
+                            detalle.DinCantidad = vm.Cantidad;
+                            detalle.DinDescripcion = vm.Descripcion;
+
+                            if (vm.ArchivoBytes != null && vm.ArchivoBytes.Length > 0)
+                            {
+                                detalle.DinArchivo = vm.NombreArchivo;
+                                detalle.DinContenido = vm.ArchivoBytes;
+                            }
+                        }
+                    }
+                    await context.SaveChangesAsync(); // Guardamos el cambio de cantidad/fecha
+
+                    // Sincronizamos la nómina
+                    if (empId > 0 && vm.TipoId != 2)
+                    {
+                        // Si le cambió la fecha de Enero a Febrero, limpiamos Enero y afectamos Febrero
+                        await SincronizarPrenominaDesdeIncidenciaAsync(empId, fechaAntigua, context);
+
+                        if (fechaAntigua.Date != vm.FechaIncidencia.Date)
+                        {
+                            await SincronizarPrenominaDesdeIncidenciaAsync(empId, vm.FechaIncidencia, context);
                         }
                     }
                 }
-                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        // =================================================================
+        // MOTOR BIFÁSICO: DE INCIDENCIA A NÓMINA
+        // =================================================================
+        private async Task SincronizarPrenominaDesdeIncidenciaAsync(int empId, DateTime fechaIncidencia, ApplicationDbContext context)
+        {
+            // TRUCO: Asegurarnos de quitarle la hora, minuto y segundo a la fecha que llega de RH
+            DateTime fechaBuscada = fechaIncidencia.Date;
+
+            // 1. Buscamos la nómina abierta comparando puras fechas de calendario
+            var nomina = await context.Nominas
+                .FirstOrDefaultAsync(n =>
+                    n.PeriodoInicio.Date <= fechaBuscada &&
+                    n.PeriodoFin.Date >= fechaBuscada &&
+                    !n.Bloqueado);
+
+            if (nomina == null) return; // Si no hay nómina abierta en esta fecha, abortamos.
+
+            // 2. Buscamos el recibo
+            var recibo = await context.NominaEmpleados
+                .Include(r => r.Empleado)
+                .FirstOrDefaultAsync(r => r.NominaId == nomina.NominaId && r.EMP_ID == empId);
+
+            if (recibo == null) return; // Si el empleado fue excluido de la sábana, abortamos.
+
+            // 3. Traemos tipos de incidencia
+            var tiposIncidencia = await context.Set<TipoIncidencia>().Where(t => t.ConId != null).ToListAsync();
+            var idsTiposInc = tiposIncidencia.Select(t => t.TinId).ToList();
+
+            // Congelamos las fechas de la nómina purificadas (sin horas) para la subconsulta
+            DateTime inicioNomina = nomina.PeriodoInicio.Date;
+            DateTime finNomina = nomina.PeriodoFin.Date;
+
+            // Buscamos todas las incidencias guardando el IncId para la cadena de texto
+            var incidenciasQuincena = await (from inc in context.Incidencium
+                                             join hin in context.HistorialIncidencium on inc.IncId equals hin.IncId
+                                             join din in context.DetalleIncidencium on inc.DinId equals din.DinId
+                                             where hin.EmpId == empId
+                                                && inc.IncFecha != null
+                                                && inc.IncFecha.Value.Date >= inicioNomina
+                                                && inc.IncFecha.Value.Date <= finNomina
+                                                && idsTiposInc.Contains(din.TinId ?? 0)
+                                             select new { inc.IncId, din.TinId, din.DinCantidad }).ToListAsync();
+
+            var conceptosCatalogo = await context.NominaConceptos.ToDictionaryAsync(c => c.ConceptoId, c => c);
+            decimal sdi = recibo.Empleado.SAE_SDI ?? 0;
+            decimal salarioDiarioNormal = (recibo.Empleado.SAE_QUINCENAL ?? 0) / 15m;
+
+            var detallesRecibo = await context.NominaEmpleadoDetalles
+                .Where(d => d.NominaEmpleadoId == recibo.NominaEmpleadoId).ToListAsync();
+
+            foreach (var tin in tiposIncidencia)
+            {
+                var d = detallesRecibo.FirstOrDefault(x => x.ConceptoId == tin.ConId.Value);
+                if (d != null) { d.Cantidad = 0; d.Total = 0; d.Importe = 0; d.Comentarios = null; }
+            }
+
+            var fallasAgrupadas = incidenciasQuincena
+                .GroupBy(i => tiposIncidencia.First(t => t.TinId == i.TinId).ConId.Value)
+                .ToList();
+
+            foreach (var grupo in fallasAgrupadas)
+            {
+                int conId = grupo.Key;
+                decimal sumaCantidades = grupo.Sum(x => x.DinCantidad);
+                if (sumaCantidades == 0) continue;
+
+                decimal totalEnDinero = 0;
+                var cat = conceptosCatalogo[conId];
+                string nombreUpper = cat.Concepto.ToUpper();
+
+                if (nombreUpper.Contains("HORAS EXTRAS")) totalEnDinero = Math.Round(sumaCantidades * ((sdi / 8m) * 2m), 2);
+                else if (nombreUpper.Contains("FESTIVO") || nombreUpper.Contains("DESCANSO")) totalEnDinero = Math.Round(sumaCantidades * (sdi * 3m), 2);
+                else if (nombreUpper.Contains("DOMINICAL")) totalEnDinero = Math.Round(sumaCantidades * (salarioDiarioNormal * 0.25m), 2);
+                else if (nombreUpper.Contains("BAJA") || nombreUpper.Contains("FALTA") || nombreUpper.Contains("SIN GOCE")) totalEnDinero = Math.Round(sumaCantidades * sdi, 2);
+
+                // Volvemos a concatenar los folios dinámicamente
+                var listaFolios = grupo.Select(x => $"INC-{x.IncId}");
+                string comentarioFolios = "Ref: " + string.Join(", ", listaFolios);
+
+                var det = detallesRecibo.FirstOrDefault(d => d.ConceptoId == conId);
+                if (det != null)
+                {
+                    det.Cantidad = sumaCantidades;
+                    det.Total = totalEnDinero;
+                    det.Importe = totalEnDinero;
+                    det.Comentarios = comentarioFolios; // <--- Sincroniza las referencias
+                }
+                else
+                {
+                    det = new NominaEmpleadoDetalle
+                    {
+                        NominaEmpleadoId = recibo.NominaEmpleadoId,
+                        ConceptoId = conId,
+                        Cantidad = sumaCantidades,
+                        Total = totalEnDinero,
+                        Importe = totalEnDinero,
+                        Comentarios = comentarioFolios
+                    };
+                    context.NominaEmpleadoDetalles.Add(det);
+                    detallesRecibo.Add(det);
+                }
+            }
+
+            // 4. Actualizamos Totales Finales del Recibo
+            decimal customSdSueldo = (recibo.Empleado.SAE_QUINCENAL ?? 0) / 15m;
+            decimal sueldoProporcional = Math.Round(customSdSueldo * recibo.DiasPagados, 2);
+
+            recibo.Percepciones = sueldoProporcional + detallesRecibo.Where(d => conceptosCatalogo.ContainsKey(d.ConceptoId) && conceptosCatalogo[d.ConceptoId].Tipo == "P").Sum(d => d.Total);
+            recibo.Deducciones = detallesRecibo.Where(d => conceptosCatalogo.ContainsKey(d.ConceptoId) && conceptosCatalogo[d.ConceptoId].Tipo == "D").Sum(d => d.Total);
+
+            recibo.Pagado = (recibo.Percepciones - recibo.Deducciones) + recibo.AdeudoAnterior;
+            recibo.Adeudado = recibo.Pagado - recibo.PagoAplicado;
+
+            context.NominaEmpleados.Update(recibo);
+
+            // 5. Ajustamos el Gran Total de la Sábana General
+            var totalRestante = await context.NominaEmpleados
+                .Where(n => n.NominaId == nomina.NominaId && n.NominaEmpleadoId != recibo.NominaEmpleadoId)
+                .SumAsync(n => n.Pagado);
+
+            nomina.TotalSueldosNetos = totalRestante + recibo.Pagado;
+            context.Nominas.Update(nomina);
+
+            await context.SaveChangesAsync();
         }
 
         // =================================================================
@@ -604,6 +784,8 @@ namespace RRHH_ARG.Data
                             SaeMensual = e.SAE_MENSUAL,
                             SaeQuincenal = e.SAE_QUINCENAL,
                             SaeSdi = e.SAE_SDI,
+                            Banco = e.Banco,            // <--- AGREGAR ESTA
+                            CuentaBancaria = e.CuentaBancaria,
                             ExpedientesTotales = 0,
                             ExpedientesCompletos = 0
                         };
@@ -632,39 +814,13 @@ namespace RRHH_ARG.Data
                     .Select(x => x.DexId)
                     .ToList();
 
-                DateTime fechaIngresoEmp = (emp.FechaContratacion ?? DateTime.MinValue).Date;
-                bool esBecario = (emp.TipId == 2 || emp.TipId == 3);
-
-                // LÓGICA UNIFICADA: ¿Qué documentos del catálogo le aplican a este empleado?
+                // LÓGICA UNIFICADA: Todos los documentos aplican a todos, excepto si tienen exclusión manual
                 var docsAplicablesDelCatalogo = catalogoCompleto.Where(doc =>
                 {
-                    // 1. Si está excluido manualmente, fuera.
+                    // 1. Si está excluido manualmente, no se le pide
                     if (exclusionesEmp.Contains(doc.DexId)) return false;
 
-                    // 2. Lógica para documentos "Históricos" (ID 1 al 19)
-                    if (doc.DexId <= 19)
-                    {
-                        if (esBecario)
-                        {
-                            // Si es becario, y NO está en su lista, lo descartamos
-                            if (!docsBecariosIds.Contains(doc.DexId)) return false;
-                        }
-                        else
-                        {
-                            // Si es empleado normal, y es el exclusivo de becarios, lo descartamos
-                            if (doc.DexId == idDocumentoExclusivoBecarios) return false;
-                        }
-                    }
-
-                    // 3. Lógica para documentos "Nuevos / Globales" (ID > 19)
-                    if (doc.DexId > 19)
-                    {
-                        // Si el documento se creó ANTES de que el empleado entrara, no se le pide
-                        if (doc.DexFecha.HasValue && fechaIngresoEmp < doc.DexFecha.Value.Date)
-                            return false;
-                    }
-
-                    // Si sobrevive a todos los filtros, es obligatorio para esta persona
+                    // Si sobrevive al filtro de exclusión manual, es obligatorio para esta persona
                     return true;
 
                 }).Select(d => d.DexId).ToList();
@@ -922,7 +1078,10 @@ namespace RRHH_ARG.Data
                     AspNetUserId = newUser.Id,
                     SAE_MENSUAL = vm.SaeMensual,
                     SAE_QUINCENAL = vm.SaeQuincenal,
-                    SAE_SDI = vm.SaeSdi
+                    SAE_SDI = vm.SaeSdi,
+                    Banco = vm.Banco,
+                    CuentaBancaria = vm.CuentaBancaria,
+
                 };
                 context.Empleados.Add(nuevoEmpleado);
                 await context.SaveChangesAsync();
@@ -971,6 +1130,8 @@ namespace RRHH_ARG.Data
                     empleado.SAE_MENSUAL = vm.SaeMensual;
                     empleado.SAE_QUINCENAL = vm.SaeQuincenal;
                     empleado.SAE_SDI = vm.SaeSdi;
+                    empleado.Banco = vm.Banco;
+                    empleado.CuentaBancaria = vm.CuentaBancaria;
 
                     context.Empleados.Update(empleado);
                     await context.SaveChangesAsync();
@@ -1117,31 +1278,8 @@ namespace RRHH_ARG.Data
 
             foreach (var doc in catalogoDocs)
             {
-                bool mostrar = true;
-
-                // NUEVO: Si está en exclusiones, no mostrar
-                if (exclusiones.Contains(doc.DexId))
-                {
-                    mostrar = false;
-                }
-                else if (doc.DexId <= 19)
-                {
-                    if (tipoEmpleadoId == 2 || tipoEmpleadoId == 3)
-                    {
-                        if (!docsBecarios.Contains(doc.DexId)) mostrar = false;
-                    }
-                    else
-                    {
-                        if (docsExcluidosEmpleado.Contains(doc.DexId)) mostrar = false;
-                    }
-                }
-                else
-                {
-                    if (doc.DexFecha.HasValue && fechaIngresoEmp < doc.DexFecha.Value.Date)
-                    {
-                        mostrar = false;
-                    }
-                }
+                // Solo ocultamos si existe una exclusión explícita para este empleado y este documento
+                bool mostrar = !exclusiones.Contains(doc.DexId);
 
                 if (mostrar)
                 {
@@ -2601,6 +2739,66 @@ namespace RRHH_ARG.Data
             return await context.DetalleExpediente
                 .Where(d => dexIdsOcultos.Contains(d.DexId))
                 .ToListAsync();
+        }
+
+        // =================================================================
+        // GENERAR REPORTE EXCEL DE EMPLEADOS ACTIVOS
+        // =================================================================
+        public async Task<byte[]> GenerarReporteExcelEmpleadosActivosAsync()
+        {
+            // 1. Obtenemos los empleados y filtramos solo los activos
+            var todos = await GetEmpleadosViewModelAsync();
+            var activos = todos.Where(e => e.StaId == 1 || e.Status != "Inactivo").ToList();
+
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Empleados Activos");
+
+            // 2. Cabecera Institucional (Azul Marino con letras blancas)
+            var headerRow = ws.Row(1);
+            headerRow.Style.Font.Bold = true;
+            headerRow.Style.Font.FontColor = XLColor.White;
+            headerRow.Style.Fill.BackgroundColor = XLColor.FromArgb(37, 60, 96);
+
+            // Nombres de Columnas
+            ws.Cell(1, 1).Value = "CÓDIGO";
+            ws.Cell(1, 2).Value = "NOMBRE COMPLETO";
+            ws.Cell(1, 3).Value = "ÁREA";
+            ws.Cell(1, 4).Value = "PUESTO(S)";
+            ws.Cell(1, 5).Value = "TELÉFONO";
+            ws.Cell(1, 6).Value = "ESTATUS";
+            ws.Cell(1, 7).Value = "SUPERVISOR ASIGNADO";
+            ws.Cell(1, 8).Value = "EXPEDIENTES ENTREGADOS";
+            ws.Cell(1, 9).Value = "AVANCE EXPEDIENTE";
+
+            // 3. Llenar los datos
+            int row = 2;
+            foreach (var emp in activos)
+            {
+                ws.Cell(row, 1).Value = emp.CodigoEmpleado;
+                ws.Cell(row, 2).Value = $"{emp.Apellidos} {emp.Nombre}".Trim();
+                ws.Cell(row, 3).Value = emp.Area;
+                ws.Cell(row, 4).Value = emp.EmpleosCombinados;
+                ws.Cell(row, 5).Value = emp.Telefono;
+                ws.Cell(row, 6).Value = emp.Status;
+                ws.Cell(row, 7).Value = (emp.SupId != null && emp.SupId > 0) ? "SÍ" : "NO";
+
+                // Formato de texto para que se vea como "10 / 15"
+                ws.Cell(row, 8).Value = $"'{emp.ExpedientesCompletos} / {emp.ExpedientesTotales}";
+
+                // Formato de porcentaje real en Excel
+                ws.Cell(row, 9).Value = emp.ExpedientesPorcentaje / 100.0m;
+                ws.Cell(row, 9).Style.NumberFormat.Format = "0.00%";
+
+                row++;
+            }
+
+            // Autoajustar las columnas a lo ancho del texto
+            ws.Columns().AdjustToContents();
+
+            // Guardar y retornar
+            using var ms = new System.IO.MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
         }
     }
 }

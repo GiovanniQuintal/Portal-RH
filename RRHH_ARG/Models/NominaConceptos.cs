@@ -23,6 +23,10 @@ namespace RRHH_ARG.Models
         [StringLength(50)]
         public string? Clasificacion { get; set; } = "REGULAR";
 
+        public bool MostrarEnSabana { get; set; }
+
+        public bool EsMontoDirecto { get; set; }
+
         // Navegación
         public virtual ICollection<NominaEmpleadoDetalle> NominaEmpleadoDetalles { get; set; } = new List<NominaEmpleadoDetalle>();
     }

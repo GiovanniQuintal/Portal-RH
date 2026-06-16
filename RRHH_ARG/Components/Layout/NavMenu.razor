@@ -100,35 +100,63 @@
             </Authorized>
         </AuthorizeView>
 
-            <AuthorizeView Roles="HSE">
-                @* --- AGREGA ESTO --- *@
-                <NavLink class="nav-link py-3 ps-4" href="qhse-dashboard">
-                    <span class="bi bi-postcard-fill me-2" aria-hidden="true"></span>
-                    <span class="nav-text">Gestión STOP</span>
-                </NavLink>
-                @* ------------------- *@
+
+            <AuthorizeView Roles="Admin">
+            <NavLink class="nav-link py-3 ps-4" href="GestionRoles">
+                <span class="bi bi-person-rolodex me-2" aria-hidden="true"></span>
+                <span class="nav-text">Gestión Roles</span>
+            </NavLink>
             </AuthorizeView>
 
-        <AuthorizeView Roles="RH, HSE">
+                <AuthorizeView Roles="Empleado, HSE, FA, Supervisor, RH">
+                <NavLink class="nav-link py-3 ps-4" href="mi-puesto">
+                    <span class="bi bi-suitcase-lg me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Perfil Puesto</span>
+                </NavLink>
+                </AuthorizeView>
+
+
+
+
+
+            <AuthorizeView Roles="RH, HSE, Empleado">
+                <NavLink class="nav-link py-3 ps-4" href="organigrama">
+                    <span class="bi bi-diagram-3 me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Organigrama</span>
+                </NavLink>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="RH, FA">
+                <div class="sidebar-heading mt-3 mb-2 px-4 text-muted small fw-bold">
+                    RH
+                </div>
+
+            
             <NavLink class="nav-link py-3 ps-4" href="empleados">
                 <span class="bi bi-person-fill me-2" aria-hidden="true"></span>
                 <span class="nav-text">Empleados</span>
             </NavLink>
-        </AuthorizeView>
-
-            <AuthorizeView Roles="RH, HSE">
-            <NavLink class="nav-link py-3 ps-4" href="reclutamiento">
-                    <span class="bi bi-people-fill me-2" aria-hidden="true"></span>
-                <span class="nav-text">Reclutamiento</span>
-            </NavLink>
-        </AuthorizeView>
-
-            <AuthorizeView Roles="RH, HSE">
+       
+         
             <NavLink class="nav-link py-3 ps-4" href="incidencias">
                     <span class="bi bi-clipboard2-x-fill me-2" aria-hidden="true"></span>
                 <span class="nav-text">Incidencias</span>
             </NavLink>
+
+                <NavLink class="nav-link py-3 ps-4" href="/finanzas/vacaciones">
+                    <span class="bi bi-airplane-fill me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Vacaciones</span>
+                </NavLink>
         </AuthorizeView>
+
+
+            <AuthorizeView Roles="RH">
+                <NavLink class="nav-link py-3 ps-4" href="reclutamiento">
+                    <span class="bi bi-people-fill me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Reclutamiento</span>
+                </NavLink>
+            </AuthorizeView>
+        
 
             
 
@@ -150,32 +178,34 @@
             </Authorized>
         </AuthorizeView>---*@
 
-        <AuthorizeView Roles="Empleado, HSE, FA, Supervisor">
-            <NavLink class="nav-link py-3 ps-4" href="mi-puesto">
-                    <span class="bi bi-suitcase-lg me-2" aria-hidden="true"></span>
-                <span class="nav-text">Perfil Puesto</span>
-            </NavLink>
-        </AuthorizeView>
+        
 
 
+            <AuthorizeView Roles="RH, FA">
+                <div class="sidebar-heading mt-3 mb-2 px-4 text-muted small fw-bold">
+                    FA
+                </div>
+                
+                    <NavLink class="nav-link py-3 ps-4" href="nomina/dashboard">
+                        <span class="bi bi-cash-coin me-2" aria-hidden="true"></span>
 
-            <AuthorizeView Roles="RH, HSE">
-            
-            <NavLink class="nav-link py-3 ps-4" href="panel-epp">
-                    <span class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></span>
-                <span class="nav-text">EPP</span>
-            </NavLink>
-            
-        </AuthorizeView>
+                        <span class="nav-text">Prenómina</span>
+                    </NavLink>
+   
+            </AuthorizeView>
 
-            <AuthorizeView Roles="RH, HSE">
-            <NavLink class="nav-link py-3 ps-4" href="organigrama">
-                    <span class="bi bi-diagram-3 me-2" aria-hidden="true"></span>
-                <span class="nav-text">Ver Organigrama</span>
-            </NavLink>
-        </AuthorizeView>
+            <AuthorizeView Roles="RH">
+                <NavLink class="nav-link py-3 ps-4" href="finanzas/hub">
+                    <span class="bi bi-cash me-2" aria-hidden="true"></span>
+
+                    <span class="nav-text">Finanzas</span>
+                </NavLink>
+            </AuthorizeView>
 
             <AuthorizeView Roles="RH, Empleado, HSE, FA, Supervisor">
+                <div class="sidebar-heading mt-3 mb-2 px-4 text-muted small fw-bold">
+                    QHSE
+                </div>
                 <NavLink class="nav-link py-3 ps-4" href="mis-tarjetas-qhse">
                     <span class="bi bi-sign-stop me-2" aria-hidden="true"></span>
                     @*-<span class="bi bi-exclamation-square me-2" aria-hidden="true"></span>-*@
@@ -183,21 +213,32 @@
                 </NavLink>
             </AuthorizeView>
 
-            <AuthorizeView Roles="RH">
-                <NavLink class="nav-link py-3 ps-4" href="nomina/dashboard">
-                    <span class="bi bi-cash-coin me-2" aria-hidden="true"></span>
-                    
-                    <span class="nav-text">Prenómina</span>
+            <AuthorizeView Roles="RH, HSE">
+
+                <NavLink class="nav-link py-3 ps-4" href="panel-epp">
+                    <span class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></span>
+                    <span class="nav-text">EPP</span>
+                </NavLink>
+
+            </AuthorizeView>
+
+            <AuthorizeView Roles="HSE">
+                @* --- AGREGA ESTO --- *@
+                <NavLink class="nav-link py-3 ps-4" href="qhse-dashboard">
+                    <span class="bi bi-postcard-fill me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Gestión STOP</span>
+                </NavLink>
+                @* ------------------- *@
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Supervisor">
+                <NavLink class="nav-link py-3 ps-4" href="subordinados">
+                    <span class="bi bi-people-fill me-2" aria-hidden="true"></span>
+                    <span class="nav-text">Objetivos del Equipo</span>
                 </NavLink>
             </AuthorizeView>
 
-            <AuthorizeView Roles="RH">
-                <NavLink class="nav-link py-3 ps-4" href="finanzas/hub">
-                    <span class="bi bi-cash me-2" aria-hidden="true"></span>
-
-                    <span class="nav-text">FA</span>
-                </NavLink>
-            </AuthorizeView>
+            
             @*-
         <AuthorizeView Roles="RH, Empleado, HSE, FA, Supervisor">
             <NavLink class="nav-link py-3 ps-4" href="qhse-card">
@@ -212,7 +253,7 @@
         <AuthorizeView Roles="RH, Empleado, HSE, FA, Supervisor">
             <NavLink class="nav-link py-3 ps-4" href="mis-objetivos">
                 <span class="bi bi-bullseye me-2" aria-hidden="true"></span>
-                <span class="nav-text">Objetivos</span>
+                <span class="nav-text">Mis Objetivos</span>
             </NavLink>
             </AuthorizeView>   @*---*@
         
@@ -232,26 +273,20 @@
 
             <AuthorizeView Roles="RH, HSE">
             <div class="sidebar-heading mt-3 mb-2 px-4 text-muted small fw-bold">
-                    Gestiones
-                </div>
-            <NavLink class="nav-link py-3 ps-4" href="GestionRoles">
-                    <span class="bi bi-person-rolodex me-2" aria-hidden="true"></span>
-                <span class="nav-text">Gestión Roles</span>
-            </NavLink>
+                    Configuraciones
+                    </div>
             
-        </AuthorizeView>
-
-            <AuthorizeView Roles="RH, HSE">
+      
             <NavLink class="nav-link py-3 ps-4" href="admin-pd">
                     <span class="bi bi-key-fill me-2" aria-hidden="true"></span>
-                <span class="nav-text">KPI</span>
+                <span class="nav-text">Gestión KPI</span>
             </NavLink>
         </AuthorizeView>
 
             <AuthorizeView Roles="RH, HSE">
             <NavLink class="nav-link py-3 ps-4" href="admin-prioridades">
                     <span class="bi bi-wrench-adjustable-circle me-2" aria-hidden="true"></span>
-                <span class="nav-text">Gestion de objetivos</span>
+                <span class="nav-text">Gestión de objetivos</span>
             </NavLink>
         </AuthorizeView>
 
@@ -274,12 +309,7 @@
         </AuthorizeView>
 
         
-        <AuthorizeView Roles="Supervisor">
-            <NavLink class="nav-link py-3 ps-4" href="subordinados">
-                <span class="bi bi-people-fill me-2" aria-hidden="true"></span>
-                <span class="nav-text">Equipo</span>
-            </NavLink>
-        </AuthorizeView>
+        
 
             <AuthorizeView Roles="RH, HSE">
             <NavLink class="nav-link py-3 ps-4" href="gestion-documentos">
@@ -320,21 +350,7 @@
         </AuthorizeView>
 
         
-            <AuthorizeView Roles="Admin">
-                <NavLink class="nav-link py-3 ps-4" href="finanzas/hub" @onclick="()=>expandSubMenu= !expandSubMenu"> 
-                    <span class="bi bi-cash me-2" aria-hidden="true"></span>
-
-                    <span class="nav-text">FA</span>
-                </NavLink>
-                @if (expandSubMenu)
-                {
-                    <NavLink class="expand-menu py-3 ps-4" href="">
-                        <span class="oi oi-cart me-3" aria-hidden="true"></span>
-                        <span class="expand-menu text-white">Example</span>
-                    </NavLink>
-                }
-
-            </AuthorizeView>
+            
             
         
         </div>

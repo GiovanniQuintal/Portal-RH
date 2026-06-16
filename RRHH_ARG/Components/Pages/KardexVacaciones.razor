@@ -250,17 +250,17 @@
     private decimal CalcularProporcional()
     {
         if (empleadoActivo == null || !empleadoActivo.FechaContratacion.HasValue) return 0;
-        
+
         DateTime fechaIngreso = empleadoActivo.FechaContratacion.Value;
         int añosCumplidos = kardexEmpleado.Count;
         DateTime ultimoAniversario = fechaIngreso.AddYears(añosCumplidos);
-        
+
         int diasTranscurridos = (DateTime.Now - ultimoAniversario).Days;
         if (diasTranscurridos <= 0) return 0;
 
-        // Suponiendo que el siguiente año de ley le tocan "x" días (ej. 14, 16...)
-        decimal derechoProximoAno = 14m; // Deberías llamar a CalcularDiasPorLey(añosCumplidos + 1)
-        
+        // ---> LÍNEA MODIFICADA: Llama al servicio oficial y asume la ley nueva porque el próximo aniversario siempre será en el futuro (después de 2023)
+        decimal derechoProximoAno = VacacionService.CalcularDiasPorLey(añosCumplidos + 1, DateTime.Now);
+
         return Math.Round((derechoProximoAno / 365m) * diasTranscurridos, 3);
     }
 
