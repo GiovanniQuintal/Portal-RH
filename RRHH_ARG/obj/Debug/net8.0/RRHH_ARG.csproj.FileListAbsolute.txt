@@ -1582,10 +1582,10 @@ G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.build.json.cache
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.development.json
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.csproj.Up2Date
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.dll
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\refint\RRHH_ARG.dll
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.pdb
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\RRHH_ARG.genruntimeconfig.cache
 G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\ref\RRHH_ARG.dll
+G:\Descargas\test RRHH\Final\RRHH_ARG\RRHH_ARG\obj\Debug\net8.0\swae.build.ex.cache

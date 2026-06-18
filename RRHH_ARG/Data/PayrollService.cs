@@ -96,28 +96,30 @@ namespace RRHH_ARG.Data
             var catalogoConceptos = await context.NominaConceptos.ToDictionaryAsync(c => c.ConceptoId, c => c);
 
             // =========================================================================
-            // OPTIMIZACIÓN: CARGAR TODOS LOS ADEUDOS DEL PASADO EN 1 SOLO VIAJE A LA BD
+            // OPTIMIZACIÓN: CARGAR EL ÚLTIMO ADEUDO DE CADA EMPLEADO (A PRUEBA DE AÑOS)
             // =========================================================================
-            int numPeriodoActual = ((mes - 1) * 2) + quincena;
-            int numPeriodoAnterior = numPeriodoActual - 1;
-            int anioAnterior = anio;
 
-            if (numPeriodoAnterior == 0)
+            // 1. Traemos los recibos históricos estrictamente anteriores a esta nómina, 
+            // ordenados desde el más reciente hasta el más viejo.
+            var recibosAnteriores = await (from neOld in context.NominaEmpleados
+                                           join nOld in context.Nominas on neOld.NominaId equals nOld.NominaId
+                                           where nOld.PeriodoInicio < fechaInicio.Date
+                                           orderby nOld.PeriodoInicio descending
+                                           select new { neOld.EMP_ID, neOld.Adeudado })
+                                           .ToListAsync();
+
+            var adeudosPasados = new Dictionary<int, decimal>();
+
+            // 2. Como vienen ordenados cronológicamente al revés, el primero que 
+            // agarremos de cada empleado será su saldo final absoluto.
+            foreach (var item in recibosAnteriores)
             {
-                numPeriodoAnterior = 24;
-                anioAnterior = anio - 1;
+                if (!adeudosPasados.ContainsKey(item.EMP_ID))
+                {
+                    adeudosPasados.Add(item.EMP_ID, item.Adeudado);
+                }
             }
-
-            string periodoAnteriorFiltro = $"P{numPeriodoAnterior}";
-
-            // Traemos un Diccionario donde la llave es el EmpId y el valor es su Deuda
-            var adeudosPasados = await (from neOld in context.NominaEmpleados
-                                        join nOld in context.Nominas on neOld.NominaId equals nOld.NominaId
-                                        where nOld.Anno == anioAnterior && nOld.Periodo == periodoAnteriorFiltro
-                                        select new { neOld.EMP_ID, neOld.Adeudado })
-                                        .ToDictionaryAsync(x => x.EMP_ID, x => x.Adeudado);
             // =========================================================================
-
 
             foreach (var emp in empleadosInvolucrados)
             {
@@ -462,9 +464,9 @@ namespace RRHH_ARG.Data
                 // ¡Guardamos los detalles para evitar choques en el contexto!
                 await context.SaveChangesAsync();
 
-                // =========================================================
-                // PASO B: SINCRONIZAR DE REGRESO A RECURSOS HUMANOS (Trazabilidad)
-                // =========================================================
+                // =========================================================================
+                // PASO B: SINCRONIZAR A RECURSOS HUMANOS (Soporte de Muchos a Uno - Falta / Sin Goce)
+                // =========================================================================
                 var conceptosConCantidad = desglose.Where(d => d.RequiereCantidad).ToList();
 
                 if (conceptosConCantidad.Any())
@@ -476,56 +478,65 @@ namespace RRHH_ARG.Data
 
                     foreach (var item in conceptosConCantidad)
                     {
-                        var tipoIncidencia = await context.Set<TipoIncidencia>().FirstOrDefaultAsync(t => t.ConId == item.ConId);
-                        if (tipoIncidencia != null && periodo != null)
+                        // CAMBIO MAESTRO: Traemos TODOS los tipos de incidencia vinculados a este concepto
+                        var tiposIncidenciaRelacionados = await context.Set<TipoIncidencia>()
+                            .Where(t => t.ConId == item.ConId)
+                            .ToListAsync();
+
+                        if (tiposIncidenciaRelacionados.Any() && periodo != null)
                         {
+                            // Extraemos la lista de IDs (Ej. ID de Falta e ID de Sin Goce)
+                            var idsTiposInc = tiposIncidenciaRelacionados.Select(t => t.TinId).ToList();
                             decimal cantidadFinal = item.Cantidad ?? 0m;
 
-                            // 1. Buscamos TODAS las incidencias de este concepto en la quincena
+                            // 1. Buscamos incidencias en la quincena que pertenezcan a CUALQUIERA de estos tipos
                             var incidenciasViejas = await (from h in context.HistorialIncidencium
                                                            join i in context.Incidencium on h.IncId equals i.IncId
                                                            join d in context.DetalleIncidencium on i.DinId equals d.DinId
-                                                           where h.EmpId == recibo.EMP_ID && d.TinId == tipoIncidencia.TinId && i.IncFecha >= periodo.PeriodoInicio && i.IncFecha <= periodo.PeriodoFin
+                                                           where h.EmpId == recibo.EMP_ID
+                                                              && d.TinId != null
+                                                              && idsTiposInc.Contains(d.TinId.Value) // <--- Filtro por coleccion
+                                                              && i.IncFecha >= periodo.PeriodoInicio
+                                                              && i.IncFecha <= periodo.PeriodoFin
                                                            select new { Hist = h, Inc = i, Det = d }).ToListAsync();
 
-                            // 2. Sumamos lo que RH había reportado originalmente
+                            // 2. Sumamos de forma conjunta todo lo reportado por RH para este concepto
                             decimal sumaRH = incidenciasViejas.Sum(x => x.Det.DinCantidad);
 
-                            // 3. LA REGLA DE ORO: Si Finanzas no alteró el número, ¡NO TOCAMOS NADA DE RH!
+                            // 3. REGLA DE ORO ACTUALIZADA: Si la suma total cuadra, el concepto no se alteró
                             if (cantidadFinal == sumaRH)
                             {
-                                // Como los números cuadran, pasamos de largo para no ensuciar las descripciones originales de RH
                                 continue;
                             }
 
-                            // 4. SI FINANZAS ALTERÓ EL NÚMERO (Override):
-                            // Borramos el historial fragmentado viejo para no duplicar sumas
-                            foreach (var vieja in incidenciasViejas)
-                            {
-                                context.HistorialIncidencium.Remove(vieja.Hist);
-                                context.Incidencium.Remove(vieja.Inc);
-                                context.DetalleIncidencium.Remove(vieja.Det);
-                            }
+                            // 4. SI FINANZAS ALTERÓ EL NÚMERO TOTAL:
+                            decimal diferencia = cantidadFinal - sumaRH;
 
-                            // Creamos UNA SOLA incidencia nueva con el valor consolidado por Finanzas
-                            if (cantidadFinal > 0)
+                            var detalleEnSabana = await context.NominaEmpleadoDetalles
+                                .FirstOrDefaultAsync(d => d.NominaEmpleadoId == recibo.NominaEmpleadoId && d.ConceptoId == item.ConId);
+
+                            if (diferencia != 0)
                             {
                                 currentDinId++;
                                 currentIncId++;
                                 currentHinId++;
 
-                                // Limpiamos el texto por si traía la cadena "Ref: INC-..."
-                                // Limpiamos el texto por si traía la cadena "Ref: INC-..." y le inyectamos el periodo
-                                string descripcionLimpia = string.IsNullOrWhiteSpace(item.Comentario) || item.Comentario.Contains("Ref: INC-")
-                                    ? $"Modificado/Consolidado por Finanzas desde {descOficial}."
-                                    : $"Consolidado por Finanzas en {descOficial}: {item.Comentario}";
+                                // Recopilamos los folios combinados (mezclando faltas con sin goces)
+                                var listaFoliosRH = incidenciasViejas.Select(x => $"INC-{x.Inc.IncId}").ToList();
+                                string refsAnteriores = string.Join(", ", listaFoliosRH);
+
+                                string signo = diferencia > 0 ? "+" : "";
+                                string descripcionAjuste = $"Ajuste de Finanzas desde {descOficial}. Cantidad ajustada: {signo}{diferencia}. Refs previas de RH: {refsAnteriores}";
+
+                                // El ajuste se guardará bajo el primer tipo de incidencia de la lista por defecto
+                                int tinIdAjuste = tiposIncidenciaRelacionados.First().TinId;
 
                                 var det = new DetalleIncidencium
                                 {
                                     DinId = currentDinId,
-                                    TinId = tipoIncidencia.TinId,
-                                    DinCantidad = cantidadFinal,
-                                    DinDescripcion = descripcionLimpia
+                                    TinId = tinIdAjuste,
+                                    DinCantidad = diferencia,
+                                    DinDescripcion = descripcionAjuste
                                 };
                                 context.DetalleIncidencium.Add(det);
 
@@ -543,6 +554,14 @@ namespace RRHH_ARG.Data
                                     IncId = inc.IncId,
                                     EmpId = recibo.EMP_ID
                                 });
+
+                                // Unimos todas las referencias originales de RH junto al nuevo folio de ajuste
+                                if (detalleEnSabana != null)
+                                {
+                                    listaFoliosRH.Add($"INC-{currentIncId}");
+                                    detalleEnSabana.Comentarios = "Ref: " + string.Join(", ", listaFoliosRH);
+                                    context.NominaEmpleadoDetalles.Update(detalleEnSabana);
+                                }
                             }
                         }
                     }

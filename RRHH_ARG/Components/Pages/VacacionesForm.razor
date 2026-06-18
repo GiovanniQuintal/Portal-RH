@@ -62,13 +62,19 @@
                     </div>
                     <div class="classic-label">Fec<u>h</u>a final</div>
                 </div>
+
+                @*
                 <div class="flex-fill">
                     <div class="d-flex align-items-center">
                         <InputDate @bind-Value="solicitud.FechaPago" class="classic-input flex-fill bg-light border-primary" title="La quincena que abarque esta fecha pagará la prima" />
                     </div>
                     <div class="classic-label fw-bold text-primary">Fecha de pa<u>g</u>o (Nómina)</div>
                 </div>
-            </div>
+
+                *@
+            </div> 
+
+
 
             @* FILA 3: Días de descanso *@
             <div class="mb-3">
@@ -123,7 +129,6 @@
                 if (solicitud.SaldoDisponible <= 0)
                 {
                     <span class="text-danger small mt-2 fw-bold">
-                        * Este usuario tiene saldo 0 en vacaciones.
                     </span>
                 }
                 else if (solicitud.DiasVacaciones > solicitud.SaldoDisponible)

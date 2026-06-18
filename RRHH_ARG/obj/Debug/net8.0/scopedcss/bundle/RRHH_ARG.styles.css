@@ -4,7 +4,7 @@
 @import '_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.wuc5ioiakb.bundle.scp.css';
 @import '_content/Z.Blazor.Diagrams/Z.Blazor.Diagrams.ezdqu7jd9f.bundle.scp.css';
 
-/* _content/RRHH_ARG/Components/Account/Pages/Login.razor.rz.scp.css */
+/* /Components/Account/Pages/Login.razor.rz.scp.css */
 
 /* --- CSS RESPONSIVE --- */
 html[b-qprah335yh], body[b-qprah335yh] {
@@ -231,7 +231,7 @@ html[b-qprah335yh], body[b-qprah335yh] {
 
 
 
-/* _content/RRHH_ARG/Components/Layout/MainLayout.razor.rz.scp.css */
+/* /Components/Layout/MainLayout.razor.rz.scp.css */
 /*.page {
     position: relative;
     display: flex;
@@ -337,8 +337,8 @@ main {
     }
     */
 
-/* _content/RRHH_ARG/Components/Layout/NavMenu.razor.rz.scp.css */
-/* _content/RRHH_ARG/Components/Pages/CardWidget.razor.rz.scp.css */
+/* /Components/Layout/NavMenu.razor.rz.scp.css */
+/* /Components/Pages/CardWidget.razor.rz.scp.css */
 .card-node .body[b-6sixeee0xp] {
     fill: #ffffff;
     stroke: #333;
@@ -364,7 +364,7 @@ main {
     stroke: white;
     stroke-width: 2px;
 }
-/* _content/RRHH_ARG/Components/Pages/EditarEmpleado.razor.rz.scp.css */
+/* /Components/Pages/EditarEmpleado.razor.rz.scp.css */
 .edit-employee-container[b-bkf01bzkt1] {
     padding: 20px;
 }
@@ -413,7 +413,7 @@ main {
     margin-right: auto;
 }
 
-/* _content/RRHH_ARG/Components/Pages/Empleados.razor.rz.scp.css */
+/* /Components/Pages/Empleados.razor.rz.scp.css */
 .employees-container[b-9w6nqow5fk] {
     padding: 20px;
     width: 100%;
@@ -554,7 +554,7 @@ main {
     color: #007bff;
     font-weight: bold;
 }
-/* _content/RRHH_ARG/Components/Pages/Incidencias.razor.rz.scp.css */
+/* /Components/Pages/Incidencias.razor.rz.scp.css */
 /* Puedes copiar y pegar el contenido exacto de Empleados.razor.css */
 /* o simplemente renombrar la clase principal */
 
@@ -617,7 +617,7 @@ main {
     font-weight: bold;
     font-size: 14px;
 }
-/* _content/RRHH_ARG/Components/Pages/Reclutamiento.razor.rz.scp.css */
+/* /Components/Pages/Reclutamiento.razor.rz.scp.css */
 /* --- 1. CONTENEDOR PRINCIPAL (ESTO LAS PONE HORIZONTALES) --- */
 .cards-wrapper[b-p3vi8h6xk3] {
     display: flex; /* Obligatorio para alineación horizontal */
@@ -726,7 +726,7 @@ main {
     margin-right: 50px;
     margin-top: 10px;
 }
-/* _content/RRHH_ARG/Components/Pages/RegistroAplicantes.razor.rz.scp.css */
+/* /Components/Pages/RegistroAplicantes.razor.rz.scp.css */
 .modal-backdrop[b-1njpz5gid4] {
     z-index: 1040;
 }
@@ -749,7 +749,7 @@ main {
         border-radius: 4px;
         padding: 8px 12px;
     }
-/* _content/RRHH_ARG/Components/Pages/Shared/InputArchivo.razor.rz.scp.css */
+/* /Components/Pages/Shared/InputArchivo.razor.rz.scp.css */
 .input-archivo-container[b-29eq7xa79q] {
     margin-bottom: 15px;
 }
@@ -775,7 +775,7 @@ main {
     line-height: 1;
     padding: 0 5px;
 }
-/* _content/RRHH_ARG/Components/Pages/Shared/RegistroIncidenciaModal.razor.rz.scp.css */
+/* /Components/Pages/Shared/RegistroIncidenciaModal.razor.rz.scp.css */
 /* Target the label text next to the step indicator */
 [b-n9kttmjm7h] .fluent-wizard-step .label {
     font-weight: 1000; /* Lo mantenemos semi-bold */

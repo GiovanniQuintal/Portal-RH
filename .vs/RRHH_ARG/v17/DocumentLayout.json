@@ -3,28 +3,20 @@
   "WorkspaceRootPath": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\components\\pages\\vacacionesform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\vacacionesform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\services\\vacacionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\services\\vacacionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\components\\pages\\payrolldashboard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\payrolldashboard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\data\\payrollservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\data\\payrollservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\data\\empleadoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\data\\empleadoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\components\\pages\\vacacionesform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|solutionrelative:rrhh_arg\\components\\pages\\vacacionesform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F8F839D9-140C-4A4E-BDAC-7E1A910959A3}|RRHH_ARG\\RRHH_ARG.csproj|g:\\descargas\\test rrhh\\final\\rrhh_arg\\rrhh_arg\\models\\empleadoviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -54,89 +46,63 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "appsettings.json",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\appsettings.json",
               "RelativeDocumentMoniker": "RRHH_ARG\\appsettings.json",
               "ToolTip": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\appsettings.json",
               "RelativeToolTip": "RRHH_ARG\\appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAEAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-06-16T02:34:26.372Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "VacacionService.cs",
-              "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Services\\VacacionService.cs",
-              "RelativeDocumentMoniker": "RRHH_ARG\\Services\\VacacionService.cs",
-              "ToolTip": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Services\\VacacionService.cs",
-              "RelativeToolTip": "RRHH_ARG\\Services\\VacacionService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHcBAAA0AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-16T02:19:53.202Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "VacacionesForm.razor",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\VacacionesForm.razor",
               "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\VacacionesForm.razor",
               "ToolTip": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\VacacionesForm.razor",
               "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\VacacionesForm.razor",
-              "ViewState": "AgIAAMYAAAAAAAAAAAAAANYAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAADIAAAAAAAAAAAAawEgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-06-13T05:50:47.538Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "PayrollDashboard.razor",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\PayrollDashboard.razor",
               "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\PayrollDashboard.razor",
               "ToolTip": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\PayrollDashboard.razor",
               "RelativeToolTip": "RRHH_ARG\\Components\\Pages\\PayrollDashboard.razor",
-              "ViewState": "AgIAAEAHAAAAAAAAAAAswGAHAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-06-09T18:50:35.33Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "EmpleadoService.cs",
-              "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Data\\EmpleadoService.cs",
-              "RelativeDocumentMoniker": "RRHH_ARG\\Data\\EmpleadoService.cs",
-              "ToolTip": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Data\\EmpleadoService.cs",
-              "RelativeToolTip": "RRHH_ARG\\Data\\EmpleadoService.cs",
-              "ViewState": "AgIAAAEIAAAAAAAAAADgvxMIAAAiAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-05T15:42:58.272Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "PayrollService.cs",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Data\\PayrollService.cs",
               "RelativeDocumentMoniker": "RRHH_ARG\\Data\\PayrollService.cs",
               "ToolTip": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Data\\PayrollService.cs",
               "RelativeToolTip": "RRHH_ARG\\Data\\PayrollService.cs",
-              "ViewState": "AgIAAI8BAAAAAAAAAADgv6EBAAApAAAAAAAAAA==",
+              "ViewState": "AgIAABQCAAAAAAAAAAAuwDgCAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-09T22:01:00.689Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 4,
               "Title": "EmpleadoViewModel.cs",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Models\\EmpleadoViewModel.cs",
               "RelativeDocumentMoniker": "RRHH_ARG\\Models\\EmpleadoViewModel.cs",
@@ -148,7 +114,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 6,
               "Title": "MoodleSyncService.cs",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Services\\MoodleSyncService.cs",
               "RelativeDocumentMoniker": "RRHH_ARG\\Services\\MoodleSyncService.cs",
@@ -160,7 +126,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 7,
               "Title": "PdService.cs",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Services\\PdService.cs",
               "RelativeDocumentMoniker": "RRHH_ARG\\Services\\PdService.cs",
@@ -172,7 +138,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 5,
               "Title": "Cursos.razor",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\Cursos.razor",
               "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\Cursos.razor",
@@ -184,7 +150,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 8,
               "Title": "QhseDashboard.razor",
               "DocumentMoniker": "G:\\Descargas\\test RRHH\\Final\\RRHH_ARG\\RRHH_ARG\\Components\\Pages\\QhseDashboard.razor",
               "RelativeDocumentMoniker": "RRHH_ARG\\Components\\Pages\\QhseDashboard.razor",
